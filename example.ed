@@ -1,0 +1,9 @@
+let x = 2;
+fn add(a: i64, b: i64) -> i64 {
+    return a + b;
+}
+
+fn main() {
+    let x = 2 + 3;
+    let y = add(x, 4);
+}

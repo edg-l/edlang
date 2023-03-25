@@ -1,0 +1,86 @@
+use std::str::FromStr;
+use crate::ast::*;
+
+grammar;
+
+Comma<T>: Vec<T> = {
+    <mut v:(<T> ",")*> <e:T?> => match e {
+        None => v,
+        Some(e) => {
+            v.push(e);
+            v
+        }
+    }
+};
+
+ExprOp: OpCode = {
+    "+" => OpCode::Add,
+    "-" => OpCode::Sub,
+};
+
+FactorOp: OpCode = {
+    "*" => OpCode::Mul,
+    "/" => OpCode::Div,
+    "%" => OpCode::Rem,
+}
+
+Tier<Op,NextTier>: SpanValue<Box<Expr>> = {
+    <l:@L> <t:Tier<Op,NextTier>> <o:Op> <n:NextTier> <r:@R> => SpanValue::new(l, Box::new(Expr::Op(t, o, n)), r),
+    NextTier
+};
+
+Expr = Tier<ExprOp, Factor>;
+Factor = Tier<FactorOp, Term>;
+
+// Terms: variables, literals, calls
+Term: SpanValue<Box<Expr>> = {
+    <l:@L> <i:Identifier> <r:@R> => SpanValue::new(l, Box::new(Expr::new_ident(i)), r),
+    <l:@L> <n:Num> <r:@R> => SpanValue::new(l, Box::new(Expr::new_number(n)), r),
+    <l:@L> <i:Identifier> "(" <values:Comma<Term>> ")" <r:@R> => SpanValue::new(l, Box::new(Expr::Call(i, values)), r),
+    "(" <Term> ")"
+};
+
+Identifier: Identifier = {
+    <l:@L> <i:r"[a-zA-Z][\w]*"> <r:@R> => Identifier(SpanValue::new(l, i.to_owned(), r)),
+};
+
+Num: Number = <l:@L> <n:r"[0-9]+"> <r:@R> => Number(SpanValue::new(l, i64::from_str(n).unwrap(), r));
+
+// Function handling
+Param: Parameter = {
+    <Identifier> ":" <Identifier> => Parameter::new(<>)
+};
+
+Params = Comma<Param>;
+
+FunctionReturn: Identifier = {
+    "->" <i:Identifier> => i,
+}
+
+Function: Function = {
+    "fn" <i:Identifier> "(" <a:Params> ")" <r:FunctionReturn?> "{" <s:Statements> "}" => Function::new(i, a, s, r)
+}
+
+// statements not including function definitions
+BasicStatement: SpanValue<Statement> = {
+    <l:@L> "let" <i:Identifier> "=" <e:Expr> ";" <r:@R> => SpanValue::new(l, Statement::new_assignment(i, e), r),
+    <l:@L> <i:Identifier> "=" <e:Expr> ";" <r:@R> => SpanValue::new(l, Statement::new_definition(i, e), r),
+    <l:@L> "return" <e:Expr> ";" <r:@R> => SpanValue::new(l, Statement::Return(e), r),
+};
+
+Statement: SpanValue<Statement> = {
+    BasicStatement,
+    <l:@L> <f:Function> <r:@R> => SpanValue::new(l, Statement::new_function(f), r),
+};
+
+Statements: Vec<SpanValue<Statement>> = {
+    Statement => vec![<>],
+    <mut s:Statements> <n:Statement> => {
+        s.push(n);
+        s
+    },
+};
+
+pub Program: Program = {
+    Statements => Program::new(<>)
+}

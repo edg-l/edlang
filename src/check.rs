@@ -33,13 +33,11 @@ pub fn check<'a>(data: &'a ProgramData, ast: &ast::Program) -> Vec<Check<'a>> {
                         line_start: 1,
                         fold: true,
                         origin: Some(&data.filename),
-                        annotations: vec![
-                            SourceAnnotation {
-                                label: "unexpected statement",
-                                annotation_type: AnnotationType::Error,
-                                range: statement.span.into(),
-                            },
-                        ],
+                        annotations: vec![SourceAnnotation {
+                            label: "unexpected statement",
+                            annotation_type: AnnotationType::Error,
+                            range: statement.span.into(),
+                        }],
                     }],
                     opt: FormatOptions {
                         color: true,
@@ -51,8 +49,8 @@ pub fn check<'a>(data: &'a ProgramData, ast: &ast::Program) -> Vec<Check<'a>> {
                 errors.push(Check::Error(dl));
             }
             Statement::Definition(_) => {
-                 // can't have a top level assignment yet.
-                 let snippet = Snippet {
+                // can't have a top level assignment yet.
+                let snippet = Snippet {
                     title: Some(Annotation {
                         id: None,
                         label: Some("unexpected definition at top level"),
@@ -64,13 +62,11 @@ pub fn check<'a>(data: &'a ProgramData, ast: &ast::Program) -> Vec<Check<'a>> {
                         line_start: 1,
                         fold: true,
                         origin: Some(&data.filename),
-                        annotations: vec![
-                            SourceAnnotation {
-                                label: "unexpected statement",
-                                annotation_type: AnnotationType::Error,
-                                range: statement.span.into(),
-                            },
-                        ],
+                        annotations: vec![SourceAnnotation {
+                            label: "unexpected statement",
+                            annotation_type: AnnotationType::Error,
+                            range: statement.span.into(),
+                        }],
                     }],
                     opt: FormatOptions {
                         color: true,
@@ -80,7 +76,7 @@ pub fn check<'a>(data: &'a ProgramData, ast: &ast::Program) -> Vec<Check<'a>> {
 
                 let dl = DisplayList::from(snippet);
                 errors.push(Check::Error(dl));
-            },
+            }
             Statement::Return(_x) => {
                 // can't have a top level assignment yet.
                 let snippet = Snippet {
@@ -95,13 +91,11 @@ pub fn check<'a>(data: &'a ProgramData, ast: &ast::Program) -> Vec<Check<'a>> {
                         line_start: 1,
                         fold: true,
                         origin: Some(&data.filename),
-                        annotations: vec![
-                            SourceAnnotation {
-                                label: "unexpected return",
-                                annotation_type: AnnotationType::Error,
-                                range: statement.span.into(),
-                            },
-                        ],
+                        annotations: vec![SourceAnnotation {
+                            label: "unexpected return",
+                            annotation_type: AnnotationType::Error,
+                            range: statement.span.into(),
+                        }],
                     }],
                     opt: FormatOptions {
                         color: true,
@@ -111,7 +105,7 @@ pub fn check<'a>(data: &'a ProgramData, ast: &ast::Program) -> Vec<Check<'a>> {
 
                 let dl = DisplayList::from(snippet);
                 errors.push(Check::Error(dl));
-            },
+            }
             Statement::Function(_function) => {}
         }
     }

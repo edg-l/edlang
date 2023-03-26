@@ -65,7 +65,7 @@ Function: Function = {
 BasicStatement: SpanValue<Statement> = {
     <l:@L> "let" <i:Identifier> "=" <e:Expr> ";" <r:@R> => SpanValue::new(l, Statement::new_assignment(i, e), r),
     <l:@L> <i:Identifier> "=" <e:Expr> ";" <r:@R> => SpanValue::new(l, Statement::new_definition(i, e), r),
-    <l:@L> "return" <e:Expr> ";" <r:@R> => SpanValue::new(l, Statement::Return(e), r),
+    <l:@L> "return" <e:Expr?> ";" <r:@R> => SpanValue::new(l, Statement::Return(e), r),
 };
 
 Statement: SpanValue<Statement> = {

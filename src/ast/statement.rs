@@ -10,7 +10,7 @@ pub struct StatementBody {
 pub enum Statement {
     Assignment(StatementBody),
     Definition(StatementBody),
-    Return(SpanValue<Box<Expr>>),
+    Return(Option<SpanValue<Box<Expr>>>),
     Function(Function),
 }
 

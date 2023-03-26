@@ -40,7 +40,7 @@ enum Commands {
         input: PathBuf,
 
         /// Output optimized llvm ir.
-        #[arg(short, long)]
+        #[arg(long)]
         optimize: bool,
 
         /// The output file. If not specified its output will be stdout.
@@ -98,7 +98,12 @@ fn main() -> Result<()> {
             let program = ProgramData::new(&str_path, &code);
             check_program(&program, &ast);
         }
-        Commands::Compile { input, output, debug: _, optimize: _ } => {
+        Commands::Compile {
+            input,
+            output,
+            debug: _,
+            optimize: _,
+        } => {
             let code = fs::read_to_string(&input)?;
 
             let parser = grammar::ProgramParser::new();

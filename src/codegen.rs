@@ -142,11 +142,16 @@ impl<'ctx> CodeGen<'ctx> {
         }
 
         // todo: check function has return?
+        let mut has_return = false;
+
         for statement in &function.body {
+            if let Statement::Return(_) = statement.value {
+                has_return = true
+            }
             self.compile_statement(&entry_block, statement, &mut variables)?;
         }
 
-        if function.return_type.is_none() {
+        if !has_return {
             self.builder.build_return(None);
         }
 
@@ -176,10 +181,14 @@ impl<'ctx> CodeGen<'ctx> {
                 variables.insert(body.ident.0.value.clone(), result);
             }
             Statement::Return(ret) => {
-                let result = self
-                    .compile_expression(block, ret, variables)?
-                    .expect("should have result");
-                self.builder.build_return(Some(&result));
+                if let Some(ret) = ret {
+                    let result = self
+                        .compile_expression(block, ret, variables)?
+                        .expect("should have result");
+                    self.builder.build_return(Some(&result));
+                } else {
+                    self.builder.build_return(None);
+                }
             }
             Statement::Function(_function) => unreachable!(),
         };

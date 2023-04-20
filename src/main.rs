@@ -12,6 +12,8 @@ use crate::codegen::ProgramData;
 pub mod ast;
 pub mod check;
 pub mod codegen;
+pub mod tokens;
+pub mod lexer;
 
 lalrpop_mod!(pub grammar);
 

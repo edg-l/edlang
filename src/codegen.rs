@@ -13,7 +13,7 @@ use itertools::{Either, Itertools};
 
 use statement::Statement;
 
-use crate::ast::{self, statement, Expr, Function, Identifier, OpCode, SpanValue, Term};
+use crate::ast::{self, statement, Expression, Function, Identifier, OpCode, SpanValue, Term};
 
 #[derive(Debug, Clone)]
 pub struct ProgramData {
@@ -199,13 +199,13 @@ impl<'ctx> CodeGen<'ctx> {
     pub fn compile_expression(
         &self,
         block: &BasicBlock,
-        expr: &SpanValue<Box<Expr>>,
+        expr: &SpanValue<Box<Expression>>,
         variables: &mut HashMap<String, BasicValueEnum<'ctx>>,
     ) -> Result<Option<BasicValueEnum<'ctx>>> {
         Ok(match &*expr.value {
-            Expr::Term(term) => Some(self.compile_term(term, variables)?),
-            Expr::Call(func_id, args) => self.compile_call(block, func_id, args, variables)?,
-            Expr::Op(lhs, op, rhs) => Some(self.compile_op(block, lhs, op, rhs, variables)?),
+            Expression::Term(term) => Some(self.compile_term(term, variables)?),
+            Expression::Call(func_id, args) => self.compile_call(block, func_id, args, variables)?,
+            Expression::Op(lhs, op, rhs) => Some(self.compile_op(block, lhs, op, rhs, variables)?),
         })
     }
 
@@ -213,7 +213,7 @@ impl<'ctx> CodeGen<'ctx> {
         &self,
         block: &BasicBlock,
         func_id: &Identifier,
-        args: &[SpanValue<Box<Expr>>],
+        args: &[SpanValue<Box<Expression>>],
         variables: &mut HashMap<String, BasicValueEnum<'ctx>>,
     ) -> Result<Option<BasicValueEnum<'ctx>>> {
         let func_name = &func_id.0.value;
@@ -242,9 +242,9 @@ impl<'ctx> CodeGen<'ctx> {
     pub fn compile_op(
         &self,
         block: &BasicBlock,
-        lhs: &SpanValue<Box<Expr>>,
+        lhs: &SpanValue<Box<Expression>>,
         op: &OpCode,
-        rhs: &SpanValue<Box<Expr>>,
+        rhs: &SpanValue<Box<Expression>>,
         variables: &mut HashMap<String, BasicValueEnum<'ctx>>,
     ) -> Result<BasicValueEnum<'ctx>> {
         let lhs = self

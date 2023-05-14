@@ -1,3 +1,4 @@
+/*
 use crate::{
     ast::{self, Statement},
     codegen::ProgramData,
@@ -112,3 +113,4 @@ pub fn check<'a>(data: &'a ProgramData, ast: &ast::Program) -> Vec<Check<'a>> {
 
     errors
 }
+ */

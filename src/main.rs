@@ -1,19 +1,16 @@
 #![allow(clippy::too_many_arguments)]
 
-use check::Check;
 use clap::{Parser, Subcommand};
 use color_eyre::Result;
 use inkwell::{context::Context, execution_engine::JitFunction, OptimizationLevel};
 use lalrpop_util::lalrpop_mod;
-use std::{fs, path::PathBuf};
-
-use crate::codegen::ProgramData;
+use std::{fs, path::PathBuf, println};
 
 pub mod ast;
 pub mod check;
 pub mod codegen;
-pub mod tokens;
 pub mod lexer;
+pub mod tokens;
 
 lalrpop_mod!(pub grammar);
 
@@ -60,6 +57,7 @@ enum Commands {
     },
 }
 
+/*
 fn check_program(program: &ProgramData, ast: &ast::Program) -> bool {
     let errors = check::check(program, ast);
 
@@ -83,6 +81,7 @@ fn check_program(program: &ProgramData, ast: &ast::Program) -> bool {
 
     error_count == 0
 }
+*/
 
 fn main() -> Result<()> {
     color_eyre::install()?;
@@ -97,8 +96,8 @@ fn main() -> Result<()> {
             let ast = parser.parse(&code).unwrap();
 
             let str_path = input.to_string_lossy();
-            let program = ProgramData::new(&str_path, &code);
-            check_program(&program, &ast);
+            //let program = ProgramData::new(&str_path, &code);
+            //check_program(&program, &ast);
         }
         Commands::Compile {
             input,
@@ -111,6 +110,9 @@ fn main() -> Result<()> {
             let parser = grammar::ProgramParser::new();
             let ast = parser.parse(&code).unwrap();
 
+            println!("{:#?}", ast);
+
+            /*
             let str_path = input.to_string_lossy();
             let program = ProgramData::new(&str_path, &code);
 
@@ -130,13 +132,14 @@ fn main() -> Result<()> {
             } else {
                 println!("{generated_llvm_ir}");
             }
+            */
         }
         Commands::Run { input } => {
             let code = fs::read_to_string(&input)?;
 
             let parser = grammar::ProgramParser::new();
             let ast = parser.parse(&code).unwrap();
-
+            /*
             let str_path = input.to_string_lossy();
             let program = ProgramData::new(&str_path, &code);
 
@@ -155,6 +158,7 @@ fn main() -> Result<()> {
                     execution_engine.get_function("main")?;
                 main.call();
             };
+            */
         }
     }
 

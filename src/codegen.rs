@@ -10,10 +10,10 @@ use inkwell::{
     values::{BasicMetadataValueEnum, BasicValue, BasicValueEnum},
 };
 use itertools::{Either, Itertools};
-
+/*
 use statement::Statement;
 
-use crate::ast::{self, statement, Expression, Function, Identifier, OpCode, SpanValue, Term};
+use crate::ast::{self, statement, Expression, Function, Identifier, OpCode, SpanValue, Term, LiteralValue};
 
 #[derive(Debug, Clone)]
 pub struct ProgramData {
@@ -203,9 +203,9 @@ impl<'ctx> CodeGen<'ctx> {
         variables: &mut HashMap<String, BasicValueEnum<'ctx>>,
     ) -> Result<Option<BasicValueEnum<'ctx>>> {
         Ok(match &*expr.value {
-            Expression::Term(term) => Some(self.compile_term(term, variables)?),
+            Expression::Literal(term) => Some(self.compile_term(&term, variables)?),
             Expression::Call(func_id, args) => self.compile_call(block, func_id, args, variables)?,
-            Expression::Op(lhs, op, rhs) => Some(self.compile_op(block, lhs, op, rhs, variables)?),
+            Expression::BinaryOp(lhs, op, rhs) => Some(self.compile_op(block, lhs, op, rhs, variables)?),
         })
     }
 
@@ -269,7 +269,7 @@ impl<'ctx> CodeGen<'ctx> {
 
     pub fn compile_term(
         &self,
-        term: &Term,
+        term: &LiteralValue,
         variables: &mut HashMap<String, BasicValueEnum<'ctx>>,
     ) -> Result<BasicValueEnum<'ctx>> {
         let value = match term {
@@ -284,3 +284,4 @@ impl<'ctx> CodeGen<'ctx> {
         Ok(value)
     }
 }
+ */

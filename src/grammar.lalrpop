@@ -24,8 +24,8 @@ FactorOp: OpCode = {
     "%" => OpCode::Rem,
 }
 
-Tier<Op,NextTier>: SpanValue<Box<Expr>> = {
-    <l:@L> <t:Tier<Op,NextTier>> <o:Op> <n:NextTier> <r:@R> => SpanValue::new(l, Box::new(Expr::Op(t, o, n)), r),
+Tier<Op,NextTier>: Box<Expression> = {
+    <t:Tier<Op,NextTier>> <o:Op> <n:NextTier> => Box::new(Expression::BinaryOp(t, o, n)),
     NextTier
 };
 
@@ -33,18 +33,18 @@ Expr = Tier<ExprOp, Factor>;
 Factor = Tier<FactorOp, Term>;
 
 // Terms: variables, literals, calls
-Term: SpanValue<Box<Expr>> = {
-    <l:@L> <i:Identifier> <r:@R> => SpanValue::new(l, Box::new(Expr::new_ident(i)), r),
-    <l:@L> <n:Num> <r:@R> => SpanValue::new(l, Box::new(Expr::new_number(n)), r),
-    <l:@L> <i:Identifier> "(" <values:Comma<Term>> ")" <r:@R> => SpanValue::new(l, Box::new(Expr::Call(i, values)), r),
+Term: Box<Expression> = {
+    <i:Identifier> => Box::new(Expression::Variable(i)),
+    <n:Num> => Box::new(Expression::Literal(n)),
+    <i:Identifier> "(" <values:Comma<Term>> ")" => Box::new(Expression::Call { function: i, args: values}),
     "(" <Term> ")"
 };
 
-Identifier: Identifier = {
-    <l:@L> <i:r"[a-zA-Z][\w]*"> <r:@R> => Identifier(SpanValue::new(l, i.to_owned(), r)),
+Identifier: String = {
+    <i:r"[a-zA-Z][\w]*"> => i.to_string(),
 };
 
-Num: Number = <l:@L> <n:r"[0-9]+"> <r:@R> => Number(SpanValue::new(l, i64::from_str(n).unwrap(), r));
+Num: LiteralValue = <n:r"[0-9]+"> => LiteralValue::Integer { bits: 32, signed: true, value: n.to_string()};
 
 // Function handling
 Param: Parameter = {
@@ -53,8 +53,8 @@ Param: Parameter = {
 
 Params = Comma<Param>;
 
-FunctionReturn: Identifier = {
-    "->" <i:Identifier> => i,
+FunctionReturn: String = {
+    "->" <i:Identifier> => i.to_string(),
 }
 
 Function: Function = {
@@ -62,18 +62,18 @@ Function: Function = {
 }
 
 // statements not including function definitions
-BasicStatement: SpanValue<Statement> = {
-    <l:@L> "let" <i:Identifier> "=" <e:Expr> ";" <r:@R> => SpanValue::new(l, Statement::new_assignment(i, e), r),
-    <l:@L> <i:Identifier> "=" <e:Expr> ";" <r:@R> => SpanValue::new(l, Statement::new_definition(i, e), r),
-    <l:@L> "return" <e:Expr?> ";" <r:@R> => SpanValue::new(l, Statement::Return(e), r),
+BasicStatement: Statement = {
+    "let" <i:Identifier> "=" <e:Expr> ";" => Statement::Variable { name: i, value: e},
+    <i:Identifier> "=" <e:Expr> ";" => Statement::Variable { name: i, value: e},
+    "return" <e:Expr?> ";" => Statement::Return(e),
 };
 
-Statement: SpanValue<Statement> = {
+Statement: Statement = {
     BasicStatement,
-    <l:@L> <f:Function> <r:@R> => SpanValue::new(l, Statement::new_function(f), r),
+    <f:Function> => Statement::Function(f),
 };
 
-Statements: Vec<SpanValue<Statement>> = {
+Statements: Vec<Statement> = {
     Statement => vec![<>],
     <mut s:Statements> <n:Statement> => {
         s.push(n);

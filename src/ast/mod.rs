@@ -24,7 +24,8 @@ pub enum LiteralValue {
     String,
     Integer {
         bits: usize,
-        signed: bool
+        signed: bool,
+        value: String,
     },
 }
 
@@ -34,7 +35,7 @@ pub enum Expression {
     Variable(String),
     Call {
         function: String,
-        args: Vec<Box<Self>>
+        args: Vec<Box<Self>>,
     },
     BinaryOp(Box<Self>, OpCode, Box<Self>),
 }
@@ -45,6 +46,12 @@ pub struct Parameter {
     pub type_name: String,
 }
 
+impl Parameter {
+    pub const fn new(ident: String, type_name: String) -> Self {
+        Self { ident, type_name }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Function {
     pub name: String,
@@ -53,11 +60,27 @@ pub struct Function {
     pub return_type: Option<String>,
 }
 
+impl Function {
+    pub const fn new(
+        name: String,
+        params: Vec<Parameter>,
+        body: Vec<Statement>,
+        return_type: Option<String>,
+    ) -> Self {
+        Self {
+            name,
+            params,
+            body,
+            return_type,
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Statement {
     Variable {
         name: String,
-        value: Box<Expression>
+        value: Box<Expression>,
     },
     Return(Option<Box<Expression>>),
     Function(Function),

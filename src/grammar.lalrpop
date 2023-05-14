@@ -1,7 +1,39 @@
 use std::str::FromStr;
-use crate::ast::*;
+use crate::{
+    ast,
+    tokens::Token,
+    lexer::LexicalError,
+};
 
 grammar;
+
+extern {
+    type Location = usize;
+    type Error = LexicalError;
+
+    enum Token {
+      "let" => Token::KeywordLet,
+      "print" => Token::KeywordPrint,
+      "identifier" => Token::Identifier(<String>),
+      "int" => Token::Integer(<String>),
+      "return" => Token::KeywordReturn,
+      "fn" => Token::KeywordFn,
+      "(" => Token::LeftParen,
+      ")" => Token::RightParen,
+      "{" => Token::LeftBracket,
+      "}" => Token::RightBracket,
+      "=" => Token::Assign,
+      ";" => Token::Semicolon,
+      ":" => Token::Colon,
+      "->" => Token::Arrow,
+      "," => Token::Coma,
+      "+" => Token::OperatorAdd,
+      "-" => Token::OperatorSub,
+      "*" => Token::OperatorMul,
+      "/" => Token::OperatorDiv,
+      "%" => Token::OperatorRem,
+    }
+}
 
 Comma<T>: Vec<T> = {
     <mut v:(<T> ",")*> <e:T?> => match e {
@@ -13,67 +45,11 @@ Comma<T>: Vec<T> = {
     }
 };
 
-ExprOp: OpCode = {
-    "+" => OpCode::Add,
-    "-" => OpCode::Sub,
-};
-
-FactorOp: OpCode = {
-    "*" => OpCode::Mul,
-    "/" => OpCode::Div,
-    "%" => OpCode::Rem,
+pub Program: ast::Program = {
+    Statements => ast::Program::new(<>)
 }
 
-Tier<Op,NextTier>: Box<Expression> = {
-    <t:Tier<Op,NextTier>> <o:Op> <n:NextTier> => Box::new(Expression::BinaryOp(t, o, n)),
-    NextTier
-};
-
-Expr = Tier<ExprOp, Factor>;
-Factor = Tier<FactorOp, Term>;
-
-// Terms: variables, literals, calls
-Term: Box<Expression> = {
-    <i:Identifier> => Box::new(Expression::Variable(i)),
-    <n:Num> => Box::new(Expression::Literal(n)),
-    <i:Identifier> "(" <values:Comma<Term>> ")" => Box::new(Expression::Call { function: i, args: values}),
-    "(" <Term> ")"
-};
-
-Identifier: String = {
-    <i:r"[a-zA-Z][\w]*"> => i.to_string(),
-};
-
-Num: LiteralValue = <n:r"[0-9]+"> => LiteralValue::Integer { bits: 32, signed: true, value: n.to_string()};
-
-// Function handling
-Param: Parameter = {
-    <Identifier> ":" <Identifier> => Parameter::new(<>)
-};
-
-Params = Comma<Param>;
-
-FunctionReturn: String = {
-    "->" <i:Identifier> => i.to_string(),
-}
-
-Function: Function = {
-    "fn" <i:Identifier> "(" <a:Params> ")" <r:FunctionReturn?> "{" <s:Statements> "}" => Function::new(i, a, s, r)
-}
-
-// statements not including function definitions
-BasicStatement: Statement = {
-    "let" <i:Identifier> "=" <e:Expr> ";" => Statement::Variable { name: i, value: e},
-    <i:Identifier> "=" <e:Expr> ";" => Statement::Variable { name: i, value: e},
-    "return" <e:Expr?> ";" => Statement::Return(e),
-};
-
-Statement: Statement = {
-    BasicStatement,
-    <f:Function> => Statement::Function(f),
-};
-
-Statements: Vec<Statement> = {
+Statements: Vec<ast::Statement> = {
     Statement => vec![<>],
     <mut s:Statements> <n:Statement> => {
         s.push(n);
@@ -81,6 +57,58 @@ Statements: Vec<Statement> = {
     },
 };
 
-pub Program: Program = {
-    Statements => Program::new(<>)
+Statement: ast::Statement = {
+    BasicStatement,
+    <f:Function> => ast::Statement::Function(f),
+};
+
+// statements not including function definitions
+BasicStatement: ast::Statement = {
+    "let" <i:"identifier"> "=" <e:Expr> ";" => ast::Statement::Variable { name: i, value: e},
+    <i:"identifier"> "=" <e:Expr> ";" => ast::Statement::Variable { name: i, value: e},
+    "return" <e:Expr?> ";" => ast::Statement::Return(e),
+};
+
+ExprOp: ast::OpCode = {
+    "+" => ast::OpCode::Add,
+    "-" => ast::OpCode::Sub,
+};
+
+FactorOp: ast::OpCode = {
+    "*" => ast::OpCode::Mul,
+    "/" => ast::OpCode::Div,
+    "%" => ast::OpCode::Rem,
+}
+
+Tier<Op,NextTier>: Box<ast::Expression> = {
+    <t:Tier<Op,NextTier>> <o:Op> <n:NextTier> => Box::new(ast::Expression::BinaryOp(t, o, n)),
+    NextTier
+};
+
+Expr = Tier<ExprOp, Factor>;
+Factor = Tier<FactorOp, Term>;
+
+// Terms: variables, literals, calls
+Term: Box<ast::Expression> = {
+    <i:"identifier"> => Box::new(ast::Expression::Variable(i)),
+    <n:Num> => Box::new(ast::Expression::Literal(n)),
+    <i:"identifier"> "(" <values:Comma<Term>> ")" => Box::new(ast::Expression::Call { function: i, args: values}),
+    "(" <Term> ")"
+};
+
+Num: ast::LiteralValue = <n:"int"> => ast::LiteralValue::Integer { bits: None, signed: true, value: n.to_string()};
+
+// Function handling
+Param: ast::Parameter = {
+    <"identifier"> ":" <"identifier"> => ast::Parameter::new(<>)
+};
+
+Params = Comma<Param>;
+
+FunctionReturn: String = {
+    "->" <i:"identifier"> => i.to_string(),
+}
+
+Function: ast::Function = {
+    "fn" <i:"identifier"> "(" <a:Params> ")" <r:FunctionReturn?> "{" <s:Statements> "}" => ast::Function::new(i, a, s, r)
 }

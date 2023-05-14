@@ -1,27 +1,42 @@
 use logos::Logos;
 use std::fmt;
 
-#[derive(Logos, Debug, PartialEq)]
+// todo: https://github.com/maciejhirsz/logos/issues/133#issuecomment-619444615
+#[derive(Logos, Debug, PartialEq, Clone)]
 #[logos(skip r"[ \t\n\f]+", skip r"#.*\n?")]
 pub enum Token {
-    #[token("var")]
-    KeywordVar,
+    #[token("let")]
+    KeywordLet,
     #[token("print")]
     KeywordPrint,
+    #[token("fn")]
+    KeywordFn,
+    #[token("return")]
+    KeywordReturn,
 
-    #[regex("[_a-zA-Z][_0-9a-zA-Z]*", |lex| lex.slice().parse().ok())]
+    #[regex(r"_?\p{XID_Start}\p{XID_Continue}*", |lex| lex.slice().parse().ok())]
     Identifier(String),
     #[regex(r"\d+", |lex| lex.slice().parse().ok())]
-    Integer(i64),
+    Integer(String),
 
     #[token("(")]
-    LParen,
+    LeftParen,
     #[token(")")]
-    RParen,
+    RightParen,
+    #[token("{")]
+    LeftBracket,
+    #[token("}")]
+    RightBracket,
     #[token("=")]
     Assign,
     #[token(";")]
     Semicolon,
+    #[token(":")]
+    Colon,
+    #[token("->")]
+    Arrow,
+    #[token(",")]
+    Coma,
 
     #[token("+")]
     OperatorAdd,

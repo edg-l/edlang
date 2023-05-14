@@ -1,10 +1,13 @@
 #![allow(clippy::too_many_arguments)]
 
 use clap::{Parser, Subcommand};
+use codegen::ProgramData;
 use color_eyre::Result;
 use inkwell::{context::Context, execution_engine::JitFunction, OptimizationLevel};
 use lalrpop_util::lalrpop_mod;
 use std::{fs, path::PathBuf, println};
+
+use crate::{ast::Program, lexer::Lexer};
 
 pub mod ast;
 pub mod check;
@@ -90,12 +93,12 @@ fn main() -> Result<()> {
 
     match args.command {
         Commands::Check { input } => {
-            let code = fs::read_to_string(&input)?;
-
+            let code = fs::read_to_string(input)?;
+            let lexer = Lexer::new(code.as_str());
             let parser = grammar::ProgramParser::new();
-            let ast = parser.parse(&code).unwrap();
+            let ast = parser.parse(lexer).unwrap();
 
-            let str_path = input.to_string_lossy();
+            //let str_path = input.to_string_lossy();
             //let program = ProgramData::new(&str_path, &code);
             //check_program(&program, &ast);
         }
@@ -106,21 +109,17 @@ fn main() -> Result<()> {
             optimize: _,
         } => {
             let code = fs::read_to_string(&input)?;
-
+            let lexer = Lexer::new(code.as_str());
             let parser = grammar::ProgramParser::new();
-            let ast = parser.parse(&code).unwrap();
+            let ast: Program = parser.parse(lexer).unwrap();
 
-            println!("{:#?}", ast);
-
-            /*
-            let str_path = input.to_string_lossy();
-            let program = ProgramData::new(&str_path, &code);
+            let program = ProgramData::new(&input, &code);
 
             let file_name = input.file_name().unwrap().to_string_lossy();
 
-            if !check_program(&program, &ast) {
-                return Ok(());
-            }
+            //if !check_program(&program, &ast) {
+            //    return Ok(());
+            //}
 
             let context = Context::create();
             let codegen = codegen::CodeGen::new(&context, &file_name, program, ast)?;
@@ -132,16 +131,14 @@ fn main() -> Result<()> {
             } else {
                 println!("{generated_llvm_ir}");
             }
-            */
         }
         Commands::Run { input } => {
             let code = fs::read_to_string(&input)?;
-
+            let lexer = Lexer::new(&code[..]);
             let parser = grammar::ProgramParser::new();
-            let ast = parser.parse(&code).unwrap();
-            /*
-            let str_path = input.to_string_lossy();
-            let program = ProgramData::new(&str_path, &code);
+            let ast = parser.parse(lexer).unwrap();
+
+            let program = ProgramData::new(&input, &code);
 
             let file_name = input.file_name().unwrap().to_string_lossy();
 
@@ -158,7 +155,6 @@ fn main() -> Result<()> {
                     execution_engine.get_function("main")?;
                 main.call();
             };
-            */
         }
     }
 

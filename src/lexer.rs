@@ -4,6 +4,7 @@ use crate::tokens::Token;
 
 pub type Spanned<Tok, Loc, Error> = Result<(Loc, Tok, Loc), Error>;
 
+#[derive(Debug, Clone, Copy)]
 pub enum LexicalError {
     InvalidToken,
 }

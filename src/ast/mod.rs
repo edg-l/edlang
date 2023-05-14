@@ -23,7 +23,7 @@ impl OpCode {
 pub enum LiteralValue {
     String,
     Integer {
-        bits: usize,
+        bits: Option<u32>,
         signed: bool,
         value: String,
     },

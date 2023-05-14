@@ -1,4 +1,8 @@
-use std::collections::HashMap;
+use std::{
+    collections::HashMap,
+    path::{Path, PathBuf},
+    todo,
+};
 
 use color_eyre::Result;
 use inkwell::{
@@ -10,21 +14,19 @@ use inkwell::{
     values::{BasicMetadataValueEnum, BasicValue, BasicValueEnum},
 };
 use itertools::{Either, Itertools};
-/*
-use statement::Statement;
 
-use crate::ast::{self, statement, Expression, Function, Identifier, OpCode, SpanValue, Term, LiteralValue};
+use crate::ast::{self, Expression, Function, LiteralValue, OpCode, Statement};
 
 #[derive(Debug, Clone)]
 pub struct ProgramData {
-    pub filename: String,
+    pub filename: PathBuf,
     pub source: String,
 }
 
 impl ProgramData {
-    pub fn new(filename: &str, source: &str) -> Self {
+    pub fn new(filename: &Path, source: &str) -> Self {
         Self {
-            filename: filename.to_string(),
+            filename: filename.to_path_buf(),
             source: source.to_string(),
         }
     }
@@ -65,9 +67,8 @@ impl<'ctx> CodeGen<'ctx> {
 
         // create the llvm functions first.
         for statement in &self.ast.statements {
-            match &statement.value {
-                Statement::Assignment(_) => unreachable!(),
-                Statement::Definition(_) => todo!(),
+            match &statement {
+                Statement::Variable { .. } => unreachable!(),
                 Statement::Return(_) => unreachable!(),
                 Statement::Function(function) => {
                     functions.push(function);
@@ -106,7 +107,7 @@ impl<'ctx> CodeGen<'ctx> {
         let args_types: Vec<BasicTypeEnum<'ctx>> = function
             .params
             .iter()
-            .map(|param| param.type_name.0.value.as_str())
+            .map(|param| param.type_name.as_str())
             .map(|t| self.get_llvm_type(t))
             .try_collect()?;
 
@@ -114,18 +115,17 @@ impl<'ctx> CodeGen<'ctx> {
             args_types.into_iter().map(|t| t.into()).collect_vec();
 
         let fn_type = match &function.return_type {
-            Some(id) => self.get_llvm_type(&id.0.value)?.fn_type(&args_types, false),
+            Some(id) => self.get_llvm_type(id)?.fn_type(&args_types, false),
             None => self.context.void_type().fn_type(&args_types, false),
         };
 
-        self.module
-            .add_function(&function.ident.0.value, fn_type, None);
+        self.module.add_function(&function.name, fn_type, None);
 
         Ok(())
     }
 
     fn compile_function(&self, function: &Function) -> Result<()> {
-        let func = self.module.get_function(&function.ident.0.value).unwrap();
+        let func = self.module.get_function(&function.name).unwrap();
         let entry_block = self.context.append_basic_block(func, "entry");
 
         self.builder.position_at_end(entry_block);
@@ -135,7 +135,7 @@ impl<'ctx> CodeGen<'ctx> {
         for (i, param) in function.params.iter().enumerate() {
             let id = param.ident.clone();
             variables.insert(
-                id.0.value.clone(),
+                id.clone(),
                 func.get_nth_param(i.try_into().unwrap())
                     .expect("parameter"),
             );
@@ -145,7 +145,7 @@ impl<'ctx> CodeGen<'ctx> {
         let mut has_return = false;
 
         for statement in &function.body {
-            if let Statement::Return(_) = statement.value {
+            if let Statement::Return(_) = statement {
                 has_return = true
             }
             self.compile_statement(&entry_block, statement, &mut variables)?;
@@ -161,24 +161,17 @@ impl<'ctx> CodeGen<'ctx> {
     fn compile_statement(
         &self,
         block: &BasicBlock,
-        statement: &SpanValue<Statement>,
+        statement: &Statement,
         variables: &mut HashMap<String, BasicValueEnum<'ctx>>,
     ) -> Result<()> {
-        match &statement.value {
+        match statement {
             // Variable assignment
-            Statement::Assignment(body) => {
+            Statement::Variable { name, value } => {
                 let result = self
-                    .compile_expression(block, &body.expr, variables)?
+                    .compile_expression(block, value, variables)?
                     .expect("should have result");
 
-                variables.insert(body.ident.0.value.clone(), result);
-            }
-            Statement::Definition(body) => {
-                let result = self
-                    .compile_expression(block, &body.expr, variables)?
-                    .expect("should have result");
-
-                variables.insert(body.ident.0.value.clone(), result);
+                variables.insert(name.clone(), result);
             }
             Statement::Return(ret) => {
                 if let Some(ret) = ret {
@@ -199,24 +192,28 @@ impl<'ctx> CodeGen<'ctx> {
     pub fn compile_expression(
         &self,
         block: &BasicBlock,
-        expr: &SpanValue<Box<Expression>>,
+        expr: &Expression,
         variables: &mut HashMap<String, BasicValueEnum<'ctx>>,
     ) -> Result<Option<BasicValueEnum<'ctx>>> {
-        Ok(match &*expr.value {
-            Expression::Literal(term) => Some(self.compile_term(&term, variables)?),
-            Expression::Call(func_id, args) => self.compile_call(block, func_id, args, variables)?,
-            Expression::BinaryOp(lhs, op, rhs) => Some(self.compile_op(block, lhs, op, rhs, variables)?),
+        Ok(match expr {
+            Expression::Variable(term) => Some(self.compile_variable(term, variables)?),
+            Expression::Literal(term) => Some(self.compile_literal(term)?),
+            Expression::Call { function, args } => {
+                self.compile_call(block, function, args, variables)?
+            }
+            Expression::BinaryOp(lhs, op, rhs) => {
+                Some(self.compile_binary_op(block, lhs, op, rhs, variables)?)
+            }
         })
     }
 
     pub fn compile_call(
         &self,
         block: &BasicBlock,
-        func_id: &Identifier,
-        args: &[SpanValue<Box<Expression>>],
+        func_name: &str,
+        args: &[Box<Expression>],
         variables: &mut HashMap<String, BasicValueEnum<'ctx>>,
     ) -> Result<Option<BasicValueEnum<'ctx>>> {
-        let func_name = &func_id.0.value;
         let function = self.module.get_function(func_name).expect("should exist");
 
         let mut value_args: Vec<BasicMetadataValueEnum> = Vec::with_capacity(args.len());
@@ -239,12 +236,12 @@ impl<'ctx> CodeGen<'ctx> {
         })
     }
 
-    pub fn compile_op(
+    pub fn compile_binary_op(
         &self,
         block: &BasicBlock,
-        lhs: &SpanValue<Box<Expression>>,
+        lhs: &Expression,
         op: &OpCode,
-        rhs: &SpanValue<Box<Expression>>,
+        rhs: &Expression,
         variables: &mut HashMap<String, BasicValueEnum<'ctx>>,
     ) -> Result<BasicValueEnum<'ctx>> {
         let lhs = self
@@ -267,21 +264,33 @@ impl<'ctx> CodeGen<'ctx> {
         Ok(result.as_basic_value_enum())
     }
 
-    pub fn compile_term(
-        &self,
-        term: &LiteralValue,
-        variables: &mut HashMap<String, BasicValueEnum<'ctx>>,
-    ) -> Result<BasicValueEnum<'ctx>> {
+    pub fn compile_literal(&self, term: &LiteralValue) -> Result<BasicValueEnum<'ctx>> {
         let value = match term {
-            Term::Identifier(ident) => *variables.get(&ident.0.value).expect("value"),
-            Term::Number(num) => self
-                .context
-                .i64_type()
-                .const_int(num.0.value.try_into()?, true)
-                .as_basic_value_enum(),
+            LiteralValue::String => todo!(),
+            LiteralValue::Integer {
+                bits,
+                signed: _,
+                value,
+            } => {
+                // todo: type resolution for bit size?
+                let bits = bits.unwrap_or(32);
+
+                self.context
+                    .custom_width_int_type(bits)
+                    .const_int(value.parse().unwrap(), false)
+                    .as_basic_value_enum()
+            }
         };
 
         Ok(value)
     }
+
+    pub fn compile_variable(
+        &self,
+        variable: &str,
+        variables: &mut HashMap<String, BasicValueEnum<'ctx>>,
+    ) -> Result<BasicValueEnum<'ctx>> {
+        let var = *variables.get(variable).expect("value");
+        Ok(var)
+    }
 }
- */

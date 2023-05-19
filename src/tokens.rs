@@ -13,6 +13,12 @@ pub enum Token {
     KeywordFn,
     #[token("return")]
     KeywordReturn,
+    #[token("struct")]
+    KeywordStruct,
+    #[token("if")]
+    KeywordIf,
+    #[token("else")]
+    KeywordElse,
 
     #[regex(r"_?\p{XID_Start}\p{XID_Continue}*", |lex| lex.slice().parse().ok())]
     Identifier(String),
@@ -48,6 +54,14 @@ pub enum Token {
     OperatorDiv,
     #[token("%")]
     OperatorRem,
+    #[token("&&")]
+    OperatorAnd,
+    #[token("||")]
+    OperatorOr,
+    #[token("==")]
+    OperatorEq,
+    #[token("!=")]
+    OperatorNe,
 }
 
 impl fmt::Display for Token {

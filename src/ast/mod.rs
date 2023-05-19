@@ -5,6 +5,10 @@ pub enum OpCode {
     Mul,
     Div,
     Rem,
+    And,
+    Or,
+    Eq,
+    Ne,
 }
 
 impl OpCode {
@@ -15,6 +19,10 @@ impl OpCode {
             OpCode::Mul => "muli",
             OpCode::Div => "divi",
             OpCode::Rem => "remi",
+            OpCode::And => "and",
+            OpCode::Or => "or",
+            OpCode::Eq => "eq",
+            OpCode::Ne => "ne",
         }
     }
 }
@@ -81,6 +89,11 @@ pub enum Statement {
     Variable {
         name: String,
         value: Box<Expression>,
+    },
+    If {
+        condition: Box<Expression>,
+        body: Vec<Statement>,
+        else_body: Option<Vec<Statement>>,
     },
     Return(Option<Box<Expression>>),
     Function(Function),

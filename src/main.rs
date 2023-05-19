@@ -121,6 +121,7 @@ fn main() -> Result<()> {
             //    return Ok(());
             //}
 
+            println!("{:#?}", ast);
             let context = Context::create();
             let codegen = codegen::CodeGen::new(&context, &file_name, program, ast)?;
             codegen.compile_ast()?;

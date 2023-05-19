@@ -1,5 +1,5 @@
 use std::{
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     path::{Path, PathBuf},
     todo,
 };
@@ -12,6 +12,7 @@ use inkwell::{
     module::Module,
     types::{BasicMetadataTypeEnum, BasicType, BasicTypeEnum},
     values::{BasicMetadataValueEnum, BasicValue, BasicValueEnum},
+    IntPredicate,
 };
 use itertools::{Either, Itertools};
 
@@ -38,6 +39,12 @@ pub struct CodeGen<'ctx> {
     builder: Builder<'ctx>,
     _program: ProgramData,
     ast: ast::Program,
+}
+
+#[derive(Debug, Clone)]
+struct BlockInfo<'a> {
+    pub blocks: Vec<BasicBlock<'a>>,
+    pub current_block: usize,
 }
 
 impl<'ctx> CodeGen<'ctx> {
@@ -70,6 +77,7 @@ impl<'ctx> CodeGen<'ctx> {
             match &statement {
                 Statement::Variable { .. } => unreachable!(),
                 Statement::Return(_) => unreachable!(),
+                Statement::If { .. } => unreachable!(),
                 Statement::Function(function) => {
                     functions.push(function);
                     self.compile_function_signature(function)?;
@@ -130,25 +138,27 @@ impl<'ctx> CodeGen<'ctx> {
 
         self.builder.position_at_end(entry_block);
 
-        let mut variables: HashMap<String, BasicValueEnum<'ctx>> = HashMap::new();
+        let mut variables: HashMap<String, (BasicValueEnum<'ctx>, usize)> = HashMap::new();
 
         for (i, param) in function.params.iter().enumerate() {
             let id = param.ident.clone();
             variables.insert(
                 id.clone(),
-                func.get_nth_param(i.try_into().unwrap())
-                    .expect("parameter"),
+                (
+                    func.get_nth_param(i.try_into().unwrap())
+                        .expect("parameter"),
+                    0,
+                ),
             );
         }
 
-        // todo: check function has return?
         let mut has_return = false;
 
         for statement in &function.body {
             if let Statement::Return(_) = statement {
                 has_return = true
             }
-            self.compile_statement(&entry_block, statement, &mut variables)?;
+            self.compile_statement(statement, &mut variables)?;
         }
 
         if !has_return {
@@ -160,27 +170,122 @@ impl<'ctx> CodeGen<'ctx> {
 
     fn compile_statement(
         &self,
-        block: &BasicBlock,
         statement: &Statement,
-        variables: &mut HashMap<String, BasicValueEnum<'ctx>>,
+        // value, assignments
+        variables: &mut HashMap<String, (BasicValueEnum<'ctx>, usize)>,
     ) -> Result<()> {
         match statement {
             // Variable assignment
             Statement::Variable { name, value } => {
                 let result = self
-                    .compile_expression(block, value, variables)?
+                    .compile_expression(value, variables)?
                     .expect("should have result");
 
-                variables.insert(name.clone(), result);
+                let accesses = if let Some(x) = variables.get(name) {
+                    x.1 + 1
+                } else {
+                    0
+                };
+                variables.insert(name.clone(), (result, accesses));
             }
             Statement::Return(ret) => {
                 if let Some(ret) = ret {
                     let result = self
-                        .compile_expression(block, ret, variables)?
+                        .compile_expression(ret, variables)?
                         .expect("should have result");
                     self.builder.build_return(Some(&result));
                 } else {
                     self.builder.build_return(None);
+                }
+            }
+            Statement::If {
+                condition,
+                body,
+                else_body,
+            } => {
+                let condition = self
+                    .compile_expression(condition, variables)?
+                    .expect("should produce a value");
+
+                let func = self
+                    .builder
+                    .get_insert_block()
+                    .unwrap()
+                    .get_parent()
+                    .expect("parent should exist");
+
+                let mut if_block = self.context.append_basic_block(func, "if");
+                let mut else_block = self.context.append_basic_block(func, "else");
+                let merge_block = self.context.append_basic_block(func, "merge");
+
+                self.builder.build_conditional_branch(
+                    condition.into_int_value(),
+                    if_block,
+                    if let Some(else_body) = else_body {
+                        else_block
+                    } else {
+                        merge_block
+                    },
+                );
+
+                let mut variables_if = variables.clone();
+                self.builder.position_at_end(if_block);
+                for s in body {
+                    self.compile_statement(s, &mut variables_if);
+                }
+                // should we set the builder at the end of the if_block again?
+                self.builder.build_unconditional_branch(merge_block);
+                if_block = self.builder.get_insert_block().unwrap(); // update for phi
+
+                let mut variables_else = variables.clone();
+                if let Some(else_body) = else_body {
+                    self.builder.position_at_end(else_block);
+
+                    for s in else_body {
+                        self.compile_statement(s, &mut variables_else);
+                    }
+                    // should we set the builder at the end of the if_block again?
+                    self.builder.build_unconditional_branch(merge_block);
+                    else_block = self.builder.get_insert_block().unwrap(); // update for phi
+                }
+
+                self.builder.position_at_end(merge_block);
+
+                let mut processed_vars = HashMap::new();
+                for (name, (value, acc)) in variables_if {
+                    if variables.contains_key(&name) {
+                        let (old_val, old_acc) = variables.get(&name).unwrap();
+                        if acc > *old_acc {
+                            let phi = self
+                                .builder
+                                .build_phi(old_val.get_type(), &format!("{name}_phi"));
+                            phi.add_incoming(&[(&value, if_block)]);
+                            processed_vars.insert(name, (value, phi));
+                        }
+                    }
+                }
+
+                if else_body.is_some() {
+                    for (name, (value, acc)) in variables_else {
+                        if variables.contains_key(&name) {
+                            let (old_val, old_acc) = variables.get(&name).unwrap();
+                            if acc > *old_acc {
+                                if let Some((_, phi)) = processed_vars.get(&name) {
+                                    phi.add_incoming(&[(&value, else_block)]);
+                                } else {
+                                    let phi = self
+                                        .builder
+                                        .build_phi(old_val.get_type(), &format!("{name}_phi"));
+                                    phi.add_incoming(&[(&value, else_block)]);
+                                    processed_vars.insert(name, (value, phi));
+                                }
+                            }
+                        }
+                    }
+                }
+
+                for (name, (_, phi)) in processed_vars {
+                    variables.insert(name, (phi.as_basic_value(), 0));
                 }
             }
             Statement::Function(_function) => unreachable!(),
@@ -191,28 +296,24 @@ impl<'ctx> CodeGen<'ctx> {
 
     pub fn compile_expression(
         &self,
-        block: &BasicBlock,
         expr: &Expression,
-        variables: &mut HashMap<String, BasicValueEnum<'ctx>>,
+        variables: &mut HashMap<String, (BasicValueEnum<'ctx>, usize)>,
     ) -> Result<Option<BasicValueEnum<'ctx>>> {
         Ok(match expr {
             Expression::Variable(term) => Some(self.compile_variable(term, variables)?),
             Expression::Literal(term) => Some(self.compile_literal(term)?),
-            Expression::Call { function, args } => {
-                self.compile_call(block, function, args, variables)?
-            }
+            Expression::Call { function, args } => self.compile_call(function, args, variables)?,
             Expression::BinaryOp(lhs, op, rhs) => {
-                Some(self.compile_binary_op(block, lhs, op, rhs, variables)?)
+                Some(self.compile_binary_op(lhs, op, rhs, variables)?)
             }
         })
     }
 
     pub fn compile_call(
         &self,
-        block: &BasicBlock,
         func_name: &str,
         args: &[Box<Expression>],
-        variables: &mut HashMap<String, BasicValueEnum<'ctx>>,
+        variables: &mut HashMap<String, (BasicValueEnum<'ctx>, usize)>,
     ) -> Result<Option<BasicValueEnum<'ctx>>> {
         let function = self.module.get_function(func_name).expect("should exist");
 
@@ -220,7 +321,7 @@ impl<'ctx> CodeGen<'ctx> {
 
         for arg in args {
             let res = self
-                .compile_expression(block, arg, variables)?
+                .compile_expression(arg, variables)?
                 .expect("should have result");
             value_args.push(res.into());
         }
@@ -238,18 +339,17 @@ impl<'ctx> CodeGen<'ctx> {
 
     pub fn compile_binary_op(
         &self,
-        block: &BasicBlock,
         lhs: &Expression,
         op: &OpCode,
         rhs: &Expression,
-        variables: &mut HashMap<String, BasicValueEnum<'ctx>>,
+        variables: &mut HashMap<String, (BasicValueEnum<'ctx>, usize)>,
     ) -> Result<BasicValueEnum<'ctx>> {
         let lhs = self
-            .compile_expression(block, lhs, variables)?
+            .compile_expression(lhs, variables)?
             .expect("should have result")
             .into_int_value();
         let rhs = self
-            .compile_expression(block, rhs, variables)?
+            .compile_expression(rhs, variables)?
             .expect("should have result")
             .into_int_value();
 
@@ -259,6 +359,14 @@ impl<'ctx> CodeGen<'ctx> {
             OpCode::Mul => self.builder.build_int_mul(lhs, rhs, "mul"),
             OpCode::Div => self.builder.build_int_signed_div(lhs, rhs, "div"),
             OpCode::Rem => self.builder.build_int_signed_rem(lhs, rhs, "rem"),
+            OpCode::And => self.builder.build_and(lhs, rhs, "and"),
+            OpCode::Or => self.builder.build_or(lhs, rhs, "or"),
+            OpCode::Eq => self
+                .builder
+                .build_int_compare(IntPredicate::EQ, lhs, rhs, "eq"),
+            OpCode::Ne => self
+                .builder
+                .build_int_compare(IntPredicate::NE, lhs, rhs, "eq"),
         };
 
         Ok(result.as_basic_value_enum())
@@ -288,9 +396,9 @@ impl<'ctx> CodeGen<'ctx> {
     pub fn compile_variable(
         &self,
         variable: &str,
-        variables: &mut HashMap<String, BasicValueEnum<'ctx>>,
+        variables: &mut HashMap<String, (BasicValueEnum<'ctx>, usize)>,
     ) -> Result<BasicValueEnum<'ctx>> {
         let var = *variables.get(variable).expect("value");
-        Ok(var)
+        Ok(var.0)
     }
 }

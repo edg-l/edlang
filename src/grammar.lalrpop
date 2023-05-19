@@ -14,6 +14,9 @@ extern {
     enum Token {
       "let" => Token::KeywordLet,
       "print" => Token::KeywordPrint,
+      "struct" => Token::KeywordStruct,
+      "if" => Token::KeywordIf,
+      "else" => Token::KeywordElse,
       "identifier" => Token::Identifier(<String>),
       "int" => Token::Integer(<String>),
       "return" => Token::KeywordReturn,
@@ -32,6 +35,10 @@ extern {
       "*" => Token::OperatorMul,
       "/" => Token::OperatorDiv,
       "%" => Token::OperatorRem,
+      "&&" => Token::OperatorAnd,
+      "||" => Token::OperatorOr,
+      "==" => Token::OperatorEq,
+      "!=" => Token::OperatorNe,
     }
 }
 
@@ -66,15 +73,30 @@ Statement: ast::Statement = {
 BasicStatement: ast::Statement = {
     "let" <i:"identifier"> "=" <e:Expr> ";" => ast::Statement::Variable { name: i, value: e},
     <i:"identifier"> "=" <e:Expr> ";" => ast::Statement::Variable { name: i, value: e},
+    "if" <cond:Expr> "{" <s:Statements> "}" <e:ElseExpr?> => ast::Statement::If { condition: cond, body: s, else_body: e},
     "return" <e:Expr?> ";" => ast::Statement::Return(e),
 };
 
-ExprOp: ast::OpCode = {
+ElseExpr: Vec<ast::Statement> = {
+    "else" "{" <s:Statements> "}" => s
+}
+
+Level0_Op: ast::OpCode = {
+    "&&" => ast::OpCode::And,
+    "||" => ast::OpCode::Or,
+}
+
+Level1_Op: ast::OpCode = {
+    "==" => ast::OpCode::Eq,
+    "!=" => ast::OpCode::Ne,
+}
+
+Level2_Op: ast::OpCode = {
     "+" => ast::OpCode::Add,
     "-" => ast::OpCode::Sub,
 };
 
-FactorOp: ast::OpCode = {
+Level3_Op: ast::OpCode = {
     "*" => ast::OpCode::Mul,
     "/" => ast::OpCode::Div,
     "%" => ast::OpCode::Rem,
@@ -85,18 +107,20 @@ Tier<Op,NextTier>: Box<ast::Expression> = {
     NextTier
 };
 
-Expr = Tier<ExprOp, Factor>;
-Factor = Tier<FactorOp, Term>;
+Expr = Tier<Level0_Op, Expr2>;
+Expr2 = Tier<Level1_Op, Expr3>;
+Expr3 = Tier<Level2_Op, Expr4>;
+Expr4 = Tier<Level3_Op, Term>;
 
 // Terms: variables, literals, calls
 Term: Box<ast::Expression> = {
     <i:"identifier"> => Box::new(ast::Expression::Variable(i)),
-    <n:Num> => Box::new(ast::Expression::Literal(n)),
+    <n:Number> => Box::new(ast::Expression::Literal(n)),
     <i:"identifier"> "(" <values:Comma<Term>> ")" => Box::new(ast::Expression::Call { function: i, args: values}),
     "(" <Term> ")"
 };
 
-Num: ast::LiteralValue = <n:"int"> => ast::LiteralValue::Integer { bits: None, signed: true, value: n.to_string()};
+Number: ast::LiteralValue = <n:"int"> => ast::LiteralValue::Integer { bits: None, signed: true, value: n.to_string()};
 
 // Function handling
 Param: ast::Parameter = {

@@ -1,7 +1,11 @@
-fn main(x: i32) -> i32 {
+fn main(x: i32, z: i32) -> i32 {
     let y = 0;
     if x == 5 {
-        y = 2 * x;
+        if x == z {
+            y = 2 * x;
+        } else {
+            y = z;
+        }
     } else {
         y = 3 * x;
     }

@@ -1,12 +1,11 @@
 use std::{
-    collections::{HashMap, HashSet},
+    collections::HashMap,
     path::{Path, PathBuf},
     todo,
 };
 
 use color_eyre::Result;
 use inkwell::{
-    basic_block::BasicBlock,
     builder::Builder,
     context::Context,
     module::Module,
@@ -39,12 +38,6 @@ pub struct CodeGen<'ctx> {
     builder: Builder<'ctx>,
     _program: ProgramData,
     ast: ast::Program,
-}
-
-#[derive(Debug, Clone)]
-struct BlockInfo<'a> {
-    pub blocks: Vec<BasicBlock<'a>>,
-    pub current_block: usize,
 }
 
 impl<'ctx> CodeGen<'ctx> {
@@ -221,7 +214,7 @@ impl<'ctx> CodeGen<'ctx> {
                 self.builder.build_conditional_branch(
                     condition.into_int_value(),
                     if_block,
-                    if let Some(else_body) = else_body {
+                    if else_body.is_some() {
                         else_block
                     } else {
                         merge_block
@@ -231,9 +224,8 @@ impl<'ctx> CodeGen<'ctx> {
                 let mut variables_if = variables.clone();
                 self.builder.position_at_end(if_block);
                 for s in body {
-                    self.compile_statement(s, &mut variables_if);
+                    self.compile_statement(s, &mut variables_if)?;
                 }
-                // should we set the builder at the end of the if_block again?
                 self.builder.build_unconditional_branch(merge_block);
                 if_block = self.builder.get_insert_block().unwrap(); // update for phi
 
@@ -242,9 +234,8 @@ impl<'ctx> CodeGen<'ctx> {
                     self.builder.position_at_end(else_block);
 
                     for s in else_body {
-                        self.compile_statement(s, &mut variables_else);
+                        self.compile_statement(s, &mut variables_else)?;
                     }
-                    // should we set the builder at the end of the if_block again?
                     self.builder.build_unconditional_branch(merge_block);
                     else_block = self.builder.get_insert_block().unwrap(); // update for phi
                 }

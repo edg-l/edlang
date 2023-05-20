@@ -123,7 +123,7 @@ fn main() -> Result<()> {
 
             println!("{:#?}", ast);
             let context = Context::create();
-            let codegen = codegen::CodeGen::new(&context, &file_name, program, ast)?;
+            let mut codegen = codegen::CodeGen::new(&context, &file_name, program, ast)?;
             codegen.compile_ast()?;
             let generated_llvm_ir = codegen.generated_code();
 
@@ -144,7 +144,7 @@ fn main() -> Result<()> {
             let file_name = input.file_name().unwrap().to_string_lossy();
 
             let context = Context::create();
-            let codegen = codegen::CodeGen::new(&context, &file_name, program, ast)?;
+            let mut codegen = codegen::CodeGen::new(&context, &file_name, program, ast)?;
             codegen.compile_ast()?;
             let execution_engine = codegen
                 .module

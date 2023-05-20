@@ -69,10 +69,14 @@ Statement: ast::Statement = {
     <f:Function> => ast::Statement::Function(f),
 };
 
+TypeInfo: String =  {
+    ":" <i:"identifier"> => i
+};
+
 // statements not including function definitions
 BasicStatement: ast::Statement = {
-    "let" <i:"identifier"> "=" <e:Expr> ";" => ast::Statement::Variable { name: i, value: e},
-    <i:"identifier"> "=" <e:Expr> ";" => ast::Statement::Variable { name: i, value: e},
+    "let" <i:"identifier"> <t:TypeInfo?> "=" <e:Expr> ";" => ast::Statement::Let { name: i, value: e, type_name: t},
+    <i:"identifier"> "=" <e:Expr> ";" => ast::Statement::Mutate { name: i, value: e},
     "if" <cond:Expr> "{" <s:Statements> "}" <e:ElseExpr?> => ast::Statement::If { condition: cond, body: s, else_body: e},
     "return" <e:Expr?> ";" => ast::Statement::Return(e),
 };

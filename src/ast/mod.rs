@@ -86,7 +86,12 @@ impl Function {
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Statement {
-    Variable {
+    Let {
+        name: String,
+        value: Box<Expression>,
+        type_name: Option<String>,
+    },
+    Mutate {
         name: String,
         value: Box<Expression>,
     },

@@ -7,12 +7,18 @@ fn test(x: Hello) {
     return;
 }
 
-fn works(x: i32) -> i32 {
-    return x * 4;
+fn works(x: i64) -> i64 {
+    let z: i64 = 0;
+    if x == 2 {
+        z = x * 2;
+    } else {
+        z = x * 3;
+    }
+    return z;
 }
 
-fn main() -> i32 {
-    let y = 2;
+fn main() -> i64 {
+    let y: i64 = 2;
     let z = y;
     return works(z);
 }

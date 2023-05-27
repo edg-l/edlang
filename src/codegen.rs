@@ -295,7 +295,7 @@ impl<'ctx> CodeGen<'ctx> {
                 self.functions.get(function).unwrap().clone().1
             }
             Expression::BinaryOp(lhs, op, rhs) => match op {
-                OpCode::Eq | OpCode::Ne => Some(TypeExp::Boolean),
+                //OpCode::Eq | OpCode::Ne => Some(TypeExp::Boolean),
                 _ => self
                     .find_expr_type(lhs, variables)
                     .or_else(|| self.find_expr_type(rhs, variables)),
@@ -386,8 +386,9 @@ impl<'ctx> CodeGen<'ctx> {
                 body,
                 else_body,
             } => {
+                let type_hint = self.find_expr_type(condition, variables);
                 let (condition, _cond_type) = self
-                    .compile_expression(condition, variables, types, Some(TypeExp::Boolean))?
+                    .compile_expression(condition, variables, types, type_hint)?
                     .expect("should produce a value");
 
                 let mut if_block = self.context.append_basic_block(function_value, "if");

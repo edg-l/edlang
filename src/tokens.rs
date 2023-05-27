@@ -15,6 +15,8 @@ pub enum Token {
     KeywordReturn,
     #[token("struct")]
     KeywordStruct,
+    #[token("ptr")]
+    KeywordPtr,
     #[token("if")]
     KeywordIf,
     #[token("else")]
@@ -24,6 +26,34 @@ pub enum Token {
     Identifier(String),
     #[regex(r"\d+", |lex| lex.slice().parse().ok())]
     Integer(String),
+    #[regex(r#""(?:[^"]|\\")*""#, |lex| lex.slice().to_string())]
+    String(String),
+    #[regex(r"(true|false)", |lex| lex.slice().parse().ok())]
+    Boolean(bool),
+
+    #[token("bool")]
+    KeywordBool,
+    #[token("i8")]
+    Inti8,
+    #[token("i16")]
+    Inti16,
+    #[token("i32")]
+    Inti32,
+    #[token("i64")]
+    Inti64,
+    #[token("u8")]
+    Intu8,
+    #[token("u16")]
+    Intu16,
+    #[token("u32")]
+    Intu32,
+    #[token("u64")]
+    Intu64,
+
+    #[token("f32")]
+    Float32,
+    #[token("f64")]
+    Float64,
 
     #[token("(")]
     LeftParen,
@@ -33,6 +63,10 @@ pub enum Token {
     LeftBracket,
     #[token("}")]
     RightBracket,
+    #[token("[")]
+    LeftSquareBracket,
+    #[token("]")]
+    RightSquareBracket,
     #[token("=")]
     Assign,
     #[token(";")]
@@ -43,6 +77,10 @@ pub enum Token {
     Arrow,
     #[token(",")]
     Coma,
+    #[token("<")]
+    LessThanSign,
+    #[token(">")]
+    MoreThanSign,
 
     #[token("+")]
     OperatorAdd,

@@ -7,7 +7,7 @@ use inkwell::{context::Context, execution_engine::JitFunction, OptimizationLevel
 use lalrpop_util::lalrpop_mod;
 use std::{fs, path::PathBuf, println};
 
-use crate::{ast::Program, lexer::Lexer};
+use crate::{ast::Program, check::Check, lexer::Lexer};
 
 pub mod ast;
 pub mod check;
@@ -36,6 +36,11 @@ enum Commands {
         /// The input file.
         input: PathBuf,
     },
+    /// Prints the code AST.
+    Ast {
+        /// The input file.
+        input: PathBuf,
+    },
     /// Compile the edlang source file.
     Compile {
         /// The input file.
@@ -60,7 +65,6 @@ enum Commands {
     },
 }
 
-/*
 fn check_program(program: &ProgramData, ast: &ast::Program) -> bool {
     let errors = check::check(program, ast);
 
@@ -84,7 +88,6 @@ fn check_program(program: &ProgramData, ast: &ast::Program) -> bool {
 
     error_count == 0
 }
-*/
 
 fn main() -> Result<()> {
     color_eyre::install()?;
@@ -93,14 +96,19 @@ fn main() -> Result<()> {
 
     match args.command {
         Commands::Check { input } => {
-            let code = fs::read_to_string(input)?;
+            let code = fs::read_to_string(&input)?;
             let lexer = Lexer::new(code.as_str());
             let parser = grammar::ProgramParser::new();
-            let ast = parser.parse(lexer).unwrap();
-
-            //let str_path = input.to_string_lossy();
-            //let program = ProgramData::new(&str_path, &code);
-            //check_program(&program, &ast);
+            let ast = parser.parse(lexer)?;
+            let program = ProgramData::new(&input, &code);
+            check_program(&program, &ast);
+        }
+        Commands::Ast { input } => {
+            let code = fs::read_to_string(&input)?;
+            let lexer = Lexer::new(code.as_str());
+            let parser = grammar::ProgramParser::new();
+            let ast = parser.parse(lexer)?;
+            println!("{ast:#?}");
         }
         Commands::Compile {
             input,
@@ -111,17 +119,17 @@ fn main() -> Result<()> {
             let code = fs::read_to_string(&input)?;
             let lexer = Lexer::new(code.as_str());
             let parser = grammar::ProgramParser::new();
-            let ast: Program = parser.parse(lexer).unwrap();
+            let ast: Program = parser.parse(lexer)?;
 
             let program = ProgramData::new(&input, &code);
 
             let file_name = input.file_name().unwrap().to_string_lossy();
 
-            //if !check_program(&program, &ast) {
-            //    return Ok(());
-            //}
+            if !check_program(&program, &ast) {
+                return Ok(());
+            }
 
-            println!("{:#?}", ast);
+            // println!("{:#?}", ast);
             let context = Context::create();
             let mut codegen = codegen::CodeGen::new(&context, &file_name, program, ast)?;
             codegen.compile_ast()?;

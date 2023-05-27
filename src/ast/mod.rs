@@ -1,3 +1,15 @@
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct Spanned<T> {
+    pub span: (usize, usize),
+    pub value: T,
+}
+
+impl<T> Spanned<T> {
+    pub fn new(value: T, span: (usize, usize)) -> Self {
+        Self { value, span }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum OpCode {
     Add,
@@ -28,19 +40,25 @@ impl OpCode {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum TypeExp {
+    Integer { bits: u32, signed: bool },
+    Boolean,
+    Array { of: Box<Self>, len: Option<u32> },
+    Pointer { target: Box<Self> },
+    Other { id: String },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum LiteralValue {
-    String,
-    Integer {
-        bits: Option<u32>,
-        signed: bool,
-        value: String,
-    },
+    String(String),
+    Integer(String),
+    Boolean(bool),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Expression {
     Literal(LiteralValue),
-    Variable(String),
+    Variable(Spanned<String>),
     Call {
         function: String,
         args: Vec<Box<Self>>,
@@ -51,12 +69,12 @@ pub enum Expression {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Parameter {
     pub ident: String,
-    pub type_name: String,
+    pub type_exp: TypeExp,
 }
 
 impl Parameter {
-    pub const fn new(ident: String, type_name: String) -> Self {
-        Self { ident, type_name }
+    pub const fn new(ident: String, type_exp: TypeExp) -> Self {
+        Self { ident, type_exp }
     }
 }
 
@@ -65,7 +83,7 @@ pub struct Function {
     pub name: String,
     pub params: Vec<Parameter>,
     pub body: Vec<Statement>,
-    pub return_type: Option<String>,
+    pub return_type: Option<TypeExp>,
 }
 
 impl Function {
@@ -73,7 +91,7 @@ impl Function {
         name: String,
         params: Vec<Parameter>,
         body: Vec<Statement>,
-        return_type: Option<String>,
+        return_type: Option<TypeExp>,
     ) -> Self {
         Self {
             name,
@@ -85,15 +103,38 @@ impl Function {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct StructField {
+    pub ident: String,
+    pub type_exp: TypeExp,
+}
+
+impl StructField {
+    pub const fn new(ident: String, type_name: TypeExp) -> Self {
+        Self {
+            ident,
+            type_exp: type_name,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct Struct {
+    pub name: String,
+    pub fields: Vec<StructField>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Statement {
     Let {
         name: String,
         value: Box<Expression>,
-        type_name: Option<String>,
+        type_name: Option<TypeExp>,
+        span: (usize, usize),
     },
     Mutate {
         name: String,
         value: Box<Expression>,
+        span: (usize, usize),
     },
     If {
         condition: Box<Expression>,
@@ -102,6 +143,7 @@ pub enum Statement {
     },
     Return(Option<Box<Expression>>),
     Function(Function),
+    Struct(Struct),
 }
 
 #[derive(Debug, Clone)]

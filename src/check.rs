@@ -1,4 +1,3 @@
-/*
 use crate::{
     ast::{self, Statement},
     codegen::ProgramData,
@@ -19,8 +18,37 @@ pub fn check<'a>(data: &'a ProgramData, ast: &ast::Program) -> Vec<Check<'a>> {
     let mut errors = vec![];
 
     for statement in &ast.statements {
-        match &statement.value {
-            Statement::Assignment(_x) => {
+        match &statement {
+            Statement::Let { name: _, span, .. } => {
+                // can't have a top level assignment yet.
+                let snippet = Snippet {
+                    title: Some(Annotation {
+                        id: None,
+                        label: Some("unexpected let at top level"),
+                        annotation_type: AnnotationType::Error,
+                    }),
+                    footer: vec![],
+                    slices: vec![Slice {
+                        source: &data.source,
+                        line_start: 1,
+                        fold: true,
+                        origin: None,
+                        annotations: vec![SourceAnnotation {
+                            label: "unexpected statement",
+                            annotation_type: AnnotationType::Error,
+                            range: *span,
+                        }],
+                    }],
+                    opt: FormatOptions {
+                        color: true,
+                        ..Default::default()
+                    },
+                };
+
+                let dl = DisplayList::from(snippet);
+                errors.push(Check::Error(dl));
+            }
+            Statement::Mutate { span, .. } => {
                 // can't have a top level assignment yet.
                 let snippet = Snippet {
                     title: Some(Annotation {
@@ -33,11 +61,11 @@ pub fn check<'a>(data: &'a ProgramData, ast: &ast::Program) -> Vec<Check<'a>> {
                         source: &data.source,
                         line_start: 1,
                         fold: true,
-                        origin: Some(&data.filename),
+                        origin: None,
                         annotations: vec![SourceAnnotation {
                             label: "unexpected statement",
                             annotation_type: AnnotationType::Error,
-                            range: statement.span.into(),
+                            range: *span,
                         }],
                     }],
                     opt: FormatOptions {
@@ -49,68 +77,8 @@ pub fn check<'a>(data: &'a ProgramData, ast: &ast::Program) -> Vec<Check<'a>> {
                 let dl = DisplayList::from(snippet);
                 errors.push(Check::Error(dl));
             }
-            Statement::Definition(_) => {
-                // can't have a top level assignment yet.
-                let snippet = Snippet {
-                    title: Some(Annotation {
-                        id: None,
-                        label: Some("unexpected definition at top level"),
-                        annotation_type: AnnotationType::Error,
-                    }),
-                    footer: vec![],
-                    slices: vec![Slice {
-                        source: &data.source,
-                        line_start: 1,
-                        fold: true,
-                        origin: Some(&data.filename),
-                        annotations: vec![SourceAnnotation {
-                            label: "unexpected statement",
-                            annotation_type: AnnotationType::Error,
-                            range: statement.span.into(),
-                        }],
-                    }],
-                    opt: FormatOptions {
-                        color: true,
-                        ..Default::default()
-                    },
-                };
-
-                let dl = DisplayList::from(snippet);
-                errors.push(Check::Error(dl));
-            }
-            Statement::Return(_x) => {
-                // can't have a top level assignment yet.
-                let snippet = Snippet {
-                    title: Some(Annotation {
-                        id: None,
-                        label: Some("unexpected return"),
-                        annotation_type: AnnotationType::Error,
-                    }),
-                    footer: vec![],
-                    slices: vec![Slice {
-                        source: &data.source,
-                        line_start: 1,
-                        fold: true,
-                        origin: Some(&data.filename),
-                        annotations: vec![SourceAnnotation {
-                            label: "unexpected return",
-                            annotation_type: AnnotationType::Error,
-                            range: statement.span.into(),
-                        }],
-                    }],
-                    opt: FormatOptions {
-                        color: true,
-                        ..Default::default()
-                    },
-                };
-
-                let dl = DisplayList::from(snippet);
-                errors.push(Check::Error(dl));
-            }
-            Statement::Function(_function) => {}
+            _ => {}
         }
     }
-
     errors
 }
- */

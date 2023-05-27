@@ -1,13 +1,18 @@
-fn main(x: i64, z: i64) -> i64 {
-    let y: i64 = 0;
-    if x == 5 {
-        if x == z {
-            y = 2 * x;
-        } else {
-            y = z;
-        }
-    } else {
-        y = 3 * x;
-    }
-    return y;
+struct Hello {
+    x: i32,
+    y: i32,
+}
+
+fn test(x: Hello) {
+    return;
+}
+
+fn works(x: i32) -> i32 {
+    return x * 4;
+}
+
+fn main() -> i32 {
+    let y = 2;
+    let z = y;
+    return works(z);
 }

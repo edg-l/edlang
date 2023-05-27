@@ -1,6 +1,6 @@
 use std::str::FromStr;
 use crate::{
-    ast,
+    ast::{self, Spanned},
     tokens::Token,
     lexer::LexicalError,
 };
@@ -18,13 +18,20 @@ extern {
       "if" => Token::KeywordIf,
       "else" => Token::KeywordElse,
       "identifier" => Token::Identifier(<String>),
-      "int" => Token::Integer(<String>),
+      "int literal" => Token::Integer(<String>),
+      "string literal" => Token::String(<String>),
+      "bool literal" => Token::Boolean(<bool>),
       "return" => Token::KeywordReturn,
       "fn" => Token::KeywordFn,
+      "ptr" => Token::KeywordPtr,
       "(" => Token::LeftParen,
       ")" => Token::RightParen,
       "{" => Token::LeftBracket,
       "}" => Token::RightBracket,
+      "[" => Token::LeftSquareBracket,
+      "]" => Token::RightSquareBracket,
+      "<" => Token::LessThanSign,
+      ">" => Token::MoreThanSign,
       "=" => Token::Assign,
       ";" => Token::Semicolon,
       ":" => Token::Colon,
@@ -39,6 +46,17 @@ extern {
       "||" => Token::OperatorOr,
       "==" => Token::OperatorEq,
       "!=" => Token::OperatorNe,
+
+      "bool" => Token::KeywordBool,
+
+      "i8" => Token::Inti8,
+      "i16" => Token::Inti16,
+      "i32" => Token::Inti32,
+      "i64" => Token::Inti64,
+      "u8" => Token::Intu8,
+      "u16" => Token::Intu16,
+      "u32" => Token::Intu32,
+      "u64" => Token::Intu64,
     }
 }
 
@@ -67,16 +85,17 @@ Statements: Vec<ast::Statement> = {
 Statement: ast::Statement = {
     BasicStatement,
     <f:Function> => ast::Statement::Function(f),
+    <s:Struct> => ast::Statement::Struct(s),
 };
 
-TypeInfo: String =  {
-    ":" <i:"identifier"> => i
+TypeInfo: ast::TypeExp =  {
+    ":" <i:LangType> => i
 };
 
 // statements not including function definitions
 BasicStatement: ast::Statement = {
-    "let" <i:"identifier"> <t:TypeInfo?> "=" <e:Expr> ";" => ast::Statement::Let { name: i, value: e, type_name: t},
-    <i:"identifier"> "=" <e:Expr> ";" => ast::Statement::Mutate { name: i, value: e},
+    <lo:@L> "let" <i:"identifier"> <t:TypeInfo?> "=" <e:Expr> ";" <hi:@R> => ast::Statement::Let { name: i, value: e, type_name: t, span: (lo, hi) },
+    <lo:@L> <i:"identifier"> "=" <e:Expr> ";" <hi:@R>  => ast::Statement::Mutate { name: i, value: e, span: (lo, hi) },
     "if" <cond:Expr> "{" <s:Statements> "}" <e:ElseExpr?> => ast::Statement::If { condition: cond, body: s, else_body: e},
     "return" <e:Expr?> ";" => ast::Statement::Return(e),
 };
@@ -118,25 +137,67 @@ Expr4 = Tier<Level3_Op, Term>;
 
 // Terms: variables, literals, calls
 Term: Box<ast::Expression> = {
-    <i:"identifier"> => Box::new(ast::Expression::Variable(i)),
+    <lo:@L> <i:"identifier"> <hi:@R> => Box::new(ast::Expression::Variable(Spanned::new(i, (lo, hi)))),
     <n:Number> => Box::new(ast::Expression::Literal(n)),
+    <n:StringLit> => Box::new(ast::Expression::Literal(n)),
+    <n:BoolLiteral> => Box::new(ast::Expression::Literal(n)),
     <i:"identifier"> "(" <values:Comma<Term>> ")" => Box::new(ast::Expression::Call { function: i, args: values}),
     "(" <Term> ")"
 };
 
-Number: ast::LiteralValue = <n:"int"> => ast::LiteralValue::Integer { bits: None, signed: true, value: n.to_string()};
+Number: ast::LiteralValue = <n:"int literal"> => ast::LiteralValue::Integer(n);
+
+StringLit: ast::LiteralValue = <n:"string literal"> => ast::LiteralValue::String(n[1..(n.len()-1)].to_string());
+
+BoolLiteral: ast::LiteralValue = <n:"bool literal"> => ast::LiteralValue::Boolean(n);
+
+ArrayLen: u32 = {
+    ";" <i:"int literal"> => i.parse().unwrap(),
+}
+
+LangType: ast::TypeExp = {
+    "ptr" "<" <target:LangType> ">" => ast::TypeExp::Pointer { target: Box::new(target) },
+    "[" <of:LangType> <len:ArrayLen?> "]" => ast::TypeExp::Array { of: Box::new(of), len },
+    "i8" => ast::TypeExp::Integer { bits: 8, signed: true },
+    "i16" => ast::TypeExp::Integer { bits: 16, signed: true },
+    "i32" => ast::TypeExp::Integer { bits: 32, signed: true },
+    "i64" => ast::TypeExp::Integer { bits: 64, signed: true },
+    "u8" => ast::TypeExp::Integer { bits: 8, signed: false },
+    "u16" => ast::TypeExp::Integer { bits: 16, signed: false },
+    "u32" => ast::TypeExp::Integer { bits: 32, signed: false },
+    "u64" => ast::TypeExp::Integer { bits: 64, signed: false },
+    "bool" => ast::TypeExp::Boolean,
+    <id:"identifier"> => ast::TypeExp::Other { id },
+};
 
 // Function handling
 Param: ast::Parameter = {
-    <"identifier"> ":" <"identifier"> => ast::Parameter::new(<>)
+    <"identifier"> ":" <LangType> => ast::Parameter::new(<>)
 };
 
 Params = Comma<Param>;
 
-FunctionReturn: String = {
-    "->" <i:"identifier"> => i.to_string(),
+FunctionReturn: ast::TypeExp = {
+    "->" <i:LangType> => i,
 }
 
 Function: ast::Function = {
     "fn" <i:"identifier"> "(" <a:Params> ")" <r:FunctionReturn?> "{" <s:Statements> "}" => ast::Function::new(i, a, s, r)
+}
+
+// Structures
+
+StructField: ast::StructField = {
+    <"identifier"> ":" <LangType> => ast::StructField::new(<>)
+};
+
+StructFields = Comma<StructField>;
+
+Struct: ast::Struct = {
+    "struct" <i:"identifier"> "{" <fields:StructFields> "}" => {
+        ast::Struct {
+            name: i,
+            fields
+        }
+    }
 }

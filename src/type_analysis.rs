@@ -10,6 +10,10 @@ pub fn type_inference(ast: &mut ast::Program) {
             let ret_type = function.return_type.clone();
             let mut var_cache: HashMap<String, TypeExp> = HashMap::new();
 
+            for arg in &function.params {
+                var_cache.insert(arg.ident.clone(), arg.type_exp.clone());
+            }
+
             if let Some(ret_type) = &ret_type {
                 let ret_type_exp = fn_return_type(function);
 
@@ -175,6 +179,7 @@ fn set_exp_types_from_cache(
             if let Some(value_type) = value_type {
                 // todo: check types matches?
                 var_cache.insert(name, value_type.clone());
+                *env = Some(value_type.clone());
             } else if var_cache.contains_key(&name) {
                 *value_type = var_cache.get(&name).cloned();
                 if env.is_none() {
@@ -183,10 +188,16 @@ fn set_exp_types_from_cache(
             }
         }
         Expression::BinaryOp(lhs, op, rhs) => match op {
-            ast::OpCode::Eq | ast::OpCode::Ne => {}
+            ast::OpCode::Eq | ast::OpCode::Ne => {
+                set_exp_types_from_cache(lhs, var_cache, env);
+                set_exp_types_from_cache(rhs, var_cache, env);
+                set_exp_types_from_cache(lhs, var_cache, env);
+                *env = Some(TypeExp::Boolean);
+            }
             _ => {
                 set_exp_types_from_cache(lhs, var_cache, env);
                 set_exp_types_from_cache(rhs, var_cache, env);
+                set_exp_types_from_cache(lhs, var_cache, env); // needed in case 2 == x
             }
         },
         Expression::Literal(lit) => match lit {
@@ -241,7 +252,7 @@ fn set_expression_type(
             }
         }
         Expression::BinaryOp(lhs, op, rhs) => match op {
-            ast::OpCode::Eq | ast::OpCode::Ne => {}
+            // ast::OpCode::Eq | ast::OpCode::Ne => {}
             _ => {
                 set_expression_type(lhs, expected_type, var_cache);
                 set_expression_type(rhs, expected_type, var_cache);

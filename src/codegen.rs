@@ -489,10 +489,11 @@ impl<'ctx> CodeGen<'ctx> {
         let (lhs, lhs_type) = self
             .compile_expression(lhs, variables, types)?
             .expect("should have result");
-        let (rhs, _rhs_type) = self
+        let (rhs, rhs_type) = self
             .compile_expression(rhs, variables, types)?
             .expect("should have result");
 
+        assert_eq!(lhs_type, rhs_type);
         let lhs = lhs.into_int_value();
         let rhs = rhs.into_int_value();
 

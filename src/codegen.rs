@@ -261,7 +261,7 @@ impl<'ctx> CodeGen<'ctx> {
             if let Statement::Return(_) = statement {
                 has_return = true
             }
-            self.compile_statement(function, func, statement, &mut variables, &mut types)?;
+            self.compile_statement(func, statement, &mut variables, &mut types)?;
         }
 
         if !has_return {
@@ -271,41 +271,8 @@ impl<'ctx> CodeGen<'ctx> {
         Ok(())
     }
 
-    fn find_expr_type(&self, expr: &Expression, variables: &Variables<'ctx>) -> Option<TypeExp> {
-        match expr {
-            Expression::Literal(x) => match x {
-                LiteralValue::String(_s) => {
-                    todo!("make internal string struct")
-                    /* todo: internal string structure here
-                        Some(
-                        self.context
-                            .i8_type()
-                            .array_type(s.bytes().len() as u32 + 1)
-                            .as_basic_type_enum(),
-                    ) */
-                }
-                LiteralValue::Integer(_) => Some(TypeExp::Integer {
-                    bits: 32,
-                    signed: true,
-                }),
-                LiteralValue::Boolean(_) => Some(TypeExp::Boolean),
-            },
-            Expression::Variable(x) => variables.get(&x.value).cloned().map(|x| x.type_exp),
-            Expression::Call { function, args: _ } => {
-                self.functions.get(function).unwrap().clone().1
-            }
-            Expression::BinaryOp(lhs, op, rhs) => match op {
-                //OpCode::Eq | OpCode::Ne => Some(TypeExp::Boolean),
-                _ => self
-                    .find_expr_type(lhs, variables)
-                    .or_else(|| self.find_expr_type(rhs, variables)),
-            },
-        }
-    }
-
     fn compile_statement(
         &self,
-        function: &Function,
         function_value: FunctionValue,
         statement: &Statement,
         // value, assignments
@@ -317,22 +284,11 @@ impl<'ctx> CodeGen<'ctx> {
             Statement::Let {
                 name,
                 value,
-                type_name,
+                value_type: _,
                 ..
             } => {
-                let type_hint = if let Some(type_name) = type_name {
-                    type_name.clone()
-                } else {
-                    let type_exp = self
-                        .find_expr_type(value, variables)
-                        .expect("type should be found");
-                    let ty = self.get_llvm_type(&type_exp)?;
-                    types.insert(type_exp.clone(), ty);
-                    type_exp
-                };
-
                 let (value, value_type) = self
-                    .compile_expression(value, variables, types, Some(type_hint))?
+                    .compile_expression(value, variables, types)?
                     .expect("should have result");
 
                 if !types.contains_key(&value_type) {
@@ -352,11 +308,8 @@ impl<'ctx> CodeGen<'ctx> {
                 );
             }
             Statement::Mutate { name, value, .. } => {
-                let var = variables.get(name).cloned().expect("variable should exist");
-                let type_hint = var.type_exp;
-
                 let (value, value_type) = self
-                    .compile_expression(value, variables, types, Some(type_hint))?
+                    .compile_expression(value, variables, types)?
                     .expect("should have result");
 
                 let var = variables.get_mut(name).expect("variable should exist");
@@ -367,14 +320,8 @@ impl<'ctx> CodeGen<'ctx> {
             }
             Statement::Return(ret) => {
                 if let Some(ret) = ret {
-                    let type_hint = self
-                        .functions
-                        .get(&function.name)
-                        .expect("function should exist")
-                        .clone()
-                        .1;
                     let (value, _value_type) = self
-                        .compile_expression(ret, variables, types, type_hint)?
+                        .compile_expression(ret, variables, types)?
                         .expect("should have result");
                     self.builder.build_return(Some(&value));
                 } else {
@@ -386,9 +333,8 @@ impl<'ctx> CodeGen<'ctx> {
                 body,
                 else_body,
             } => {
-                let type_hint = self.find_expr_type(condition, variables);
                 let (condition, _cond_type) = self
-                    .compile_expression(condition, variables, types, type_hint)?
+                    .compile_expression(condition, variables, types)?
                     .expect("should produce a value");
 
                 let mut if_block = self.context.append_basic_block(function_value, "if");
@@ -408,7 +354,7 @@ impl<'ctx> CodeGen<'ctx> {
                 let mut variables_if = variables.clone();
                 self.builder.position_at_end(if_block);
                 for s in body {
-                    self.compile_statement(function, function_value, s, &mut variables_if, types)?;
+                    self.compile_statement(function_value, s, &mut variables_if, types)?;
                 }
                 self.builder.build_unconditional_branch(merge_block);
                 if_block = self.builder.get_insert_block().unwrap(); // update for phi
@@ -418,13 +364,7 @@ impl<'ctx> CodeGen<'ctx> {
                     self.builder.position_at_end(else_block);
 
                     for s in else_body {
-                        self.compile_statement(
-                            function,
-                            function_value,
-                            s,
-                            &mut variables_else,
-                            types,
-                        )?;
+                        self.compile_statement(function_value, s, &mut variables_else, types)?;
                     }
                     self.builder.build_unconditional_branch(merge_block);
                     else_block = self.builder.get_insert_block().unwrap(); // update for phi
@@ -489,16 +429,20 @@ impl<'ctx> CodeGen<'ctx> {
         expr: &Expression,
         variables: &mut Variables<'ctx>,
         types: &mut TypeStorage<'ctx>,
-        type_hint: Option<TypeExp>,
     ) -> Result<Option<(BasicValueEnum<'ctx>, TypeExp)>> {
         Ok(match expr {
-            Expression::Variable(term) => Some(self.compile_variable(&term.value, variables)?),
-            Expression::Literal(term) => Some(self.compile_literal(term, type_hint)?),
-            Expression::Call { function, args } => {
-                self.compile_call(function, args, variables, types)?
-            }
+            Expression::Variable {
+                name,
+                value_type: _,
+            } => Some(self.compile_variable(&name.value, variables)?),
+            Expression::Literal(term) => Some(self.compile_literal(term)?),
+            Expression::Call {
+                function,
+                args,
+                value_type,
+            } => self.compile_call(function, args, variables, types, value_type.clone())?,
             Expression::BinaryOp(lhs, op, rhs) => {
-                Some(self.compile_binary_op(lhs, op, rhs, variables, types, type_hint)?)
+                Some(self.compile_binary_op(lhs, op, rhs, variables, types)?)
             }
         })
     }
@@ -509,20 +453,16 @@ impl<'ctx> CodeGen<'ctx> {
         args: &[Box<Expression>],
         variables: &mut Variables<'ctx>,
         types: &mut TypeStorage<'ctx>,
+        value_type: Option<TypeExp>,
     ) -> Result<Option<(BasicValueEnum<'ctx>, TypeExp)>> {
         info!("compiling fn call: func_name={}", func_name);
         let function = self.module.get_function(func_name).expect("should exist");
-        let func_info = self
-            .functions
-            .get(func_name)
-            .cloned()
-            .expect("should exist");
 
         let mut value_args: Vec<BasicMetadataValueEnum> = Vec::with_capacity(args.len());
 
-        for (arg, arg_type) in args.iter().zip(func_info.0.iter()) {
+        for arg in args.iter() {
             let (res, _res_type) = self
-                .compile_expression(arg, variables, types, Some(arg_type.clone()))?
+                .compile_expression(arg, variables, types)?
                 .expect("should have result");
             value_args.push(res.into());
         }
@@ -533,10 +473,7 @@ impl<'ctx> CodeGen<'ctx> {
             .try_as_basic_value();
 
         Ok(match result {
-            Either::Left(val) => Some((
-                val,
-                func_info.1.expect("should have ret type info if returns"),
-            )),
+            Either::Left(val) => Some((val, value_type.unwrap())),
             Either::Right(_) => None,
         })
     }
@@ -548,13 +485,12 @@ impl<'ctx> CodeGen<'ctx> {
         rhs: &Expression,
         variables: &mut Variables<'ctx>,
         types: &mut TypeStorage<'ctx>,
-        type_hint: Option<TypeExp>,
     ) -> Result<(BasicValueEnum<'ctx>, TypeExp)> {
         let (lhs, lhs_type) = self
-            .compile_expression(lhs, variables, types, type_hint.clone())?
+            .compile_expression(lhs, variables, types)?
             .expect("should have result");
         let (rhs, _rhs_type) = self
-            .compile_expression(rhs, variables, types, type_hint)?
+            .compile_expression(rhs, variables, types)?
             .expect("should have result");
 
         let lhs = lhs.into_int_value();
@@ -593,11 +529,7 @@ impl<'ctx> CodeGen<'ctx> {
         Ok((result.as_basic_value_enum(), res_type))
     }
 
-    pub fn compile_literal(
-        &self,
-        term: &LiteralValue,
-        type_hint: Option<TypeExp>,
-    ) -> Result<(BasicValueEnum<'ctx>, TypeExp)> {
+    pub fn compile_literal(&self, term: &LiteralValue) -> Result<(BasicValueEnum<'ctx>, TypeExp)> {
         let value = match term {
             LiteralValue::String(_s) => {
                 todo!()
@@ -614,28 +546,20 @@ impl<'ctx> CodeGen<'ctx> {
                     .as_basic_value_enum(),
                 TypeExp::Boolean,
             ),
-            LiteralValue::Integer(v) => {
-                if let Some(type_hint) = type_hint {
-                    (
-                        self.get_llvm_type(&type_hint)?
-                            .into_int_type()
-                            .const_int(v.parse().unwrap(), false)
-                            .as_basic_value_enum(),
-                        type_hint,
-                    )
-                } else {
-                    let type_exp = TypeExp::Integer {
-                        bits: 32,
-                        signed: true,
-                    };
-                    (
-                        self.get_llvm_type(&type_exp)?
-                            .into_int_type()
-                            .const_int(v.parse().unwrap(), false)
-                            .as_basic_value_enum(),
-                        type_exp,
-                    )
-                }
+            LiteralValue::Integer {
+                value,
+                bits,
+                signed,
+            } => {
+                let bits = bits.unwrap_or(32);
+                let signed = signed.unwrap_or(true);
+                (
+                    self.context
+                        .custom_width_int_type(bits)
+                        .const_int(value.parse().unwrap(), false)
+                        .as_basic_value_enum(),
+                    TypeExp::Integer { bits, signed },
+                )
             }
         };
 

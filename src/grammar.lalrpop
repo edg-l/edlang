@@ -94,9 +94,12 @@ TypeInfo: ast::TypeExp =  {
 
 // statements not including function definitions
 BasicStatement: ast::Statement = {
-    <lo:@L> "let" <i:"identifier"> <t:TypeInfo?> "=" <e:Expr> ";" <hi:@R> => ast::Statement::Let { name: i, value: e, type_name: t, span: (lo, hi) },
-    <lo:@L> <i:"identifier"> "=" <e:Expr> ";" <hi:@R>  => ast::Statement::Mutate { name: i, value: e, span: (lo, hi) },
-    "if" <cond:Expr> "{" <s:Statements> "}" <e:ElseExpr?> => ast::Statement::If { condition: cond, body: s, else_body: e},
+    <lo:@L> "let" <i:"identifier"> <t:TypeInfo?> "=" <e:Expr> ";" <hi:@R> =>
+            ast::Statement::Let { name: i, value: e, value_type: t, span: (lo, hi) },
+    <lo:@L> <i:"identifier"> "=" <e:Expr> ";" <hi:@R> =>
+            ast::Statement::Mutate { name: i, value: e, span: (lo, hi), value_type: None },
+    "if" <cond:Expr> "{" <s:Statements> "}" <e:ElseExpr?> =>
+            ast::Statement::If { condition: cond, body: s, else_body: e},
     "return" <e:Expr?> ";" => ast::Statement::Return(e),
 };
 
@@ -137,15 +140,22 @@ Expr4 = Tier<Level3_Op, Term>;
 
 // Terms: variables, literals, calls
 Term: Box<ast::Expression> = {
-    <lo:@L> <i:"identifier"> <hi:@R> => Box::new(ast::Expression::Variable(Spanned::new(i, (lo, hi)))),
+    <lo:@L> <i:"identifier"> <hi:@R> => Box::new(ast::Expression::Variable {
+        name: Spanned::new(i, (lo, hi)),
+        value_type: None
+    }),
     <n:Number> => Box::new(ast::Expression::Literal(n)),
     <n:StringLit> => Box::new(ast::Expression::Literal(n)),
     <n:BoolLiteral> => Box::new(ast::Expression::Literal(n)),
-    <i:"identifier"> "(" <values:Comma<Term>> ")" => Box::new(ast::Expression::Call { function: i, args: values}),
+    <i:"identifier"> "(" <values:Comma<Term>> ")" => Box::new(ast::Expression::Call { function: i, args: values, value_type: None }),
     "(" <Term> ")"
 };
 
-Number: ast::LiteralValue = <n:"int literal"> => ast::LiteralValue::Integer(n);
+Number: ast::LiteralValue = <n:"int literal"> => ast::LiteralValue::Integer {
+    value: n,
+    bits: None,
+    signed: None
+};
 
 StringLit: ast::LiteralValue = <n:"string literal"> => ast::LiteralValue::String(n[1..(n.len()-1)].to_string());
 

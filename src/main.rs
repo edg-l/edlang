@@ -14,6 +14,7 @@ pub mod check;
 pub mod codegen;
 pub mod lexer;
 pub mod tokens;
+pub mod type_analysis;
 
 lalrpop_mod!(pub grammar);
 
@@ -99,15 +100,17 @@ fn main() -> Result<()> {
             let code = fs::read_to_string(&input)?;
             let lexer = Lexer::new(code.as_str());
             let parser = grammar::ProgramParser::new();
-            let ast = parser.parse(lexer)?;
+            let mut ast = parser.parse(lexer)?;
+            type_analysis::type_inference(&mut ast);
             let program = ProgramData::new(&input, &code);
             check_program(&program, &ast);
         }
         Commands::Ast { input } => {
-            let code = fs::read_to_string(&input)?;
+            let code = fs::read_to_string(input)?;
             let lexer = Lexer::new(code.as_str());
             let parser = grammar::ProgramParser::new();
-            let ast = parser.parse(lexer)?;
+            let mut ast = parser.parse(lexer)?;
+            type_analysis::type_inference(&mut ast);
             println!("{ast:#?}");
         }
         Commands::Compile {
@@ -119,7 +122,8 @@ fn main() -> Result<()> {
             let code = fs::read_to_string(&input)?;
             let lexer = Lexer::new(code.as_str());
             let parser = grammar::ProgramParser::new();
-            let ast: Program = parser.parse(lexer)?;
+            let mut ast: Program = parser.parse(lexer)?;
+            type_analysis::type_inference(&mut ast);
 
             let program = ProgramData::new(&input, &code);
 

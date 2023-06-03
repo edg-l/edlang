@@ -51,17 +51,25 @@ pub enum TypeExp {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum LiteralValue {
     String(String),
-    Integer(String),
+    Integer {
+        value: String,
+        bits: Option<u32>,
+        signed: Option<bool>,
+    },
     Boolean(bool),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Expression {
     Literal(LiteralValue),
-    Variable(Spanned<String>),
+    Variable {
+        name: Spanned<String>,
+        value_type: Option<TypeExp>,
+    },
     Call {
         function: String,
         args: Vec<Box<Self>>,
+        value_type: Option<TypeExp>,
     },
     BinaryOp(Box<Self>, OpCode, Box<Self>),
 }
@@ -128,12 +136,13 @@ pub enum Statement {
     Let {
         name: String,
         value: Box<Expression>,
-        type_name: Option<TypeExp>,
+        value_type: Option<TypeExp>,
         span: (usize, usize),
     },
     Mutate {
         name: String,
         value: Box<Expression>,
+        value_type: Option<TypeExp>,
         span: (usize, usize),
     },
     If {

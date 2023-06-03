@@ -12,7 +12,7 @@ categories = ["compilers"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-clap = { version = "4.3.0", features = ["derive"] }
+clap = { version = "4.3.1", features = ["derive"] }
 color-eyre = "0.6.2"
 itertools = "0.10.5"
 lalrpop-util = { version = "0.20.0", features = ["lexer"] }

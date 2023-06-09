@@ -24,6 +24,8 @@ extern {
       "return" => Token::KeywordReturn,
       "fn" => Token::KeywordFn,
       "ptr" => Token::KeywordPtr,
+      "_" => Token::KeywordUnderscore,
+
       "(" => Token::LeftParen,
       ")" => Token::RightParen,
       "{" => Token::LeftBracket,
@@ -151,10 +153,52 @@ Term: Box<ast::Expression> = {
     "(" <Term> ")"
 };
 
-Number: ast::LiteralValue = <n:"int literal"> => ast::LiteralValue::Integer {
-    value: n,
-    bits: None,
-    signed: None
+Number: ast::LiteralValue = {
+    <n:"int literal"> "_"? "i8" => ast::LiteralValue::Integer {
+        value: n,
+        bits: 8,
+        signed: true,
+    },
+    <n:"int literal"> "_"? "i16" => ast::LiteralValue::Integer {
+        value: n,
+        bits: 16,
+        signed: true,
+    },
+    <n:"int literal"> "_"? "i32" => ast::LiteralValue::Integer {
+        value: n,
+        bits: 32,
+        signed: true,
+    },
+    <n:"int literal"> "_"? "i64" => ast::LiteralValue::Integer {
+        value: n,
+        bits: 64,
+        signed: true,
+    },
+    <n:"int literal"> "_"? "u8" => ast::LiteralValue::Integer {
+        value: n,
+        bits: 8,
+        signed: false,
+    },
+    <n:"int literal"> "_"? "u16" => ast::LiteralValue::Integer {
+        value: n,
+        bits: 16,
+        signed: false,
+    },
+    <n:"int literal"> "_"? "u32" => ast::LiteralValue::Integer {
+        value: n,
+        bits: 32,
+        signed: false,
+    },
+    <n:"int literal"> "_"? "u64" => ast::LiteralValue::Integer {
+        value: n,
+        bits: 64,
+        signed: false,
+    },
+    <n:"int literal"> => ast::LiteralValue::Integer {
+        value: n,
+        bits: 32,
+        signed: true,
+    },
 };
 
 StringLit: ast::LiteralValue = <n:"string literal"> => ast::LiteralValue::String(n[1..(n.len()-1)].to_string());

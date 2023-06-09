@@ -1,9 +1,30 @@
 use logos::Logos;
-use std::fmt;
+use std::{convert::Infallible, fmt};
+
+//  https://github.com/maciejhirsz/logos/issues/133
+
+#[derive(Debug, PartialEq, Clone, Default)]
+pub enum LexingError {
+    NumberParseError,
+    #[default]
+    Other,
+}
+
+impl From<std::num::ParseIntError> for LexingError {
+    fn from(_: std::num::ParseIntError) -> Self {
+        LexingError::NumberParseError
+    }
+}
+
+impl From<Infallible> for LexingError {
+    fn from(_: Infallible) -> Self {
+        LexingError::Other
+    }
+}
 
 // todo: https://github.com/maciejhirsz/logos/issues/133#issuecomment-619444615
 #[derive(Logos, Debug, PartialEq, Clone)]
-#[logos(skip r"[ \t\n\f]+", skip r"#.*\n?")]
+#[logos(error = LexingError, skip r"[ \t\n\f]+", skip r"#.*\n?")]
 pub enum Token {
     #[token("let")]
     KeywordLet,
@@ -21,14 +42,16 @@ pub enum Token {
     KeywordIf,
     #[token("else")]
     KeywordElse,
+    #[token("_")]
+    KeywordUnderscore,
 
-    #[regex(r"_?\p{XID_Start}\p{XID_Continue}*", |lex| lex.slice().parse().ok())]
+    #[regex(r"_?\p{XID_Start}\p{XID_Continue}*", |lex| lex.slice().to_string())]
     Identifier(String),
-    #[regex(r"\d+", |lex| lex.slice().parse().ok())]
+    #[regex(r"\d+", |lex| lex.slice().to_string())]
     Integer(String),
     #[regex(r#""(?:[^"]|\\")*""#, |lex| lex.slice().to_string())]
     String(String),
-    #[regex(r"(true|false)", |lex| lex.slice().parse().ok())]
+    #[regex(r"(true|false)", |lex| lex.slice().parse::<bool>().unwrap())]
     Boolean(bool),
 
     #[token("bool")]

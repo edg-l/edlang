@@ -1,5 +1,6 @@
 #![allow(clippy::too_many_arguments)]
 
+use check::print_error;
 use clap::{Parser, Subcommand};
 use codegen::ProgramData;
 use color_eyre::Result;
@@ -101,7 +102,7 @@ fn main() -> Result<()> {
             let lexer = Lexer::new(code.as_str());
             let parser = grammar::ProgramParser::new();
             let mut ast = parser.parse(lexer)?;
-            type_analysis::type_inference(&mut ast);
+            type_analysis::type_inference2(&mut ast);
             let program = ProgramData::new(&input, &code);
             check_program(&program, &ast);
         }
@@ -109,9 +110,15 @@ fn main() -> Result<()> {
             let code = fs::read_to_string(input)?;
             let lexer = Lexer::new(code.as_str());
             let parser = grammar::ProgramParser::new();
-            let mut ast = parser.parse(lexer)?;
-            type_analysis::type_inference2(&mut ast);
-            println!("{ast:#?}");
+            match parser.parse(lexer) {
+                Ok(mut ast) => {
+                    type_analysis::type_inference2(&mut ast);
+                    println!("{ast:#?}");
+                }
+                Err(e) => {
+                    print_error(&code, e);
+                }
+            }
         }
         Commands::Compile {
             input,
@@ -123,7 +130,7 @@ fn main() -> Result<()> {
             let lexer = Lexer::new(code.as_str());
             let parser = grammar::ProgramParser::new();
             let mut ast: Program = parser.parse(lexer)?;
-            type_analysis::type_inference(&mut ast);
+            type_analysis::type_inference2(&mut ast);
 
             let program = ProgramData::new(&input, &code);
 

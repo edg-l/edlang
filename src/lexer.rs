@@ -2,19 +2,21 @@ use std::{fmt::Display, ops::Range};
 
 use logos::{Logos, SpannedIter};
 
-use crate::tokens::Token;
+use crate::tokens::{LexingError, Token};
 
 pub type Spanned<Tok, Loc, Error> = Result<(Loc, Tok, Loc), Error>;
 
 #[derive(Debug, Clone)]
 pub enum LexicalError {
-    InvalidToken(Range<usize>),
+    InvalidToken(LexingError, Range<usize>),
 }
 
 impl Display for LexicalError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            LexicalError::InvalidToken(span) => write!(f, "lexical error at: {:?}", span),
+            LexicalError::InvalidToken(err, span) => {
+                write!(f, "lexical error at ({:?}): {:?}", err, span)
+            }
         }
     }
 }
@@ -39,7 +41,7 @@ impl<'input> Iterator for Lexer<'input> {
     fn next(&mut self) -> Option<Self::Item> {
         self.token_stream.next().map(|(token, span)| match token {
             Ok(token) => Ok((span.start, token, span.end)),
-            Err(()) => Err(LexicalError::InvalidToken(span)),
+            Err(err) => Err(LexicalError::InvalidToken(err, span)),
         })
     }
 }

@@ -8,17 +8,17 @@ fn test(x: Hello) {
 }
 
 fn works(x: i64) -> i64 {
-    let z = 0;
+    let z = 0i64;
     if 2 == x {
-        z = x * 2;
+        z = x * 2i64;
     } else {
-        z = x * 3;
+        z = x * 3i64;
     }
     return z;
 }
 
 fn main() -> i64 {
-    let y = 2;
+    let y = 2i64;
     let z = y;
     return works(z);
 }

@@ -53,8 +53,8 @@ pub enum LiteralValue {
     String(String),
     Integer {
         value: String,
-        bits: Option<u32>,
-        signed: Option<bool>,
+        bits: u32,
+        signed: bool,
     },
     Boolean(bool),
 }

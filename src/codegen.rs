@@ -552,8 +552,8 @@ impl<'ctx> CodeGen<'ctx> {
                 bits,
                 signed,
             } => {
-                let bits = bits.unwrap_or(32);
-                let signed = signed.unwrap_or(true);
+                let bits = *bits;
+                let signed = *signed;
                 (
                     self.context
                         .custom_width_int_type(bits)

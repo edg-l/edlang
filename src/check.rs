@@ -1,11 +1,14 @@
 use crate::{
     ast::{self, Statement},
     codegen::ProgramData,
+    lexer::LexicalError,
+    tokens::Token,
 };
 use annotate_snippets::{
     display_list::{DisplayList, FormatOptions},
     snippet::{Annotation, AnnotationType, Slice, Snippet, SourceAnnotation},
 };
+use lalrpop_util::ParseError;
 
 #[derive(Debug)]
 pub enum Check<'a> {
@@ -81,4 +84,66 @@ pub fn check<'a>(data: &'a ProgramData, ast: &ast::Program) -> Vec<Check<'a>> {
         }
     }
     errors
+}
+
+pub fn print_error(source: &str, err: ParseError<usize, Token, LexicalError>) {
+    match err {
+        ParseError::InvalidToken { location } => {
+            let snippet = Snippet {
+                title: None,
+                footer: vec![],
+                slices: vec![Slice {
+                    source,
+                    line_start: 1,
+                    fold: true,
+                    origin: None,
+
+                    annotations: vec![SourceAnnotation {
+                        label: "invalid token",
+                        annotation_type: AnnotationType::Error,
+                        range: (location, location),
+                    }],
+                }],
+                opt: FormatOptions {
+                    color: true,
+                    ..Default::default()
+                },
+            };
+            let dl = DisplayList::from(snippet);
+            println!("{dl}");
+        }
+        ParseError::UnrecognizedEof { location, expected } => todo!(),
+        ParseError::UnrecognizedToken { token, expected } => todo!(),
+        ParseError::ExtraToken { token } => todo!(),
+        ParseError::User { error } => match error {
+            LexicalError::InvalidToken(err, range) => {
+                let title = format!("invalid token (lexical error): {:?}", err);
+                let snippet = Snippet {
+                    title: Some(Annotation {
+                        id: None,
+                        label: Some(&title),
+                        annotation_type: AnnotationType::Error,
+                    }),
+                    footer: vec![],
+                    slices: vec![Slice {
+                        source: dbg!(source),
+                        line_start: 1,
+                        fold: false,
+                        origin: None,
+                        annotations: vec![SourceAnnotation {
+                            label: "invalid token (lexical error)",
+                            annotation_type: AnnotationType::Error,
+                            range: dbg!((range.start, range.end)),
+                        }],
+                    }],
+                    opt: FormatOptions {
+                        color: true,
+                        ..Default::default()
+                    },
+                };
+                let dl = DisplayList::from(snippet);
+                println!("{dl}");
+            }
+        },
+    };
 }

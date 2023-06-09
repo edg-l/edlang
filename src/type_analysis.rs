@@ -1,8 +1,181 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use tracing::{info, warn};
 
 use crate::ast::{self, Expression, Function, Statement, TypeExp};
+
+#[derive(Debug, Clone, Default)]
+struct Storage {
+    structs: HashMap<String, HashMap<String, TypeExp>>,
+    functions: HashMap<String, Function>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum TypeGuess {
+    /// The guess comes from a strong source: call args, return type, let binding.
+    Strong,
+    ///
+    Weak,
+}
+
+pub fn type_inference2(ast: &mut ast::Program) {
+    let mut storage = Storage::default();
+
+    // gather global constructs first
+    for statement in ast.statements.iter_mut() {
+        match statement {
+            Statement::Struct(st) => {
+                let fields = st
+                    .fields
+                    .iter()
+                    .map(|x| (x.ident.clone(), x.type_exp.clone()))
+                    .collect();
+                storage.structs.insert(st.name.clone(), fields);
+            }
+            Statement::Function(function) => {
+                storage
+                    .functions
+                    .insert(function.name.clone(), function.clone());
+            }
+            // todo: find globals here too
+            _ => {}
+        }
+    }
+
+    for function in storage.functions.values() {
+        let mut scope_vars: HashMap<String, Option<TypeExp>> = HashMap::new();
+
+        for arg in &function.params {
+            scope_vars.insert(arg.ident.clone(), Some(arg.type_exp.clone()));
+        }
+
+        type_inference_scope(&function.body, &scope_vars, function, &storage);
+    }
+}
+
+/// Finds variable types in the scope, returns newly created variables to handle shadowing
+fn type_inference_scope(
+    statements: &[ast::Statement],
+    scope_vars: &HashMap<String, Option<TypeExp>>,
+    func: &Function,
+    storage: &Storage,
+) -> (HashMap<String, Option<TypeExp>>, HashSet<String>) {
+    let mut scope_vars = scope_vars.clone();
+    let mut new_vars: HashSet<String> = HashSet::new();
+
+    for statement in statements {
+        match statement {
+            Statement::Let {
+                name,
+                value,
+                value_type,
+                span: _,
+            } => {
+                new_vars.insert(name.clone());
+
+                let exp_type = type_inference_expression(value, &scope_vars, storage);
+
+                if value_type.is_none() {
+                    scope_vars.insert(name.clone(), exp_type);
+                } else {
+                    if exp_type.is_some() && &exp_type != value_type {
+                        panic!("let type mismatch: {:?} != {:?}", value_type, exp_type);
+                    }
+                    scope_vars.insert(name.clone(), value_type.clone());
+                }
+            }
+            Statement::Mutate {
+                name,
+                value,
+                value_type: _,
+                span: _,
+            } => {
+                if !scope_vars.contains_key(name) {
+                    panic!("undeclared variable");
+                }
+
+                let exp_type = type_inference_expression(value, &scope_vars, storage);
+                let var = scope_vars.get_mut(name).unwrap();
+
+                if var.is_none() {
+                    *var = exp_type;
+                } else if exp_type.is_some() && &exp_type != var {
+                    panic!("mutate type mismatch: {:?} != {:?}", var, exp_type);
+                }
+            }
+            Statement::If {
+                condition,
+                body,
+                else_body,
+            } => {
+                let cond_type = type_inference_expression(condition, &scope_vars, storage);
+            },
+            Statement::Return(_) => todo!(),
+            Statement::Function(_) => unreachable!(),
+            Statement::Struct(_) => unreachable!(),
+        }
+    }
+
+    (scope_vars, new_vars)
+}
+
+fn type_inference_expression(
+    exp: &Expression,
+    scope_vars: &HashMap<String, Option<TypeExp>>,
+    storage: &Storage,
+) -> Option<TypeExp> {
+    match exp {
+        Expression::Literal(lit) => {
+            match lit {
+                ast::LiteralValue::String(_) => None, // todo
+                ast::LiteralValue::Integer {
+                    value: _,
+                    bits,
+                    signed,
+                } => {
+                    if bits.is_some() && signed.is_some() {
+                        Some(TypeExp::Integer {
+                            bits: bits.unwrap(),
+                            signed: signed.unwrap(),
+                        })
+                    } else {
+                        None
+                    }
+                }
+                ast::LiteralValue::Boolean(_) => Some(TypeExp::Boolean),
+            }
+        }
+        Expression::Variable {
+            name,
+            value_type: _,
+        } => scope_vars.get(&name.value).cloned().flatten(),
+        Expression::Call {
+            function,
+            args: _,
+            value_type: _,
+        } => storage
+            .functions
+            .get(function)
+            .map(|x| &x.return_type)
+            .cloned()
+            .flatten(),
+        Expression::BinaryOp(lhs, op, rhs) => match op {
+            ast::OpCode::Eq | ast::OpCode::Ne => {
+                Some(TypeExp::Boolean)
+            },
+            _ => {
+                let lhs_type = type_inference_expression(lhs, scope_vars, storage);
+                let rhs_type = type_inference_expression(rhs, scope_vars, storage);
+
+                if lhs_type.is_some() && rhs_type.is_some() {
+                    assert_eq!(lhs_type, rhs_type, "types should match");
+                }
+
+                lhs_type.or(rhs_type)
+            }
+        },
+    }
+}
 
 pub fn type_inference(ast: &mut ast::Program) {
     let mut struct_cache: HashMap<String, HashMap<String, TypeExp>> = HashMap::new();
@@ -46,7 +219,11 @@ pub fn type_inference(ast: &mut ast::Program) {
     }
 }
 
-fn update_statements(statements: &mut [Statement], var_cache: &mut HashMap<String, TypeExp>, fn_cache: &HashMap<String, Function>) {
+fn update_statements(
+    statements: &mut [Statement],
+    var_cache: &mut HashMap<String, TypeExp>,
+    fn_cache: &HashMap<String, Function>,
+) {
     let mut var_cache = var_cache.clone();
 
     {
@@ -191,7 +368,7 @@ fn set_exp_types_from_cache(
     exp: &mut Expression,
     var_cache: &mut HashMap<String, TypeExp>,
     env: &mut Option<TypeExp>,
-    fn_cache: &HashMap<String, Function>
+    fn_cache: &HashMap<String, Function>,
 ) {
     match exp {
         Expression::Variable { name, value_type } => {

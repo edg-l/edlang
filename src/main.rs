@@ -110,7 +110,7 @@ fn main() -> Result<()> {
             let lexer = Lexer::new(code.as_str());
             let parser = grammar::ProgramParser::new();
             let mut ast = parser.parse(lexer)?;
-            type_analysis::type_inference(&mut ast);
+            type_analysis::type_inference2(&mut ast);
             println!("{ast:#?}");
         }
         Commands::Compile {

@@ -10,14 +10,7 @@ struct Storage {
     functions: HashMap<String, Function>,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum TypeGuess {
-    /// The guess comes from a strong source: call args, return type, let binding.
-    Strong,
-    ///
-    Weak,
-}
-
+// this works, but need to find a way to store the found info + handle literal integer types (or not?)
 pub fn type_inference2(ast: &mut ast::Program) {
     let mut storage = Storage::default();
 
@@ -42,6 +35,8 @@ pub fn type_inference2(ast: &mut ast::Program) {
         }
     }
 
+    dbg!(&storage);
+
     for function in storage.functions.values() {
         let mut scope_vars: HashMap<String, Option<TypeExp>> = HashMap::new();
 
@@ -49,7 +44,9 @@ pub fn type_inference2(ast: &mut ast::Program) {
             scope_vars.insert(arg.ident.clone(), Some(arg.type_exp.clone()));
         }
 
-        type_inference_scope(&function.body, &scope_vars, function, &storage);
+        let (new_scope_vars, _) =
+            type_inference_scope(&function.body, &scope_vars, function, &storage);
+        dbg!(new_scope_vars);
     }
 }
 
@@ -73,7 +70,7 @@ fn type_inference_scope(
             } => {
                 new_vars.insert(name.clone());
 
-                let exp_type = type_inference_expression(value, &scope_vars, storage);
+                let exp_type = type_inference_expression(value, &mut scope_vars, storage, None);
 
                 if value_type.is_none() {
                     scope_vars.insert(name.clone(), exp_type);
@@ -94,7 +91,7 @@ fn type_inference_scope(
                     panic!("undeclared variable");
                 }
 
-                let exp_type = type_inference_expression(value, &scope_vars, storage);
+                let exp_type = type_inference_expression(value, &mut scope_vars, storage, None);
                 let var = scope_vars.get_mut(name).unwrap();
 
                 if var.is_none() {
@@ -108,9 +105,45 @@ fn type_inference_scope(
                 body,
                 else_body,
             } => {
-                let cond_type = type_inference_expression(condition, &scope_vars, storage);
-            },
-            Statement::Return(_) => todo!(),
+                type_inference_expression(
+                    condition,
+                    &mut scope_vars,
+                    storage,
+                    Some(TypeExp::Boolean),
+                );
+
+                let (new_scope_vars, new_vars) =
+                    type_inference_scope(body, &scope_vars, func, storage);
+
+                for (k, v) in new_scope_vars.into_iter() {
+                    // not a new var within the scope (shadowing), so type info is valid
+                    if scope_vars.contains_key(&k) && !new_vars.contains(&k) {
+                        scope_vars.insert(k, v);
+                    }
+                }
+
+                if let Some(body) = else_body {
+                    let (new_scope_vars, new_vars) =
+                        type_inference_scope(body, &scope_vars, func, storage);
+
+                    for (k, v) in new_scope_vars.into_iter() {
+                        // not a new var within the scope (shadowing), so type info is valid
+                        if scope_vars.contains_key(&k) && !new_vars.contains(&k) {
+                            scope_vars.insert(k, v);
+                        }
+                    }
+                }
+            }
+            Statement::Return(exp) => {
+                if let Some(exp) = exp {
+                    type_inference_expression(
+                        exp,
+                        &mut scope_vars,
+                        storage,
+                        func.return_type.clone(),
+                    );
+                }
+            }
             Statement::Function(_) => unreachable!(),
             Statement::Struct(_) => unreachable!(),
         }
@@ -121,8 +154,9 @@ fn type_inference_scope(
 
 fn type_inference_expression(
     exp: &Expression,
-    scope_vars: &HashMap<String, Option<TypeExp>>,
+    scope_vars: &mut HashMap<String, Option<TypeExp>>,
     storage: &Storage,
+    expected_type: Option<TypeExp>,
 ) -> Option<TypeExp> {
     match exp {
         Expression::Literal(lit) => {
@@ -148,24 +182,44 @@ fn type_inference_expression(
         Expression::Variable {
             name,
             value_type: _,
-        } => scope_vars.get(&name.value).cloned().flatten(),
+        } => {
+            let var = scope_vars.get(&name.value).cloned().flatten();
+
+            if expected_type.is_some() {
+                if var.is_none() {
+                    scope_vars.insert(name.value.clone(), expected_type.clone());
+                    expected_type
+                } else if expected_type.is_some() {
+                    assert_eq!(var, expected_type, "type mismatch with variables");
+                    expected_type
+                } else {
+                    var
+                }
+            } else {
+                var
+            }
+        }
         Expression::Call {
             function,
-            args: _,
+            args,
             value_type: _,
-        } => storage
-            .functions
-            .get(function)
-            .map(|x| &x.return_type)
-            .cloned()
-            .flatten(),
+        } => {
+            let func = storage.functions.get(function).cloned().unwrap();
+
+            for (i, arg) in args.iter().enumerate() {
+                let arg_type = func.params[i].type_exp.clone();
+                // result is ignored, but need these to infer call arg types
+                type_inference_expression(arg, scope_vars, storage, Some(arg_type));
+            }
+
+            func.return_type
+        }
         Expression::BinaryOp(lhs, op, rhs) => match op {
-            ast::OpCode::Eq | ast::OpCode::Ne => {
-                Some(TypeExp::Boolean)
-            },
+            ast::OpCode::Eq | ast::OpCode::Ne => Some(TypeExp::Boolean),
             _ => {
-                let lhs_type = type_inference_expression(lhs, scope_vars, storage);
-                let rhs_type = type_inference_expression(rhs, scope_vars, storage);
+                let lhs_type =
+                    type_inference_expression(lhs, scope_vars, storage, expected_type.clone());
+                let rhs_type = type_inference_expression(rhs, scope_vars, storage, expected_type);
 
                 if lhs_type.is_some() && rhs_type.is_some() {
                     assert_eq!(lhs_type, rhs_type, "types should match");

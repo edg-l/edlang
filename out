@@ -1,0 +1,246 @@
+Program {
+    statements: [
+        Struct(
+            Struct {
+                name: "Hello",
+                fields: [
+                    StructField {
+                        ident: "x",
+                        type_exp: Integer {
+                            bits: 32,
+                            signed: true,
+                        },
+                    },
+                    StructField {
+                        ident: "y",
+                        type_exp: Integer {
+                            bits: 32,
+                            signed: true,
+                        },
+                    },
+                ],
+            },
+        ),
+        Function(
+            Function {
+                name: "test",
+                params: [
+                    Parameter {
+                        ident: "x",
+                        type_exp: Other {
+                            id: "Hello",
+                        },
+                    },
+                ],
+                body: [
+                    Return(
+                        None,
+                    ),
+                ],
+                return_type: None,
+            },
+        ),
+        Function(
+            Function {
+                name: "works",
+                params: [
+                    Parameter {
+                        ident: "x",
+                        type_exp: Integer {
+                            bits: 64,
+                            signed: true,
+                        },
+                    },
+                ],
+                body: [
+                    Let {
+                        name: "z",
+                        value: Literal(
+                            Integer {
+                                value: "0",
+                                bits: None,
+                                signed: None,
+                            },
+                        ),
+                        value_type: None,
+                        span: (
+                            107,
+                            117,
+                        ),
+                    },
+                    If {
+                        condition: BinaryOp(
+                            Literal(
+                                Integer {
+                                    value: "2",
+                                    bits: None,
+                                    signed: None,
+                                },
+                            ),
+                            Eq,
+                            Variable {
+                                name: Spanned {
+                                    span: (
+                                        130,
+                                        131,
+                                    ),
+                                    value: "x",
+                                },
+                                value_type: None,
+                            },
+                        ),
+                        body: [
+                            Mutate {
+                                name: "z",
+                                value: BinaryOp(
+                                    Variable {
+                                        name: Spanned {
+                                            span: (
+                                                146,
+                                                147,
+                                            ),
+                                            value: "x",
+                                        },
+                                        value_type: None,
+                                    },
+                                    Mul,
+                                    Literal(
+                                        Integer {
+                                            value: "2",
+                                            bits: None,
+                                            signed: None,
+                                        },
+                                    ),
+                                ),
+                                value_type: None,
+                                span: (
+                                    142,
+                                    152,
+                                ),
+                            },
+                        ],
+                        else_body: Some(
+                            [
+                                Mutate {
+                                    name: "z",
+                                    value: BinaryOp(
+                                        Variable {
+                                            name: Spanned {
+                                                span: (
+                                                    178,
+                                                    179,
+                                                ),
+                                                value: "x",
+                                            },
+                                            value_type: None,
+                                        },
+                                        Mul,
+                                        Literal(
+                                            Integer {
+                                                value: "3",
+                                                bits: None,
+                                                signed: None,
+                                            },
+                                        ),
+                                    ),
+                                    value_type: None,
+                                    span: (
+                                        174,
+                                        184,
+                                    ),
+                                },
+                            ],
+                        ),
+                    },
+                    Return(
+                        Some(
+                            Variable {
+                                name: Spanned {
+                                    span: (
+                                        202,
+                                        203,
+                                    ),
+                                    value: "z",
+                                },
+                                value_type: None,
+                            },
+                        ),
+                    ),
+                ],
+                return_type: Some(
+                    Integer {
+                        bits: 64,
+                        signed: true,
+                    },
+                ),
+            },
+        ),
+        Function(
+            Function {
+                name: "main",
+                params: [],
+                body: [
+                    Let {
+                        name: "y",
+                        value: Literal(
+                            Integer {
+                                value: "2",
+                                bits: None,
+                                signed: None,
+                            },
+                        ),
+                        value_type: None,
+                        span: (
+                            231,
+                            241,
+                        ),
+                    },
+                    Let {
+                        name: "z",
+                        value: Variable {
+                            name: Spanned {
+                                span: (
+                                    254,
+                                    255,
+                                ),
+                                value: "y",
+                            },
+                            value_type: None,
+                        },
+                        value_type: None,
+                        span: (
+                            246,
+                            256,
+                        ),
+                    },
+                    Return(
+                        Some(
+                            Call {
+                                function: "works",
+                                args: [
+                                    Variable {
+                                        name: Spanned {
+                                            span: (
+                                                274,
+                                                275,
+                                            ),
+                                            value: "z",
+                                        },
+                                        value_type: None,
+                                    },
+                                ],
+                                value_type: None,
+                            },
+                        ),
+                    ),
+                ],
+                return_type: Some(
+                    Integer {
+                        bits: 64,
+                        signed: true,
+                    },
+                ),
+            },
+        ),
+    ],
+}

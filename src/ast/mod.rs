@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Spanned<T> {
     pub span: (usize, usize),
@@ -64,12 +66,10 @@ pub enum Expression {
     Literal(LiteralValue),
     Variable {
         name: Spanned<String>,
-        value_type: Option<TypeExp>,
     },
     Call {
         function: String,
         args: Vec<Box<Self>>,
-        value_type: Option<TypeExp>,
     },
     BinaryOp(Box<Self>, OpCode, Box<Self>),
 }
@@ -86,16 +86,17 @@ impl Parameter {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Function {
     pub name: String,
     pub params: Vec<Parameter>,
     pub body: Vec<Statement>,
+    pub scope_type_info: HashMap<String, Vec<TypeExp>>,
     pub return_type: Option<TypeExp>,
 }
 
 impl Function {
-    pub const fn new(
+    pub fn new(
         name: String,
         params: Vec<Parameter>,
         body: Vec<Statement>,
@@ -106,6 +107,7 @@ impl Function {
             params,
             body,
             return_type,
+            scope_type_info: HashMap::new(),
         }
     }
 }
@@ -113,14 +115,14 @@ impl Function {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct StructField {
     pub ident: String,
-    pub type_exp: TypeExp,
+    pub field_type: TypeExp,
 }
 
 impl StructField {
     pub const fn new(ident: String, type_name: TypeExp) -> Self {
         Self {
             ident,
-            type_exp: type_name,
+            field_type: type_name,
         }
     }
 }
@@ -131,7 +133,7 @@ pub struct Struct {
     pub fields: Vec<StructField>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Statement {
     Let {
         name: String,
@@ -142,13 +144,14 @@ pub enum Statement {
     Mutate {
         name: String,
         value: Box<Expression>,
-        value_type: Option<TypeExp>,
         span: (usize, usize),
     },
     If {
         condition: Box<Expression>,
         body: Vec<Statement>,
+        scope_type_info: HashMap<String, Vec<TypeExp>>,
         else_body: Option<Vec<Statement>>,
+        else_body_scope_type_info: HashMap<String, Vec<TypeExp>>,
     },
     Return(Option<Box<Expression>>),
     Function(Function),

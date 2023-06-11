@@ -8,19 +8,15 @@ struct Storage {
     functions: HashMap<String, Function>,
 }
 
-/*
-To briefly summarize the union-find algorithm, given the set of all types in a proof,
-it allows one to group them together into equivalence classes by means of a union procedure and to
- pick a representative for each such class using a find procedure. Emphasizing the word procedure in
- the sense of side effect, we're clearly leaving the realm of logic in order to prepare an effective algorithm.
-  The representative of a u n i o n ( a , b ) {\mathtt {union}}(a,b) is determined such that, if both a and b are
-  type variables then the representative is arbitrarily one of them, but while uniting a variable and a term, the
-  term becomes the representative. Assuming an implementation of union-find at hand, one can formulate the unification of two monotypes as follows:
- */
+// problem with scopes,
+// let x = 2;
+// let x = 2i64;
+
+type ScopeMap = HashMap<String, Vec<Option<TypeExp>>>;
 
 // this works, but need to find a way to store the found info + handle literal integer types (or not?)
 // maybe use scope ids
-pub fn type_inference2(ast: &mut ast::Program) {
+pub fn type_inference(ast: &mut ast::Program) {
     let mut storage = Storage::default();
 
     // gather global constructs first
@@ -30,7 +26,7 @@ pub fn type_inference2(ast: &mut ast::Program) {
                 let fields = st
                     .fields
                     .iter()
-                    .map(|x| (x.ident.clone(), x.type_exp.clone()))
+                    .map(|x| (x.ident.clone(), x.field_type.clone()))
                     .collect();
                 storage.structs.insert(st.name.clone(), fields);
             }
@@ -46,26 +42,33 @@ pub fn type_inference2(ast: &mut ast::Program) {
 
     dbg!(&storage);
 
-    for function in storage.functions.values() {
-        let mut scope_vars: HashMap<String, Option<TypeExp>> = HashMap::new();
+    for statement in ast.statements.iter_mut() {
+        if let Statement::Function(function) = statement {
+            let mut scope_vars: ScopeMap = HashMap::new();
 
-        for arg in &function.params {
-            scope_vars.insert(arg.ident.clone(), Some(arg.type_exp.clone()));
+            for arg in &function.params {
+                scope_vars.insert(arg.ident.clone(), vec![Some(arg.type_exp.clone())]);
+            }
+
+            let func_info = function.clone();
+            let (new_scope_vars, _) =
+                type_inference_scope(&mut function.body, &scope_vars, &func_info, &storage);
+            // todo: check all vars have  type info?
+            function.scope_type_info = new_scope_vars
+                .into_iter()
+                .map(|(a, b)| (a, b.into_iter().map(Option::unwrap).collect()))
+                .collect();
         }
-
-        let (new_scope_vars, _) =
-            type_inference_scope(&function.body, &scope_vars, function, &storage);
-        dbg!(new_scope_vars);
     }
 }
 
 /// Finds variable types in the scope, returns newly created variables to handle shadowing
 fn type_inference_scope(
-    statements: &[ast::Statement],
-    scope_vars: &HashMap<String, Option<TypeExp>>,
+    statements: &mut [ast::Statement],
+    scope_vars: &ScopeMap,
     func: &Function,
     storage: &Storage,
-) -> (HashMap<String, Option<TypeExp>>, HashSet<String>) {
+) -> (ScopeMap, HashSet<String>) {
     let mut scope_vars = scope_vars.clone();
     let mut new_vars: HashSet<String> = HashSet::new();
 
@@ -81,19 +84,24 @@ fn type_inference_scope(
 
                 let exp_type = type_inference_expression(value, &mut scope_vars, storage, None);
 
+                if !scope_vars.contains_key(name) {
+                    scope_vars.insert(name.clone(), vec![]);
+                }
+
+                let var = scope_vars.get_mut(name).unwrap();
+
                 if value_type.is_none() {
-                    scope_vars.insert(name.clone(), exp_type);
+                    var.push(exp_type);
                 } else {
                     if exp_type.is_some() && &exp_type != value_type {
                         panic!("let type mismatch: {:?} != {:?}", value_type, exp_type);
                     }
-                    scope_vars.insert(name.clone(), value_type.clone());
+                    var.push(value_type.clone());
                 }
             }
             Statement::Mutate {
                 name,
                 value,
-                value_type: _,
                 span: _,
             } => {
                 if !scope_vars.contains_key(name) {
@@ -101,7 +109,7 @@ fn type_inference_scope(
                 }
 
                 let exp_type = type_inference_expression(value, &mut scope_vars, storage, None);
-                let var = scope_vars.get_mut(name).unwrap();
+                let var = scope_vars.get_mut(name).unwrap().last_mut().unwrap();
 
                 if var.is_none() {
                     *var = exp_type;
@@ -113,6 +121,8 @@ fn type_inference_scope(
                 condition,
                 body,
                 else_body,
+                scope_type_info,
+                else_body_scope_type_info,
             } => {
                 type_inference_expression(
                     condition,
@@ -124,23 +134,33 @@ fn type_inference_scope(
                 let (new_scope_vars, new_vars) =
                     type_inference_scope(body, &scope_vars, func, storage);
 
-                for (k, v) in new_scope_vars.into_iter() {
+                for (k, v) in new_scope_vars.iter() {
                     // not a new var within the scope (shadowing), so type info is valid
-                    if scope_vars.contains_key(&k) && !new_vars.contains(&k) {
-                        scope_vars.insert(k, v);
+                    if scope_vars.contains_key(k) && !new_vars.contains(k) {
+                        scope_vars.insert(k.clone(), v.clone());
                     }
                 }
+
+                *scope_type_info = new_scope_vars
+                    .into_iter()
+                    .map(|(a, b)| (a, b.into_iter().map(Option::unwrap).collect()))
+                    .collect();
 
                 if let Some(body) = else_body {
                     let (new_scope_vars, new_vars) =
                         type_inference_scope(body, &scope_vars, func, storage);
 
-                    for (k, v) in new_scope_vars.into_iter() {
+                    for (k, v) in new_scope_vars.iter() {
                         // not a new var within the scope (shadowing), so type info is valid
-                        if scope_vars.contains_key(&k) && !new_vars.contains(&k) {
-                            scope_vars.insert(k, v);
+                        if scope_vars.contains_key(k) && !new_vars.contains(k) {
+                            scope_vars.insert(k.clone(), v.clone());
                         }
                     }
+
+                    *else_body_scope_type_info = new_scope_vars
+                        .into_iter()
+                        .map(|(a, b)| (a, b.into_iter().map(Option::unwrap).collect()))
+                        .collect();
                 }
             }
             Statement::Return(exp) => {
@@ -163,7 +183,7 @@ fn type_inference_scope(
 
 fn type_inference_expression(
     exp: &Expression,
-    scope_vars: &mut HashMap<String, Option<TypeExp>>,
+    scope_vars: &mut ScopeMap,
     storage: &Storage,
     expected_type: Option<TypeExp>,
 ) -> Option<TypeExp> {
@@ -182,31 +202,28 @@ fn type_inference_expression(
                 ast::LiteralValue::Boolean(_) => Some(TypeExp::Boolean),
             }
         }
-        Expression::Variable {
-            name,
-            value_type: _,
-        } => {
-            let var = scope_vars.get(&name.value).cloned().flatten();
+        Expression::Variable { name } => {
+            let var = scope_vars
+                .get_mut(&name.value)
+                .expect("to exist")
+                .last_mut()
+                .unwrap();
 
             if expected_type.is_some() {
                 if var.is_none() {
-                    scope_vars.insert(name.value.clone(), expected_type.clone());
+                    *var = expected_type.clone();
                     expected_type
                 } else if expected_type.is_some() {
-                    assert_eq!(var, expected_type, "type mismatch with variables");
+                    assert_eq!(*var, expected_type, "type mismatch with variables");
                     expected_type
                 } else {
-                    var
+                    var.clone()
                 }
             } else {
-                var
+                var.clone()
             }
         }
-        Expression::Call {
-            function,
-            args,
-            value_type: _,
-        } => {
+        Expression::Call { function, args } => {
             let func = storage.functions.get(function).cloned().unwrap();
 
             for (i, arg) in args.iter().enumerate() {

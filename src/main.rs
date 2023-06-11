@@ -3,12 +3,15 @@
 use check::print_error;
 use clap::{Parser, Subcommand};
 use codegen::ProgramData;
-use color_eyre::Result;
 use inkwell::{context::Context, execution_engine::JitFunction, OptimizationLevel};
 use lalrpop_util::lalrpop_mod;
 use std::{fs, path::PathBuf, println};
 
-use crate::{ast::Program, check::Check, lexer::Lexer};
+use crate::{
+    ast::Program,
+    check::{print_type_error, Check},
+    lexer::Lexer,
+};
 
 pub mod ast;
 pub mod check;
@@ -91,7 +94,7 @@ fn check_program(program: &ProgramData, ast: &ast::Program) -> bool {
     error_count == 0
 }
 
-fn main() -> Result<()> {
+fn main() -> color_eyre::Result<()> {
     color_eyre::install()?;
     tracing_subscriber::fmt::init();
     let args = Args::parse();
@@ -102,7 +105,10 @@ fn main() -> Result<()> {
             let lexer = Lexer::new(code.as_str());
             let parser = grammar::ProgramParser::new();
             let mut ast = parser.parse(lexer)?;
-            type_analysis::type_inference(&mut ast);
+            if let Err(e) = type_analysis::type_check(&mut ast) {
+                print_type_error(&code, e);
+                return Ok(());
+            }
             let program = ProgramData::new(&input, &code);
             check_program(&program, &ast);
         }
@@ -112,7 +118,10 @@ fn main() -> Result<()> {
             let parser = grammar::ProgramParser::new();
             match parser.parse(lexer) {
                 Ok(mut ast) => {
-                    type_analysis::type_inference(&mut ast);
+                    if let Err(e) = type_analysis::type_check(&mut ast) {
+                        print_type_error(&code, e);
+                        return Ok(());
+                    }
                     println!("{ast:#?}");
                 }
                 Err(e) => {
@@ -130,7 +139,10 @@ fn main() -> Result<()> {
             let lexer = Lexer::new(code.as_str());
             let parser = grammar::ProgramParser::new();
             let mut ast: Program = parser.parse(lexer)?;
-            type_analysis::type_inference(&mut ast);
+            if let Err(e) = type_analysis::type_check(&mut ast) {
+                print_type_error(&code, e);
+                return Ok(());
+            }
 
             let program = ProgramData::new(&input, &code);
 
@@ -156,7 +168,11 @@ fn main() -> Result<()> {
             let code = fs::read_to_string(&input)?;
             let lexer = Lexer::new(&code[..]);
             let parser = grammar::ProgramParser::new();
-            let ast = parser.parse(lexer).unwrap();
+            let mut ast: Program = parser.parse(lexer)?;
+            if let Err(e) = type_analysis::type_check(&mut ast) {
+                print_type_error(&code, e);
+                return Ok(());
+            }
 
             let program = ProgramData::new(&input, &code);
 

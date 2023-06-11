@@ -178,12 +178,12 @@ impl<'ctx> CodeGen<'ctx> {
         let args_types: Vec<BasicMetadataTypeEnum<'ctx>> =
             args_types.into_iter().map(|t| t.into()).collect_vec();
 
-        let (fn_type, ret_type) = match &function.return_type {
+        let fn_type = match &function.return_type {
             Some(id) => {
                 let return_type = self.get_llvm_type(id)?;
-                (return_type.fn_type(&args_types, false), Some(id.clone()))
+                return_type.fn_type(&args_types, false)
             }
-            None => (self.context.void_type().fn_type(&args_types, false), None),
+            None => self.context.void_type().fn_type(&args_types, false),
         };
 
         self.module.add_function(&function.name, fn_type, None);
@@ -446,6 +446,8 @@ impl<'ctx> CodeGen<'ctx> {
         let rhs = self
             .compile_expression(rhs, variables, scope_info)?
             .expect("should have result");
+
+        assert_eq!(lhs.get_type(), rhs.get_type(), "type mismatch");
 
         let lhs = lhs.into_int_value();
         let rhs = rhs.into_int_value();

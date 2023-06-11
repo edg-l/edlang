@@ -3,6 +3,7 @@ use crate::{
     codegen::ProgramData,
     lexer::LexicalError,
     tokens::Token,
+    type_analysis::TypeError,
 };
 use annotate_snippets::{
     display_list::{DisplayList, FormatOptions},
@@ -97,7 +98,6 @@ pub fn print_error(source: &str, err: ParseError<usize, Token, LexicalError>) {
                     line_start: 1,
                     fold: true,
                     origin: None,
-
                     annotations: vec![SourceAnnotation {
                         label: "invalid token",
                         annotation_type: AnnotationType::Error,
@@ -126,14 +126,14 @@ pub fn print_error(source: &str, err: ParseError<usize, Token, LexicalError>) {
                     }),
                     footer: vec![],
                     slices: vec![Slice {
-                        source: dbg!(source),
+                        source: source,
                         line_start: 1,
                         fold: false,
                         origin: None,
                         annotations: vec![SourceAnnotation {
                             label: "invalid token (lexical error)",
                             annotation_type: AnnotationType::Error,
-                            range: dbg!((range.start, range.end)),
+                            range: (range.start, range.end),
                         }],
                     }],
                     opt: FormatOptions {
@@ -145,5 +145,69 @@ pub fn print_error(source: &str, err: ParseError<usize, Token, LexicalError>) {
                 println!("{dl}");
             }
         },
+    };
+}
+
+pub fn print_type_error(source: &str, err: TypeError) {
+    dbg!(&err);
+    match err {
+        TypeError::Mismatch {
+            found,
+            expected,
+            span,
+        } => {
+            let snippet = Snippet {
+                title: Some(Annotation {
+                    id: None,
+                    label: Some("type mismatch"),
+                    annotation_type: AnnotationType::Error,
+                }),
+                footer: vec![],
+                slices: vec![Slice {
+                    source,
+                    line_start: 1,
+                    fold: false,
+                    origin: None,
+                    annotations: vec![SourceAnnotation {
+                        label: "type mismatch",
+                        annotation_type: AnnotationType::Error,
+                        range: span,
+                    }],
+                }],
+                opt: FormatOptions {
+                    color: true,
+                    ..Default::default()
+                },
+            };
+            let dl = DisplayList::from(snippet);
+            println!("{dl}");
+        }
+        TypeError::UndeclaredVariable { name, span } => {
+            let snippet = Snippet {
+                title: Some(Annotation {
+                    id: None,
+                    label: Some("undeclared variable"),
+                    annotation_type: AnnotationType::Error,
+                }),
+                footer: vec![],
+                slices: vec![Slice {
+                    source,
+                    line_start: 1,
+                    fold: false,
+                    origin: None,
+                    annotations: vec![SourceAnnotation {
+                        label: "undeclared variable",
+                        annotation_type: AnnotationType::Error,
+                        range: span,
+                    }],
+                }],
+                opt: FormatOptions {
+                    color: true,
+                    ..Default::default()
+                },
+            };
+            let dl = DisplayList::from(snippet);
+            println!("{dl}");
+        }
     };
 }

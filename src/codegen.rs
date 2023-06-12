@@ -9,9 +9,7 @@ use inkwell::{
     builder::Builder,
     context::Context,
     module::Module,
-    targets::{
-        CodeModel, InitializationConfig, RelocMode, Target, TargetData, TargetMachine, TargetTriple,
-    },
+    targets::{CodeModel, InitializationConfig, RelocMode, Target, TargetMachine},
     types::{BasicMetadataTypeEnum, BasicType, BasicTypeEnum, StructType},
     values::{BasicMetadataValueEnum, BasicValue, BasicValueEnum, FunctionValue},
     IntPredicate, OptimizationLevel,
@@ -57,7 +55,6 @@ pub struct Variable<'ctx> {
 }
 
 pub type Variables<'ctx> = HashMap<String, Variable<'ctx>>;
-// pub type TypeStorage<'ctx> = HashMap<TypeExp, BasicTypeEnum<'ctx>>;
 
 /// Holds the struct type and maps fields to types and the location within the struct.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -96,6 +93,9 @@ impl<'ctx> CodeGen<'ctx> {
             )
             .unwrap();
 
+        module.set_data_layout(&target_machine.get_target_data().get_data_layout());
+        module.set_triple(&triple);
+
         let codegen = CodeGen {
             context,
             module,
@@ -119,7 +119,7 @@ impl<'ctx> CodeGen<'ctx> {
 
         let target_data = self.target_machine.get_target_data();
 
-        // create types
+        // create struct types
         for statement in &self.ast.statements {
             if let Statement::Struct(s) = &statement.value {
                 let mut fields = HashMap::new();
@@ -129,7 +129,7 @@ impl<'ctx> CodeGen<'ctx> {
                     // todo: this doesnt handle out of order structs well
                     let ty = self.get_llvm_type(&field.field_type.value)?;
                     field_types.push((ty, Some(i)));
-                    // todo: ensure alignment and padding here
+
                     fields.insert(
                         field.ident.value.clone(),
                         (i, field.field_type.value.clone()),
@@ -201,6 +201,12 @@ impl<'ctx> CodeGen<'ctx> {
         if let Err(err) = self.module.verify() {
             eprintln!("error:\n{}", err);
         }
+        // compile:
+        //let buffer = self.target_machine.write_to_memory_buffer(&self.module, FileType::Assembly).unwrap();
+        //let mut x = buffer.as_slice();
+        //let mut what = String::new();
+        //x.read_to_string(&mut what);
+        //println!("{}", what);
         self.module.print_to_string().to_str().unwrap().to_string()
     }
 

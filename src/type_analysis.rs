@@ -92,7 +92,7 @@ fn type_inference_scope(
             } => {
                 new_vars.insert(name.value.clone());
 
-                let exp_type = type_inference_expression(&value, &mut scope_vars, storage, None)?;
+                let exp_type = type_inference_expression(value, &mut scope_vars, storage, None)?;
 
                 if !scope_vars.contains_key(&name.value) {
                     scope_vars.insert(name.value.clone(), vec![]);
@@ -121,7 +121,7 @@ fn type_inference_scope(
                     })?;
                 }
 
-                let exp_type = type_inference_expression(&value, &mut scope_vars, storage, None)?;
+                let exp_type = type_inference_expression(value, &mut scope_vars, storage, None)?;
                 let var = scope_vars.get_mut(&name.value).unwrap().last_mut().unwrap();
 
                 if var.is_none() {
@@ -142,7 +142,7 @@ fn type_inference_scope(
                 else_body_scope_type_info,
             } => {
                 type_inference_expression(
-                    &condition,
+                    condition,
                     &mut scope_vars,
                     storage,
                     Some(TypeExp::Boolean),

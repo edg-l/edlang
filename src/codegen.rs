@@ -131,7 +131,7 @@ impl<'ctx> CodeGen<'ctx> {
         info!("functions:\n{:#?}", self.functions);
 
         // implement them.
-        for (_, function) in &self.functions {
+        for function in self.functions.values() {
             self.compile_function(function)?;
         }
 
@@ -251,7 +251,7 @@ impl<'ctx> CodeGen<'ctx> {
                 ..
             } => {
                 let value = self
-                    .compile_expression(&value, variables, scope_info)?
+                    .compile_expression(value, variables, scope_info)?
                     .expect("should have result");
 
                 variables.insert(
@@ -265,7 +265,7 @@ impl<'ctx> CodeGen<'ctx> {
             }
             Statement::Mutate { name, value, .. } => {
                 let value = self
-                    .compile_expression(&value, variables, scope_info)?
+                    .compile_expression(value, variables, scope_info)?
                     .expect("should have result");
 
                 let var = variables
@@ -277,7 +277,7 @@ impl<'ctx> CodeGen<'ctx> {
             Statement::Return(ret) => {
                 if let Some(ret) = ret {
                     let value = self
-                        .compile_expression(&ret, variables, scope_info)?
+                        .compile_expression(ret, variables, scope_info)?
                         .expect("should have result");
                     self.builder.build_return(Some(&value));
                 } else {
@@ -397,7 +397,7 @@ impl<'ctx> CodeGen<'ctx> {
         scope_info: &HashMap<String, Vec<TypeExp>>,
     ) -> Result<Option<BasicValueEnum<'ctx>>> {
         Ok(match &*expr.value {
-            Expression::Variable { name } => Some(self.compile_variable(&name, variables)?),
+            Expression::Variable { name } => Some(self.compile_variable(name, variables)?),
             Expression::Literal(term) => Some(self.compile_literal(term)?),
             Expression::Call { function, args } => {
                 self.compile_call(function, args, variables, scope_info)?

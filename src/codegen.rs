@@ -9,9 +9,12 @@ use inkwell::{
     builder::Builder,
     context::Context,
     module::Module,
+    targets::{
+        CodeModel, InitializationConfig, RelocMode, Target, TargetData, TargetMachine, TargetTriple,
+    },
     types::{BasicMetadataTypeEnum, BasicType, BasicTypeEnum, StructType},
     values::{BasicMetadataValueEnum, BasicValue, BasicValueEnum, FunctionValue},
-    IntPredicate,
+    IntPredicate, OptimizationLevel,
 };
 use itertools::{Either, Itertools};
 use tracing::info;
@@ -43,6 +46,7 @@ pub struct CodeGen<'ctx> {
     functions: HashMap<String, Function>,
     _program: ProgramData,
     ast: ast::Program,
+    target_machine: TargetMachine,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -72,6 +76,25 @@ impl<'ctx> CodeGen<'ctx> {
         ast: ast::Program,
     ) -> Result<Self> {
         let module = context.create_module(module_name);
+        Target::initialize_native(&InitializationConfig::default())
+            .expect("Failed to initialize native target");
+        let triple = TargetMachine::get_default_triple();
+
+        // https://thedan64.github.io/inkwell/inkwell/targets/struct.TargetMachine.html#method.write_to_memory_buffer
+        let opt = OptimizationLevel::Default;
+        let reloc = RelocMode::Default;
+        let model = CodeModel::Default;
+        let target = Target::from_name("x86-64").unwrap();
+        let target_machine = target
+            .create_target_machine(
+                &triple,
+                "x86-64",
+                TargetMachine::get_host_cpu_features().to_str()?,
+                opt,
+                reloc,
+                model,
+            )
+            .unwrap();
 
         let codegen = CodeGen {
             context,
@@ -81,6 +104,7 @@ impl<'ctx> CodeGen<'ctx> {
             ast,
             struct_types: HashMap::new(),
             functions: HashMap::new(),
+            target_machine,
         };
 
         Ok(codegen)
@@ -93,16 +117,18 @@ impl<'ctx> CodeGen<'ctx> {
 
         // todo fix the grammar so top level statements are only functions and static vars.
 
+        let target_data = self.target_machine.get_target_data();
+
         // create types
         for statement in &self.ast.statements {
             if let Statement::Struct(s) = &statement.value {
                 let mut fields = HashMap::new();
-                let mut field_types = vec![];
+                let mut field_types: Vec<(BasicTypeEnum<'_>, Option<usize>)> = vec![];
 
                 for (i, field) in s.fields.iter().enumerate() {
                     // todo: this doesnt handle out of order structs well
                     let ty = self.get_llvm_type(&field.field_type.value)?;
-                    field_types.push(ty);
+                    field_types.push((ty, Some(i)));
                     // todo: ensure alignment and padding here
                     fields.insert(
                         field.ident.value.clone(),
@@ -110,7 +136,40 @@ impl<'ctx> CodeGen<'ctx> {
                     );
                 }
 
-                let ty = self.context.struct_type(&field_types, false);
+                field_types.sort_by(|a, b| {
+                    target_data
+                        .get_bit_size(&b.0)
+                        .cmp(&target_data.get_bit_size(&a.0))
+                });
+
+                let total_byte_size: u32 = field_types
+                    .iter()
+                    .map(|x| (target_data.get_bit_size(&x.0) + 7) / 8)
+                    .sum::<u64>()
+                    .try_into()
+                    .unwrap();
+
+                if !total_byte_size.is_power_of_two() {
+                    let next = total_byte_size.next_power_of_two();
+                    let diff = next - total_byte_size;
+                    let padding = self.context.i8_type().array_type(diff);
+                    field_types.push((padding.as_basic_type_enum(), None))
+                }
+
+                for (current_i, ty) in field_types.iter().enumerate() {
+                    for field in fields.values_mut() {
+                        if let Some(i) = ty.1 {
+                            if i == field.0 {
+                                field.0 = current_i;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                let ty = self
+                    .context
+                    .struct_type(&field_types.into_iter().map(|x| x.0).collect_vec(), false);
 
                 let struct_type = StructTypeInfo { fields, ty };
                 struct_types.insert(s.name.value.clone(), struct_type);

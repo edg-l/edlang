@@ -1,0 +1,10 @@
+
+
+struct Hello {
+    y: i16,
+    x: i32,
+}
+
+fn test(x: Hello) {
+    return;
+}

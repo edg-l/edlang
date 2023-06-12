@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use crate::{
     ast::{self, Spanned},
     tokens::Token,
@@ -76,42 +75,46 @@ pub Program: ast::Program = {
     Statements => ast::Program::new(<>)
 }
 
-Statements: Vec<ast::Statement> = {
-    Statement => vec![<>],
+Statements: Vec<Spanned<ast::Statement>> = {
+    <Statement> => vec![<>],
     <mut s:Statements> <n:Statement> => {
         s.push(n);
         s
     },
 };
 
-Statement: ast::Statement = {
+Statement: Spanned<ast::Statement> = {
     BasicStatement,
-    <f:Function> => ast::Statement::Function(f),
-    <s:Struct> => ast::Statement::Struct(s),
+    <lo:@L> <f:Function> <hi:@R> => Spanned::new(ast::Statement::Function(f), (lo, hi)),
+    <lo:@L> <s:Struct> <hi:@R> => Spanned::new(ast::Statement::Struct(s), (lo, hi)),
 };
 
-TypeInfo: ast::TypeExp =  {
+TypeInfo: Spanned<ast::TypeExp> =  {
     ":" <i:LangType> => i
 };
 
+Identifier: Spanned<String> = {
+    <lo:@L> <i:"identifier"> <hi:@R> => Spanned::new(i, (lo, hi))
+}
+
 // statements not including function definitions
-BasicStatement: ast::Statement = {
-    <lo:@L> "let" <i:"identifier"> <t:TypeInfo?> "=" <e:Expr> ";" <hi:@R> =>
-            ast::Statement::Let { name: i, value: e, value_type: t, span: (lo, hi) },
-    <lo:@L> <i:"identifier"> "=" <e:Expr> ";" <hi:@R> =>
-            ast::Statement::Mutate { name: i, value: e, span: (lo, hi) },
-    "if" <cond:Expr> "{" <s:Statements> "}" <e:ElseExpr?> =>
-            ast::Statement::If {
+BasicStatement: Spanned<ast::Statement> = {
+    <lo:@L> "let" <i:Identifier> <t:TypeInfo?> "=" <e:Expr> ";" <hi:@R> =>
+            Spanned::new(ast::Statement::Let { name: i, value: e, value_type: t }, (lo, hi)),
+    <lo:@L> <i:Identifier> "=" <e:Expr> ";" <hi:@R> =>
+            Spanned::new(ast::Statement::Mutate { name: i, value: e }, (lo, hi)),
+    <lo:@L> "if" <cond:Expr> "{" <s:Statements> "}" <e:ElseExpr?> <hi:@R> =>
+            Spanned::new(ast::Statement::If {
                 condition: cond,
                 body: s,
                 else_body: e,
                 scope_type_info: Default::default(),
                 else_body_scope_type_info: Default::default(),
-            },
-    "return" <e:Expr?> ";" => ast::Statement::Return(e),
+            }, (lo, hi)),
+    <lo:@L> "return" <e:Expr?> ";" <hi:@R> => Spanned::new(ast::Statement::Return(e), (lo, hi)),
 };
 
-ElseExpr: Vec<ast::Statement> = {
+ElseExpr: Vec<Spanned<ast::Statement>> = {
     "else" "{" <s:Statements> "}" => s
 }
 
@@ -136,8 +139,8 @@ Level3_Op: ast::OpCode = {
     "%" => ast::OpCode::Rem,
 }
 
-Tier<Op,NextTier>: Box<ast::Expression> = {
-    <t:Tier<Op,NextTier>> <o:Op> <n:NextTier> => Box::new(ast::Expression::BinaryOp(t, o, n)),
+Tier<Op,NextTier>: Spanned<Box<ast::Expression>> = {
+    <lo:@L> <t:Tier<Op,NextTier>> <o:Op> <n:NextTier> <hi:@R> => Spanned::new(Box::new(ast::Expression::BinaryOp(t, o, n)), (lo, hi)),
     NextTier
 };
 
@@ -147,14 +150,14 @@ Expr3 = Tier<Level2_Op, Expr4>;
 Expr4 = Tier<Level3_Op, Term>;
 
 // Terms: variables, literals, calls
-Term: Box<ast::Expression> = {
-    <lo:@L> <i:"identifier"> <hi:@R> => Box::new(ast::Expression::Variable {
-        name: Spanned::new(i, (lo, hi))
-    }),
-    <n:Number> => Box::new(ast::Expression::Literal(n)),
-    <n:StringLit> => Box::new(ast::Expression::Literal(n)),
-    <n:BoolLiteral> => Box::new(ast::Expression::Literal(n)),
-    <i:"identifier"> "(" <values:Comma<Term>> ")" => Box::new(ast::Expression::Call { function: i, args: values }),
+Term: Spanned<Box<ast::Expression>> = {
+    <lo:@L> <i:"identifier"> <hi:@R> => Spanned::new(Box::new(ast::Expression::Variable {
+        name: i
+    }), (lo, hi)),
+    <lo:@L> <n:Number> <hi:@R> => Spanned::new(Box::new(ast::Expression::Literal(n)), (lo, hi)),
+    <lo:@L> <n:StringLit> <hi:@R> => Spanned::new(Box::new(ast::Expression::Literal(n)), (lo, hi)),
+    <lo:@L> <n:BoolLiteral> <hi:@R> => Spanned::new(Box::new(ast::Expression::Literal(n)), (lo, hi)),
+    <lo:@L> <i:Identifier> "(" <values:Comma<Term>> ")" <hi:@R> => Spanned::new(Box::new(ast::Expression::Call { function: i, args: values }), (lo, hi)),
     "(" <Term> ")"
 };
 
@@ -214,46 +217,46 @@ ArrayLen: u32 = {
     ";" <i:"int literal"> => i.parse().unwrap(),
 }
 
-LangType: ast::TypeExp = {
-    "ptr" "<" <target:LangType> ">" => ast::TypeExp::Pointer { target: Box::new(target) },
-    "[" <of:LangType> <len:ArrayLen?> "]" => ast::TypeExp::Array { of: Box::new(of), len },
-    "i8" => ast::TypeExp::Integer { bits: 8, signed: true },
-    "i16" => ast::TypeExp::Integer { bits: 16, signed: true },
-    "i32" => ast::TypeExp::Integer { bits: 32, signed: true },
-    "i64" => ast::TypeExp::Integer { bits: 64, signed: true },
-    "u8" => ast::TypeExp::Integer { bits: 8, signed: false },
-    "u16" => ast::TypeExp::Integer { bits: 16, signed: false },
-    "u32" => ast::TypeExp::Integer { bits: 32, signed: false },
-    "u64" => ast::TypeExp::Integer { bits: 64, signed: false },
-    "bool" => ast::TypeExp::Boolean,
-    <id:"identifier"> => ast::TypeExp::Other { id },
+LangType: Spanned<ast::TypeExp> = {
+    <lo:@L> "ptr" "<" <target:LangType> ">" <hi:@R> => Spanned::new(ast::TypeExp::Pointer { target: Spanned::new(Box::new(target.value), target.span) }, (lo, hi)),
+    <lo:@L> "[" <of:LangType> <len:ArrayLen?> "]" <hi:@R> => Spanned::new(ast::TypeExp::Array { of: Spanned::new(Box::new(of.value), of.span), len }, (lo, hi)),
+    <lo:@L> "i8" <hi:@R> => Spanned::new(ast::TypeExp::Integer { bits: 8, signed: true }, (lo, hi)),
+    <lo:@L> "i16" <hi:@R> => Spanned::new(ast::TypeExp::Integer { bits: 16, signed: true }, (lo, hi)),
+    <lo:@L> "i32" <hi:@R> => Spanned::new(ast::TypeExp::Integer { bits: 32, signed: true }, (lo, hi)),
+    <lo:@L> "i64" <hi:@R> => Spanned::new(ast::TypeExp::Integer { bits: 64, signed: true }, (lo, hi)),
+    <lo:@L> "u8" <hi:@R> => Spanned::new(ast::TypeExp::Integer { bits: 8, signed: false }, (lo, hi)),
+    <lo:@L> "u16" <hi:@R> => Spanned::new(ast::TypeExp::Integer { bits: 16, signed: false }, (lo, hi)),
+    <lo:@L> "u32" <hi:@R> => Spanned::new(ast::TypeExp::Integer { bits: 32, signed: false }, (lo, hi)),
+    <lo:@L> "u64" <hi:@R> => Spanned::new(ast::TypeExp::Integer { bits: 64, signed: false }, (lo, hi)),
+    <lo:@L> "bool" <hi:@R> => Spanned::new(ast::TypeExp::Boolean, (lo, hi)),
+    <lo:@L> <id:"identifier"> <hi:@R> => Spanned::new(ast::TypeExp::Other { id }, (lo, hi)),
 };
 
 // Function handling
 Param: ast::Parameter = {
-    <"identifier"> ":" <LangType> => ast::Parameter::new(<>)
+    <Identifier> ":" <LangType> => ast::Parameter::new(<>)
 };
 
 Params = Comma<Param>;
 
-FunctionReturn: ast::TypeExp = {
+FunctionReturn: Spanned<ast::TypeExp> = {
     "->" <i:LangType> => i,
 }
 
 Function: ast::Function = {
-    "fn" <i:"identifier"> "(" <a:Params> ")" <r:FunctionReturn?> "{" <s:Statements> "}" => ast::Function::new(i, a, s, r)
+    "fn" <i:Identifier> "(" <a:Params> ")" <r:FunctionReturn?> "{" <s:Statements> "}" => ast::Function::new(i, a, s, r)
 }
 
 // Structures
 
 StructField: ast::StructField = {
-    <"identifier"> ":" <LangType> => ast::StructField::new(<>)
+    <Identifier> ":" <LangType> => ast::StructField::new(<>)
 };
 
 StructFields = Comma<StructField>;
 
 Struct: ast::Struct = {
-    "struct" <i:"identifier"> "{" <fields:StructFields> "}" => {
+    "struct" <i:Identifier> "{" <fields:StructFields> "}" => {
         ast::Struct {
             name: i,
             fields

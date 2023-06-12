@@ -16,7 +16,7 @@ use inkwell::{
 use itertools::{Either, Itertools};
 use tracing::info;
 
-use crate::ast::{self, Expression, Function, LiteralValue, OpCode, Statement, TypeExp};
+use crate::ast::{self, Expression, Function, LiteralValue, OpCode, Spanned, Statement, TypeExp};
 
 #[derive(Debug, Clone)]
 pub struct ProgramData {
@@ -95,22 +95,25 @@ impl<'ctx> CodeGen<'ctx> {
 
         // create types
         for statement in &self.ast.statements {
-            if let Statement::Struct(s) = &statement {
+            if let Statement::Struct(s) = &statement.value {
                 let mut fields = HashMap::new();
                 let mut field_types = vec![];
 
                 for (i, field) in s.fields.iter().enumerate() {
                     // todo: this doesnt handle out of order structs well
-                    let ty = self.get_llvm_type(&field.field_type)?;
+                    let ty = self.get_llvm_type(&field.field_type.value)?;
                     field_types.push(ty);
                     // todo: ensure alignment and padding here
-                    fields.insert(field.ident.clone(), (i, field.field_type.clone()));
+                    fields.insert(
+                        field.ident.value.clone(),
+                        (i, field.field_type.value.clone()),
+                    );
                 }
 
                 let ty = self.context.struct_type(&field_types, false);
 
                 let struct_type = StructTypeInfo { fields, ty };
-                struct_types.insert(s.name.clone(), struct_type);
+                struct_types.insert(s.name.value.clone(), struct_type);
             }
         }
 
@@ -118,8 +121,8 @@ impl<'ctx> CodeGen<'ctx> {
 
         // create the llvm functions first.
         for statement in &self.ast.statements {
-            if let Statement::Function(function) = &statement {
-                functions.insert(function.name.clone(), function.clone());
+            if let Statement::Function(function) = &statement.value {
+                functions.insert(function.name.value.clone(), function.clone());
                 self.compile_function_signature(function)?;
             }
         }
@@ -150,11 +153,11 @@ impl<'ctx> CodeGen<'ctx> {
                 .as_basic_type_enum(),
             TypeExp::Boolean => self.context.bool_type().as_basic_type_enum(),
             TypeExp::Array { of, len } => {
-                let ty = self.get_llvm_type(of)?;
+                let ty = self.get_llvm_type(&of.value)?;
                 ty.array_type(len.unwrap()).as_basic_type_enum()
             }
             TypeExp::Pointer { target } => {
-                let ty = self.get_llvm_type(target)?;
+                let ty = self.get_llvm_type(&target.value)?;
                 ty.ptr_type(Default::default()).as_basic_type_enum()
             }
             TypeExp::Other { id } => self
@@ -172,7 +175,7 @@ impl<'ctx> CodeGen<'ctx> {
             .params
             .iter()
             .map(|param| &param.type_exp)
-            .map(|t| self.get_llvm_type(t))
+            .map(|t| self.get_llvm_type(&t.value))
             .try_collect()?;
 
         let args_types: Vec<BasicMetadataTypeEnum<'ctx>> =
@@ -180,19 +183,20 @@ impl<'ctx> CodeGen<'ctx> {
 
         let fn_type = match &function.return_type {
             Some(id) => {
-                let return_type = self.get_llvm_type(id)?;
+                let return_type = self.get_llvm_type(&id.value)?;
                 return_type.fn_type(&args_types, false)
             }
             None => self.context.void_type().fn_type(&args_types, false),
         };
 
-        self.module.add_function(&function.name, fn_type, None);
+        self.module
+            .add_function(&function.name.value, fn_type, None);
 
         Ok(())
     }
 
     fn compile_function(&self, function: &Function) -> Result<()> {
-        let func = self.module.get_function(&function.name).unwrap();
+        let func = self.module.get_function(&function.name.value).unwrap();
         let entry_block = self.context.append_basic_block(func, "entry");
 
         self.builder.position_at_end(entry_block);
@@ -205,7 +209,7 @@ impl<'ctx> CodeGen<'ctx> {
                 .get_nth_param(i.try_into().unwrap())
                 .expect("parameter");
             variables.insert(
-                id.clone(),
+                id.value.clone(),
                 Variable {
                     value: param_value,
                     phi_counter: 0,
@@ -217,7 +221,7 @@ impl<'ctx> CodeGen<'ctx> {
         let mut has_return = false;
 
         for statement in &function.body {
-            if let Statement::Return(_) = statement {
+            if let Statement::Return(_) = statement.value {
                 has_return = true
             }
             self.compile_statement(func, statement, &mut variables, &function.scope_type_info)?;
@@ -233,12 +237,12 @@ impl<'ctx> CodeGen<'ctx> {
     fn compile_statement(
         &self,
         function_value: FunctionValue,
-        statement: &Statement,
+        statement: &Spanned<Statement>,
         // value, assignments
         variables: &mut Variables<'ctx>,
         scope_info: &HashMap<String, Vec<TypeExp>>,
     ) -> Result<()> {
-        match statement {
+        match &statement.value {
             // Variable assignment
             Statement::Let {
                 name,
@@ -247,11 +251,11 @@ impl<'ctx> CodeGen<'ctx> {
                 ..
             } => {
                 let value = self
-                    .compile_expression(value, variables, scope_info)?
+                    .compile_expression(&value, variables, scope_info)?
                     .expect("should have result");
 
                 variables.insert(
-                    name.clone(),
+                    name.value.clone(),
                     Variable {
                         value,
                         phi_counter: 0,
@@ -261,17 +265,19 @@ impl<'ctx> CodeGen<'ctx> {
             }
             Statement::Mutate { name, value, .. } => {
                 let value = self
-                    .compile_expression(value, variables, scope_info)?
+                    .compile_expression(&value, variables, scope_info)?
                     .expect("should have result");
 
-                let var = variables.get_mut(name).expect("variable should exist");
+                let var = variables
+                    .get_mut(&name.value)
+                    .expect("variable should exist");
                 var.phi_counter += 1;
                 var.value = value;
             }
             Statement::Return(ret) => {
                 if let Some(ret) = ret {
                     let value = self
-                        .compile_expression(ret, variables, scope_info)?
+                        .compile_expression(&ret, variables, scope_info)?
                         .expect("should have result");
                     self.builder.build_return(Some(&value));
                 } else {
@@ -386,12 +392,12 @@ impl<'ctx> CodeGen<'ctx> {
 
     pub fn compile_expression(
         &self,
-        expr: &Expression,
+        expr: &Spanned<Box<Expression>>,
         variables: &mut Variables<'ctx>,
         scope_info: &HashMap<String, Vec<TypeExp>>,
     ) -> Result<Option<BasicValueEnum<'ctx>>> {
-        Ok(match expr {
-            Expression::Variable { name } => Some(self.compile_variable(&name.value, variables)?),
+        Ok(match &*expr.value {
+            Expression::Variable { name } => Some(self.compile_variable(&name, variables)?),
             Expression::Literal(term) => Some(self.compile_literal(term)?),
             Expression::Call { function, args } => {
                 self.compile_call(function, args, variables, scope_info)?
@@ -404,13 +410,16 @@ impl<'ctx> CodeGen<'ctx> {
 
     pub fn compile_call(
         &self,
-        func_name: &str,
-        args: &[Box<Expression>],
+        func_name: &Spanned<String>,
+        args: &[Spanned<Box<Expression>>],
         variables: &mut Variables<'ctx>,
         scope_info: &HashMap<String, Vec<TypeExp>>,
     ) -> Result<Option<BasicValueEnum<'ctx>>> {
-        info!("compiling fn call: func_name={}", func_name);
-        let function = self.module.get_function(func_name).expect("should exist");
+        info!("compiling fn call: func_name={}", func_name.value);
+        let function = self
+            .module
+            .get_function(&func_name.value)
+            .expect("should exist");
 
         let mut value_args: Vec<BasicMetadataValueEnum> = Vec::with_capacity(args.len());
 
@@ -423,7 +432,7 @@ impl<'ctx> CodeGen<'ctx> {
 
         let result = self
             .builder
-            .build_call(function, &value_args, &format!("{func_name}_call"))
+            .build_call(function, &value_args, &format!("{}_call", func_name.value))
             .try_as_basic_value();
 
         Ok(match result {
@@ -434,9 +443,9 @@ impl<'ctx> CodeGen<'ctx> {
 
     pub fn compile_binary_op(
         &self,
-        lhs: &Expression,
+        lhs: &Spanned<Box<Expression>>,
         op: &OpCode,
-        rhs: &Expression,
+        rhs: &Spanned<Box<Expression>>,
         variables: &mut Variables<'ctx>,
         scope_info: &HashMap<String, Vec<TypeExp>>,
     ) -> Result<BasicValueEnum<'ctx>> {
@@ -489,10 +498,9 @@ impl<'ctx> CodeGen<'ctx> {
             LiteralValue::Integer {
                 value,
                 bits,
-                signed,
+                signed: _,
             } => {
                 let bits = *bits;
-                let signed = *signed;
 
                 self.context
                     .custom_width_int_type(bits)

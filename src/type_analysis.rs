@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use crate::ast::{self, Expression, Function, Statement, TypeExp};
+use crate::ast::{self, Expression, Function, Spanned, Statement, TypeExp};
 
 #[derive(Debug, Clone)]
 pub enum TypeError {
@@ -30,19 +30,19 @@ pub fn type_check(ast: &mut ast::Program) -> Result<(), TypeError> {
 
     // gather global constructs first
     for statement in ast.statements.iter_mut() {
-        match statement {
+        match &mut statement.value {
             Statement::Struct(st) => {
                 let fields = st
                     .fields
                     .iter()
-                    .map(|x| (x.ident.clone(), x.field_type.clone()))
+                    .map(|x| (x.ident.value.clone(), x.field_type.value.clone()))
                     .collect();
-                storage.structs.insert(st.name.clone(), fields);
+                storage.structs.insert(st.name.value.clone(), fields);
             }
             Statement::Function(function) => {
                 storage
                     .functions
-                    .insert(function.name.clone(), function.clone());
+                    .insert(function.name.value.clone(), function.clone());
             }
             // todo: find globals here too
             _ => {}
@@ -50,11 +50,14 @@ pub fn type_check(ast: &mut ast::Program) -> Result<(), TypeError> {
     }
 
     for statement in ast.statements.iter_mut() {
-        if let Statement::Function(function) = statement {
+        if let Statement::Function(function) = &mut statement.value {
             let mut scope_vars: ScopeMap = HashMap::new();
 
             for arg in &function.params {
-                scope_vars.insert(arg.ident.clone(), vec![Some(arg.type_exp.clone())]);
+                scope_vars.insert(
+                    arg.ident.value.clone(),
+                    vec![Some(arg.type_exp.value.clone())],
+                );
             }
 
             let func_info = function.clone();
@@ -72,7 +75,7 @@ pub fn type_check(ast: &mut ast::Program) -> Result<(), TypeError> {
 
 /// Finds variable types in the scope, returns newly created variables to handle shadowing
 fn type_inference_scope(
-    statements: &mut [ast::Statement],
+    statements: &mut [Spanned<ast::Statement>],
     scope_vars: &ScopeMap,
     func: &Function,
     storage: &Storage,
@@ -81,43 +84,45 @@ fn type_inference_scope(
     let mut new_vars: HashSet<String> = HashSet::new();
 
     for statement in statements {
-        match statement {
+        match &mut statement.value {
             Statement::Let {
                 name,
                 value,
                 value_type,
-                span,
             } => {
-                new_vars.insert(name.clone());
+                new_vars.insert(name.value.clone());
 
-                let exp_type = type_inference_expression(value, &mut scope_vars, storage, None)?;
+                let exp_type = type_inference_expression(&value, &mut scope_vars, storage, None)?;
 
-                if !scope_vars.contains_key(name) {
-                    scope_vars.insert(name.clone(), vec![]);
+                if !scope_vars.contains_key(&name.value) {
+                    scope_vars.insert(name.value.clone(), vec![]);
                 }
 
-                let var = scope_vars.get_mut(name).unwrap();
+                let var = scope_vars.get_mut(&name.value).unwrap();
 
                 if value_type.is_none() {
                     var.push(exp_type);
                 } else {
-                    if exp_type.is_some() && &exp_type != value_type {
+                    if exp_type.is_some() && exp_type != value_type.clone().map(|x| x.value) {
                         Err(TypeError::Mismatch {
                             found: exp_type.clone().unwrap(),
-                            expected: value_type.clone().unwrap(),
-                            span: *span,
+                            expected: value_type.clone().map(|x| x.value).unwrap(),
+                            span: statement.span,
                         })?;
                     }
-                    var.push(value_type.clone());
+                    var.push(value_type.clone().map(|x| x.value));
                 }
             }
-            Statement::Mutate { name, value, span } => {
-                if !scope_vars.contains_key(name) {
-                    panic!("undeclared variable");
+            Statement::Mutate { name, value } => {
+                if !scope_vars.contains_key(&name.value) {
+                    Err(TypeError::UndeclaredVariable {
+                        name: name.value.clone(),
+                        span: name.span,
+                    })?;
                 }
 
-                let exp_type = type_inference_expression(value, &mut scope_vars, storage, None)?;
-                let var = scope_vars.get_mut(name).unwrap().last_mut().unwrap();
+                let exp_type = type_inference_expression(&value, &mut scope_vars, storage, None)?;
+                let var = scope_vars.get_mut(&name.value).unwrap().last_mut().unwrap();
 
                 if var.is_none() {
                     *var = exp_type;
@@ -125,7 +130,7 @@ fn type_inference_scope(
                     Err(TypeError::Mismatch {
                         found: exp_type.clone().unwrap(),
                         expected: var.clone().unwrap(),
-                        span: *span,
+                        span: statement.span,
                     })?;
                 }
             }
@@ -137,7 +142,7 @@ fn type_inference_scope(
                 else_body_scope_type_info,
             } => {
                 type_inference_expression(
-                    condition,
+                    &condition,
                     &mut scope_vars,
                     storage,
                     Some(TypeExp::Boolean),
@@ -181,7 +186,7 @@ fn type_inference_scope(
                         exp,
                         &mut scope_vars,
                         storage,
-                        func.return_type.clone(),
+                        func.return_type.clone().map(|x| x.value),
                     )?;
                 }
             }
@@ -194,12 +199,12 @@ fn type_inference_scope(
 }
 
 fn type_inference_expression(
-    exp: &Expression,
+    exp: &Spanned<Box<Expression>>,
     scope_vars: &mut ScopeMap,
     storage: &Storage,
     expected_type: Option<TypeExp>,
 ) -> Result<Option<TypeExp>, TypeError> {
-    Ok(match exp {
+    Ok(match &*exp.value {
         Expression::Literal(lit) => {
             match lit {
                 ast::LiteralValue::String(_) => None, // todo
@@ -216,7 +221,7 @@ fn type_inference_expression(
         }
         Expression::Variable { name } => {
             let var = scope_vars
-                .get_mut(&name.value)
+                .get_mut(name)
                 .expect("to exist")
                 .last_mut()
                 .unwrap();
@@ -230,7 +235,7 @@ fn type_inference_expression(
                         Err(TypeError::Mismatch {
                             found: expected_type.clone().unwrap(),
                             expected: var.clone().unwrap(),
-                            span: name.span,
+                            span: exp.span,
                         })?;
                     }
                     expected_type
@@ -242,15 +247,15 @@ fn type_inference_expression(
             }
         }
         Expression::Call { function, args } => {
-            let func = storage.functions.get(function).cloned().unwrap();
+            let func = storage.functions.get(&function.value).cloned().unwrap();
 
             for (i, arg) in args.iter().enumerate() {
                 let arg_type = func.params[i].type_exp.clone();
                 // result is ignored, but need these to infer call arg types
-                type_inference_expression(arg, scope_vars, storage, Some(arg_type))?;
+                type_inference_expression(arg, scope_vars, storage, Some(arg_type.value))?;
             }
 
-            func.return_type
+            func.return_type.map(|x| x.value)
         }
         Expression::BinaryOp(lhs, op, rhs) => match op {
             ast::OpCode::Eq | ast::OpCode::Ne => Some(TypeExp::Boolean),

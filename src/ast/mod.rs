@@ -43,11 +43,21 @@ impl OpCode {
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum TypeExp {
-    Integer { bits: u32, signed: bool },
+    Integer {
+        bits: u32,
+        signed: bool,
+    },
     Boolean,
-    Array { of: Box<Self>, len: Option<u32> },
-    Pointer { target: Box<Self> },
-    Other { id: String },
+    Array {
+        of: Spanned<Box<Self>>,
+        len: Option<u32>,
+    },
+    Pointer {
+        target: Spanned<Box<Self>>,
+    },
+    Other {
+        id: String,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -65,42 +75,42 @@ pub enum LiteralValue {
 pub enum Expression {
     Literal(LiteralValue),
     Variable {
-        name: Spanned<String>,
+        name: String,
     },
     Call {
-        function: String,
-        args: Vec<Box<Self>>,
+        function: Spanned<String>,
+        args: Vec<Spanned<Box<Self>>>,
     },
-    BinaryOp(Box<Self>, OpCode, Box<Self>),
+    BinaryOp(Spanned<Box<Self>>, OpCode, Spanned<Box<Self>>),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Parameter {
-    pub ident: String,
-    pub type_exp: TypeExp,
+    pub ident: Spanned<String>,
+    pub type_exp: Spanned<TypeExp>,
 }
 
 impl Parameter {
-    pub const fn new(ident: String, type_exp: TypeExp) -> Self {
+    pub const fn new(ident: Spanned<String>, type_exp: Spanned<TypeExp>) -> Self {
         Self { ident, type_exp }
     }
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Function {
-    pub name: String,
+    pub name: Spanned<String>,
     pub params: Vec<Parameter>,
-    pub body: Vec<Statement>,
+    pub body: Vec<Spanned<Statement>>,
     pub scope_type_info: HashMap<String, Vec<TypeExp>>,
-    pub return_type: Option<TypeExp>,
+    pub return_type: Option<Spanned<TypeExp>>,
 }
 
 impl Function {
     pub fn new(
-        name: String,
+        name: Spanned<String>,
         params: Vec<Parameter>,
-        body: Vec<Statement>,
-        return_type: Option<TypeExp>,
+        body: Vec<Spanned<Statement>>,
+        return_type: Option<Spanned<TypeExp>>,
     ) -> Self {
         Self {
             name,
@@ -114,12 +124,12 @@ impl Function {
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct StructField {
-    pub ident: String,
-    pub field_type: TypeExp,
+    pub ident: Spanned<String>,
+    pub field_type: Spanned<TypeExp>,
 }
 
 impl StructField {
-    pub const fn new(ident: String, type_name: TypeExp) -> Self {
+    pub const fn new(ident: Spanned<String>, type_name: Spanned<TypeExp>) -> Self {
         Self {
             ident,
             field_type: type_name,
@@ -129,42 +139,40 @@ impl StructField {
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Struct {
-    pub name: String,
+    pub name: Spanned<String>,
     pub fields: Vec<StructField>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Statement {
     Let {
-        name: String,
-        value: Box<Expression>,
-        value_type: Option<TypeExp>,
-        span: (usize, usize),
+        name: Spanned<String>,
+        value: Spanned<Box<Expression>>,
+        value_type: Option<Spanned<TypeExp>>,
     },
     Mutate {
-        name: String,
-        value: Box<Expression>,
-        span: (usize, usize),
+        name: Spanned<String>,
+        value: Spanned<Box<Expression>>,
     },
     If {
-        condition: Box<Expression>,
-        body: Vec<Statement>,
+        condition: Spanned<Box<Expression>>,
+        body: Vec<Spanned<Statement>>,
         scope_type_info: HashMap<String, Vec<TypeExp>>,
-        else_body: Option<Vec<Statement>>,
+        else_body: Option<Vec<Spanned<Statement>>>,
         else_body_scope_type_info: HashMap<String, Vec<TypeExp>>,
     },
-    Return(Option<Box<Expression>>),
+    Return(Option<Spanned<Box<Expression>>>),
     Function(Function),
     Struct(Struct),
 }
 
 #[derive(Debug, Clone)]
 pub struct Program {
-    pub statements: Vec<Statement>,
+    pub statements: Vec<Spanned<Statement>>,
 }
 
 impl Program {
-    pub fn new(statements: Vec<Statement>) -> Self {
+    pub fn new(statements: Vec<Spanned<Statement>>) -> Self {
         Self { statements }
     }
 }

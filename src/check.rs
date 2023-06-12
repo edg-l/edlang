@@ -22,8 +22,8 @@ pub fn check<'a>(data: &'a ProgramData, ast: &ast::Program) -> Vec<Check<'a>> {
     let mut errors = vec![];
 
     for statement in &ast.statements {
-        match &statement {
-            Statement::Let { name: _, span, .. } => {
+        match &statement.value {
+            Statement::Let { name, .. } => {
                 // can't have a top level assignment yet.
                 let snippet = Snippet {
                     title: Some(Annotation {
@@ -40,7 +40,7 @@ pub fn check<'a>(data: &'a ProgramData, ast: &ast::Program) -> Vec<Check<'a>> {
                         annotations: vec![SourceAnnotation {
                             label: "unexpected statement",
                             annotation_type: AnnotationType::Error,
-                            range: *span,
+                            range: name.span,
                         }],
                     }],
                     opt: FormatOptions {
@@ -52,7 +52,7 @@ pub fn check<'a>(data: &'a ProgramData, ast: &ast::Program) -> Vec<Check<'a>> {
                 let dl = DisplayList::from(snippet);
                 errors.push(Check::Error(dl));
             }
-            Statement::Mutate { span, .. } => {
+            Statement::Mutate { name, .. } => {
                 // can't have a top level assignment yet.
                 let snippet = Snippet {
                     title: Some(Annotation {
@@ -69,7 +69,7 @@ pub fn check<'a>(data: &'a ProgramData, ast: &ast::Program) -> Vec<Check<'a>> {
                         annotations: vec![SourceAnnotation {
                             label: "unexpected statement",
                             annotation_type: AnnotationType::Error,
-                            range: *span,
+                            range: name.span,
                         }],
                     }],
                     opt: FormatOptions {
@@ -112,9 +112,15 @@ pub fn print_error(source: &str, err: ParseError<usize, Token, LexicalError>) {
             let dl = DisplayList::from(snippet);
             println!("{dl}");
         }
-        ParseError::UnrecognizedEof { location, expected } => todo!(),
-        ParseError::UnrecognizedToken { token, expected } => todo!(),
-        ParseError::ExtraToken { token } => todo!(),
+        ParseError::UnrecognizedEof {
+            location: _,
+            expected: _,
+        } => todo!(),
+        ParseError::UnrecognizedToken {
+            token: _,
+            expected: _,
+        } => todo!(),
+        ParseError::ExtraToken { token: _ } => todo!(),
         ParseError::User { error } => match error {
             LexicalError::InvalidToken(err, range) => {
                 let title = format!("invalid token (lexical error): {:?}", err);
@@ -126,7 +132,7 @@ pub fn print_error(source: &str, err: ParseError<usize, Token, LexicalError>) {
                     }),
                     footer: vec![],
                     slices: vec![Slice {
-                        source: source,
+                        source,
                         line_start: 1,
                         fold: false,
                         origin: None,
@@ -149,11 +155,10 @@ pub fn print_error(source: &str, err: ParseError<usize, Token, LexicalError>) {
 }
 
 pub fn print_type_error(source: &str, err: TypeError) {
-    dbg!(&err);
     match err {
         TypeError::Mismatch {
-            found,
-            expected,
+            found: _,
+            expected: _,
             span,
         } => {
             let snippet = Snippet {
@@ -182,7 +187,7 @@ pub fn print_type_error(source: &str, err: TypeError) {
             let dl = DisplayList::from(snippet);
             println!("{dl}");
         }
-        TypeError::UndeclaredVariable { name, span } => {
+        TypeError::UndeclaredVariable { name: _, span } => {
             let snippet = Snippet {
                 title: Some(Annotation {
                     id: None,

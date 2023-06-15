@@ -547,13 +547,10 @@ impl<'ctx> CodeGen<'ctx> {
 
     pub fn compile_literal(&self, term: &LiteralValue) -> Result<BasicValueEnum<'ctx>> {
         let value = match term {
-            LiteralValue::String(_s) => {
+            LiteralValue::String(s) => {
+                // todo: search string folding and interning.
+                // self.builder.build_global_string_ptr(s, "literal_str");
                 todo!()
-                /*
-                self
-                .context
-                .const_string(s.as_bytes(), true)
-                .as_basic_value_enum() */
             }
             LiteralValue::Boolean(v) => self
                 .context

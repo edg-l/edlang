@@ -1,0 +1,16 @@
+[package]
+name = "edlang_check"
+version = "0.1.0"
+authors = ["Edgar Luque <edgar@edgarluque.com>"]
+description = "edlang check"
+edition = "2021"
+keywords = ["llvm", "compiler"]
+license = "AGPL-3.0-only"
+categories = ["compilers"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+ariadne = { version = "0.4.0", features = ["auto-color"] }
+edlang_ast = { version = "0.1.0", path = "../edlang_ast" }
+tracing = { workspace = true }

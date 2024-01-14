@@ -1,27 +1,19 @@
-[package]
-name = "edlang"
-version = "0.1.0"
-authors = ["Edgar Luque <edgar@edgarluque.com>"]
-description = "A experimental language using LLVM."
-edition = "2021"
-readme = "README.md"
-keywords = ["llvm", "compiler"]
-license = "AGPL-3.0-only"
-categories = ["compilers"]
+[workspace]
+resolver = "2"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+members = [ "bin/edlang", "lib/edlang_ast", "lib/edlang_check", "lib/edlang_codegen_mlir", "lib/edlang_driver","lib/edlang_parser", "lib/edlang_session"]
 
-[dependencies]
-clap = { version = "4.3.3", features = ["derive"] }
-color-eyre = "0.6.2"
-itertools = "0.11"
-lalrpop-util = { version = "0.20.0", features = ["lexer"] }
-regex = "1.9"
-tracing = "0.1.37"
-tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
-inkwell = { version = "0.2.0", features = ["llvm16-0"] }
-annotate-snippets = { version = "0.9.1", features = ["color"] }
-logos = "0.13.0"
+[profile.release]
+lto = true
+codegen-units = 1
 
-[build-dependencies]
-lalrpop = "0.20.0"
+# Set the settings for build scripts and proc-macros.
+[profile.dev.build-override]
+opt-level = 3
+
+# On dev optimize dependencies a bit so it's not as slow.
+[profile.dev.package."*"]
+opt-level = 1
+
+[workspace.dependencies]
+tracing = "0.1.40"

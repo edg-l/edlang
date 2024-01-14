@@ -1,0 +1,20 @@
+[package]
+name = "edlang_parser"
+version = "0.1.0"
+authors = ["Edgar Luque <edgar@edgarluque.com>"]
+description = "edlang parser"
+edition = "2021"
+keywords = ["llvm", "compiler"]
+license = "AGPL-3.0-only"
+categories = ["compilers"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+edlang_ast = { version = "0.1.0", path = "../edlang_ast" }
+lalrpop-util = { version = "0.20.0", features = ["lexer"] }
+logos = "0.13.0"
+tracing = { workspace = true }
+
+[build-dependencies]
+lalrpop = "0.20.0"

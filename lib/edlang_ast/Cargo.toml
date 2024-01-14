@@ -1,0 +1,13 @@
+[package]
+name = "edlang_ast"
+version = "0.1.0"
+authors = ["Edgar Luque <edgar@edgarluque.com>"]
+description = "edlang AST"
+edition = "2021"
+keywords = ["llvm", "compiler"]
+license = "AGPL-3.0-only"
+categories = ["compilers"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]

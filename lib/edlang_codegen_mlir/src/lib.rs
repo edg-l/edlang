@@ -32,6 +32,7 @@ pub mod codegen;
 mod context;
 mod ffi;
 pub mod linker;
+mod util;
 
 pub fn compile(session: &Session, program: &Module) -> Result<PathBuf, Box<dyn std::error::Error>> {
     let context = Context::new();

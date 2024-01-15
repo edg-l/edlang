@@ -41,6 +41,20 @@ pub struct PathExpr {
     pub span: Span,
 }
 
+impl PathExpr {
+    pub fn get_full_path(&self) -> String {
+        let mut result = self.first.name.clone();
+        for path in &self.extra {
+            result.push('.');
+            match path {
+                PathSegment::Field(name) => result.push_str(&name.name),
+                PathSegment::Index { .. } => result.push_str("[]"),
+            }
+        }
+        result
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum PathSegment {
     Field(Ident),

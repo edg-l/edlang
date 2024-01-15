@@ -4,7 +4,7 @@ use edlang_ast::Module;
 use edlang_session::Session;
 use melior::{
     dialect::DialectRegistry,
-    ir::{Location, Module as MeliorModule},
+    ir::{operation::OperationPrintingFlags, Location, Module as MeliorModule},
     pass::{self, PassManager},
     utility::{register_all_dialects, register_all_llvm_translations, register_all_passes},
     Context as MeliorContext,
@@ -42,16 +42,20 @@ impl Context {
         assert!(melior_module.as_operation().verify());
 
         tracing::debug!(
-            "MLIR Code before passes:\n{:#?}",
-            melior_module.as_operation()
+            "MLIR Code before passes:\n{}",
+            melior_module.as_operation().to_string_with_flags(
+                OperationPrintingFlags::new().enable_debug_info(true, true)
+            )?
         );
 
         // TODO: Add proper error handling.
         self.run_pass_manager(&mut melior_module)?;
 
         tracing::debug!(
-            "MLIR Code after passes:\n{:#?}",
-            melior_module.as_operation()
+            "MLIR Code after passes:\n{}",
+            melior_module.as_operation().to_string_with_flags(
+                OperationPrintingFlags::new().enable_debug_info(true, true)
+            )?
         );
 
         Ok(melior_module)

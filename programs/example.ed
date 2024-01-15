@@ -3,6 +3,14 @@ mod Main {
         return a + b;
     }
 
+    fn check(a: i32) -> i32 {
+        if a == 2 {
+            return a;
+        } else {
+            return 0;
+        }
+    }
+
     fn main() -> i32 {
         let x: i32 = 2 + 3;
         let y: i32 = add(x, 4);

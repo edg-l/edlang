@@ -244,7 +244,7 @@ pub(crate) ForStmt: ast::ForStmt = {
 }
 
 pub(crate) IfStmt: ast::IfStmt = {
-  <lo:@L> "if" <condition:Expression> <then_block:Block> <else_block:Block?> <hi:@R> => {
+  <lo:@L> "if" <condition:Expression> <then_block:Block> <else_block:("else" <Block>)?> <hi:@R> => {
     ast::IfStmt {
       condition,
       then_block,

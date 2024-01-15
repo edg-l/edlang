@@ -25,10 +25,12 @@ extern {
     "pub" => Token::KeywordPub,
     "mut" => Token::KeywordMut,
     "use" => Token::KeywordUse,
+    "in" => Token::KeywordIn,
+    "extern" => Token::KeywordExtern,
 
     // literals
     "identifier" => Token::Identifier(<String>),
-    "integer" => Token::Integer(<u64>),
+    "integer" => Token::Integer(<u128>),
     "string" => Token::String(<String>),
     "boolean" => Token::Boolean(<bool>),
 
@@ -50,6 +52,7 @@ extern {
     ">=" => Token::MoreThanEqSign,
     "<=" => Token::LessThanEqSign,
     "." => Token::Dot,
+    ".." => Token::TwoDots,
 
     // operators
     "+" => Token::OperatorAdd,
@@ -111,9 +114,293 @@ PlusSeparated<T>: Vec<T> = {
     }
 };
 
+List<T>: Vec<T> = {
+  <T> => vec![<>],
+  <mut s:List<T>> <n:T> => {
+      s.push(n);
+      s
+  },
+}
+
 pub(crate) Ident: ast::Ident = {
   <lo:@L> <name:"identifier"> <hi:@R> => ast::Ident {
     name,
     span: ast::Span::new(lo, hi),
   }
+}
+
+pub(crate) Type: ast::Type = {
+    <lo:@L> <name:Ident> <hi:@R> => ast::Type {
+        name,
+        generics: vec![],
+        span: ast::Span::new(lo, hi),
+    },
+    <lo:@L> <name:Ident> "<" <generics:Comma<Type>> ">" <hi:@R> => ast::Type {
+        name,
+        generics,
+        span: ast::Span::new(lo, hi),
+    },
+}
+
+pub(crate) PathExpr: ast::PathExpr = {
+  <lo:@L> <first:Ident> <extra:PathSegments?> <hi:@R> => ast::PathExpr {
+    first,
+    extra: extra.unwrap_or(vec![]),
+    span: ast::Span::new(lo, hi),
+  }
+}
+
+pub PathSegments: Vec<ast::PathSegment> = {
+  <PathSegment> => vec![<>],
+  <mut s:PathSegments> <n:PathSegment> => {
+      s.push(n);
+      s
+  },
+}
+
+pub(crate) PathSegment: ast::PathSegment = {
+  "." <Ident> => ast::PathSegment::Field(<>),
+  <lo:@L> "[" <value:Expression> "]" <hi:@R> => ast::PathSegment::Index {
+    value,
+    span: ast::Span::new(lo, hi),
+  },
+}
+
+pub(crate) Block: ast::Block = {
+    <lo:@L> "{" <body:List<Statement>> "}" <hi:@R> => ast::Block {
+        body,
+        span: ast::Span::new(lo, hi),
+    }
+}
+
+pub(crate) Statement: ast::Statement = {
+  <IfStmt> => ast::Statement::If(<>),
+  <WhileStmt> => ast::Statement::While(<>),
+  <ForStmt> => ast::Statement::For(<>),
+  <LetStmt> ";" => ast::Statement::Let(<>),
+  <AssignStmt> ";" => ast::Statement::Assign(<>),
+  <FnCallExpr> ";" => ast::Statement::FnCall(<>),
+  <ReturnStmt> ";" => ast::Statement::Return(<>),
+}
+
+pub(crate) FnCallExpr: ast::FnCallExpr = {
+  <lo:@L> <name:Ident> "(" <params:Comma<Expression>> ")" <hi:@R> => ast::FnCallExpr {
+    name,
+    params,
+    span: ast::Span::new(lo, hi),
+  }
+}
+
+pub(crate) LetStmt: ast::LetStmt = {
+  <lo:@L> "let" <is_mut:"mut"?> <name:Ident> ":" <target_type:Type> "=" <value:Expression> <hi:@R> => ast::LetStmt {
+    is_mut: is_mut.is_some(),
+    name,
+    r#type: target_type,
+    value,
+    span: ast::Span::new(lo, hi),
+  },
+}
+
+pub(crate) AssignStmt: ast::AssignStmt = {
+  <lo:@L> <name:PathExpr> "=" <value:Expression> <hi:@R> => ast::AssignStmt {
+    name,
+    value,
+    span: ast::Span::new(lo, hi),
+  },
+}
+
+pub(crate) ReturnStmt: ast::ReturnStmt = {
+  <lo:@L> "return" <value:Expression?> <hi:@R> => ast::ReturnStmt {
+    value,
+    span: ast::Span::new(lo, hi),
+  },
+}
+
+pub(crate) WhileStmt: ast::WhileStmt = {
+  <lo:@L> "while" <condition:Expression> <block:Block> <hi:@R> => {
+    ast::WhileStmt {
+      condition,
+      block,
+      span: ast::Span::new(lo, hi),
+    }
+  }
+}
+
+pub(crate) ForStmt: ast::ForStmt = {
+  <lo:@L> "for" <name:Ident> "in" <from:Expression> <block:Block> <hi:@R> => ast::ForStmt {
+      name,
+      from,
+      to: None,
+      block,
+      span: ast::Span::new(lo, hi),
+    },
+  <lo:@L> "for" <name:Ident> "in" <from:Expression> ".." <to:Expression> <block:Block> <hi:@R> => ast::ForStmt {
+      name,
+      from,
+      to: Some(to),
+      block,
+      span: ast::Span::new(lo, hi),
+    },
+}
+
+pub(crate) IfStmt: ast::IfStmt = {
+  <lo:@L> "if" <condition:Expression> <then_block:Block> <else_block:Block?> <hi:@R> => {
+    ast::IfStmt {
+      condition,
+      then_block,
+      else_block,
+      span: ast::Span::new(lo, hi),
+    }
+  }
+}
+
+pub(crate) Term: ast::Expression = {
+  <ValueExpr> => ast::Expression::Value(<>),
+  <FnCallExpr> => ast::Expression::FnCall(<>),
+  "(" <Expression> ")",
+}
+
+pub(crate) Expression: ast::Expression = {
+  #[precedence(level="0")]
+  <Term>,
+  <op:UnaryOp> <rhs:Expression> => ast::Expression::Unary(
+    op,
+    Box::new(rhs)
+  ),
+  // <op:UnaryOp> <e:Expression> => ast::Expression::UnaryOp(op, Box::new(e)),
+  #[precedence(level="1")] #[assoc(side="left")]
+  <lhs:Expression> <op:BinaryFirstLvlOp> <rhs:Expression> => ast::Expression::Binary(
+    Box::new(lhs),
+    op,
+    Box::new(rhs)
+  ),
+  #[precedence(level="2")] #[assoc(side="left")]
+  <lhs:Expression> <op:BinarySecondLvlOp> <rhs:Expression> => ast::Expression::Binary(
+    Box::new(lhs),
+    op,
+    Box::new(rhs)
+  ),
+  #[precedence(level="3")] #[assoc(side="left")]
+  <lhs:Expression> <op:BinaryThirdLvlOp> <rhs:Expression> => ast::Expression::Binary(
+    Box::new(lhs),
+    op,
+    Box::new(rhs)
+  ),
+}
+
+pub BinaryFirstLvlOp: ast::BinaryOp = {
+  <lo:@L> "==" <hi:@R> => ast::BinaryOp::Compare(ast::CmpOp::Eq, ast::Span::new(hi, lo)),
+  <lo:@L> "!=" <hi:@R> => ast::BinaryOp::Compare(ast::CmpOp::NotEq, ast::Span::new(hi, lo)),
+  <lo:@L> "<" <hi:@R> => ast::BinaryOp::Compare(ast::CmpOp::Lt, ast::Span::new(hi, lo)),
+  <lo:@L> ">" <hi:@R> => ast::BinaryOp::Compare(ast::CmpOp::Gt, ast::Span::new(hi, lo)),
+  <lo:@L> "<=" <hi:@R> => ast::BinaryOp::Compare(ast::CmpOp::LtEq, ast::Span::new(hi, lo)),
+  <lo:@L> ">=" <hi:@R> => ast::BinaryOp::Compare(ast::CmpOp::GtEq, ast::Span::new(hi, lo)),
+  <lo:@L> "&&" <hi:@R> => ast::BinaryOp::Logic(ast::LogicOp::And, ast::Span::new(hi, lo)),
+  <lo:@L> "||" <hi:@R> => ast::BinaryOp::Logic(ast::LogicOp::Or, ast::Span::new(hi, lo)),
+}
+
+pub BinarySecondLvlOp: ast::BinaryOp = {
+  <lo:@L> "/" <hi:@R> => ast::BinaryOp::Arith(ast::ArithOp::Div, ast::Span::new(hi, lo)),
+  <lo:@L> "*" <hi:@R> => ast::BinaryOp::Arith(ast::ArithOp::Mul, ast::Span::new(hi, lo)),
+  <lo:@L> "%" <hi:@R> => ast::BinaryOp::Arith(ast::ArithOp::Mod, ast::Span::new(hi, lo)),
+}
+
+pub BinaryThirdLvlOp: ast::BinaryOp = {
+  <lo:@L> "+" <hi:@R> => ast::BinaryOp::Arith(ast::ArithOp::Add, ast::Span::new(hi, lo)),
+  <lo:@L> "-" <hi:@R> => ast::BinaryOp::Arith(ast::ArithOp::Sub, ast::Span::new(hi, lo)),
+  <lo:@L> "&" <hi:@R> => ast::BinaryOp::Bitwise(ast::BitwiseOp::And, ast::Span::new(hi, lo)),
+  <lo:@L> "|" <hi:@R> => ast::BinaryOp::Bitwise(ast::BitwiseOp::Or, ast::Span::new(hi, lo)),
+  <lo:@L> "^" <hi:@R> => ast::BinaryOp::Bitwise(ast::BitwiseOp::Xor, ast::Span::new(hi, lo)),
+}
+
+pub UnaryOp: ast::UnaryOp = {
+  <lo:@L> "-" <hi:@R>  => ast::UnaryOp::ArithNeg(ast::Span::new(hi, lo)),
+  <lo:@L> "!" <hi:@R>  => ast::UnaryOp::LogicalNot(ast::Span::new(hi, lo)),
+  <lo:@L> "~" <hi:@R>  => ast::UnaryOp::BitwiseNot(ast::Span::new(hi, lo)),
+}
+
+pub(crate) ValueExpr: ast::ValueExpr = {
+  <lo:@L> <value:"integer"> <hi:@R>  => ast::ValueExpr::Int {
+    value,
+    span: ast::Span::new(lo, hi),
+  },
+  <lo:@L> <value:"boolean"> <hi:@R> => ast::ValueExpr::Bool{
+    value,
+    span: ast::Span::new(lo, hi),
+  },
+  <lo:@L> <value:"string"> <hi:@R> => ast::ValueExpr::Str{
+    value,
+    span: ast::Span::new(lo, hi),
+  },
+  <PathExpr> => ast::ValueExpr::Path(<>),
+}
+
+pub(crate) FnParam: ast::FnParam = {
+    <lo:@L> <name:Ident> ":" <arg_type:Type> <hi:@R> => ast::FnParam {
+        name,
+        arg_type,
+        span: ast::Span::new(lo, hi),
+    }
+}
+
+pub(crate) Function: ast::Function = {
+    <lo:@L> <is_public:"pub"?> <is_extern:"extern"?> "fn" <name:Ident> "(" <params:Comma<FnParam>> ")"
+        <return_type:("->" <Type>)?> <body:Block> <hi:@R> => ast::Function {
+        is_public: is_public.is_some(),
+        is_extern: is_extern.is_some(),
+        name,
+        params,
+        return_type,
+        body,
+        span: ast::Span::new(lo, hi),
+    }
+}
+
+pub(crate) Constant: ast::Constant = {
+    <lo:@L> "const" <name:Ident> ":" <r#type:Type> "=" <value:Expression> ";" <hi:@R> => ast::Constant {
+        name,
+        r#type,
+        value,
+        span: ast::Span::new(lo, hi),
+    }
+}
+
+pub(crate) StructField: ast::StructField = {
+    <lo:@L> <name:Ident> ":" <r#type:Type> <hi:@R> => ast::StructField {
+        name,
+        r#type,
+        span: ast::Span::new(lo, hi),
+    }
+}
+
+pub(crate) Struct: ast::Struct = {
+    <lo:@L> "struct" <name:Ident> <generics:("<" <Comma<Type>> ">")?> "{" <fields:Comma<StructField>> "}" <hi:@R> => ast::Struct {
+        name,
+        fields,
+        generics: generics.unwrap_or(vec![]),
+        span: ast::Span::new(lo, hi),
+    }
+}
+
+pub(crate) Import: ast::Import = {
+    <lo:@L> "use" <path:PathExpr> <symbols:("{" <Comma<Ident>> "}")?> ";" <hi:@R> => ast::Import {
+        path,
+        symbols: symbols.unwrap_or(vec![]),
+        span: ast::Span::new(lo, hi),
+    }
+}
+
+pub Module: ast::Module = {
+    <lo:@L> "mod" <name:Ident> "{" <imports:List<Import>?> <contents:List<ModuleStatement>> "}" <hi:@R> => ast::Module {
+        name,
+        imports: imports.unwrap_or(vec![]),
+        contents,
+        span: ast::Span::new(lo, hi),
+    }
+}
+
+pub(crate) ModuleStatement: ast::ModuleStatement = {
+    <Function> => ast::ModuleStatement::Function(<>),
+    <Constant> => ast::ModuleStatement::Constant(<>),
+    <Struct> => ast::ModuleStatement::Struct(<>),
 }

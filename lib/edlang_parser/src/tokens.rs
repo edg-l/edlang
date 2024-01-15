@@ -51,14 +51,18 @@ pub enum Token {
     KeywordMut,
     #[token("use")]
     KeywordUse,
+    #[token("in")]
+    KeywordIn,
+    #[token("extern")]
+    KeywordExtern,
 
     // Modern way of allowing identifiers, read: https://unicode.org/reports/tr31/
     #[regex(r"[\p{XID_Start}_]\p{XID_Continue}*", |lex| lex.slice().to_string())]
     Identifier(String),
 
     // Literals
-    #[regex(r"\d+", |lex| lex.slice().parse::<u64>().unwrap())]
-    Integer(u64),
+    #[regex(r"\d+", |lex| lex.slice().parse::<u128>().unwrap())]
+    Integer(u128),
     #[regex(r#""(?:[^"]|\\")*""#, |lex| lex.slice().to_string())]
     String(String),
     #[regex(r"(true|false)", |lex| lex.slice().parse::<bool>().unwrap())]
@@ -88,6 +92,8 @@ pub enum Token {
     Coma,
     #[token(".")]
     Dot,
+    #[token("..")]
+    TwoDots,
     #[token("<")]
     LessThanSign,
     #[token(">")]

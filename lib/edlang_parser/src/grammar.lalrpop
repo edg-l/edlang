@@ -1,0 +1,119 @@
+use crate::tokens::Token;
+use crate::lexer::LexicalError;
+use edlang_ast as ast;
+use std::str::FromStr;
+
+grammar;
+
+extern {
+  type Location = usize;
+  type Error = LexicalError;
+
+  enum Token {
+    // keywords
+    "let" => Token::KeywordLet,
+    "const" => Token::KeywordConst,
+    "fn" => Token::KeywordFn,
+    "return" => Token::KeywordReturn,
+    "struct" => Token::KeywordStruct,
+    "if" => Token::KeywordIf,
+    "else" => Token::KeywordElse,
+    "while" => Token::KeywordWhile,
+    "for" => Token::KeywordFor,
+    "match" => Token::KeywordMatch,
+    "mod" => Token::KeywordMod,
+    "pub" => Token::KeywordPub,
+    "mut" => Token::KeywordMut,
+    "use" => Token::KeywordUse,
+
+    // literals
+    "identifier" => Token::Identifier(<String>),
+    "integer" => Token::Integer(<u64>),
+    "string" => Token::String(<String>),
+    "boolean" => Token::Boolean(<bool>),
+
+    // Other
+
+    "(" => Token::LeftParen,
+    ")" => Token::RightParen,
+    "{" => Token::LeftBracket,
+    "}" => Token::RightBracket,
+    "[" => Token::LeftSquareBracket,
+    "]" => Token::RightSquareBracket,
+    "=" => Token::Assign,
+    ";" => Token::Semicolon,
+    ":" => Token::Colon,
+    "->" => Token::Arrow,
+    "," => Token::Coma,
+    "<" => Token::LessThanSign,
+    ">" => Token::MoreThanSign,
+    ">=" => Token::MoreThanEqSign,
+    "<=" => Token::LessThanEqSign,
+    "." => Token::Dot,
+
+    // operators
+    "+" => Token::OperatorAdd,
+    "-" => Token::OperatorSub,
+    "*" => Token::OperatorMul,
+    "/" => Token::OperatorDiv,
+    "%" => Token::OperatorRem,
+    "&&" => Token::OperatorAnd,
+    "||" => Token::OperatorOr,
+    "==" => Token::OperatorEq,
+    "!=" => Token::OperatorNe,
+    "!" => Token::OperatorNot,
+    "~" => Token::OperatorBitwiseNot,
+    "^" => Token::OperatorBitwiseXor,
+    "&" => Token::OperatorBitwiseAnd,
+    "|" => Token::OperatorBitwiseOr,
+  }
+}
+
+// lalrpop macros
+
+Dot<T>: Vec<T> = {
+    <mut v:(<T> ".")*> <e:T?> => match e {
+        None => v,
+        Some(e) => {
+            v.push(e);
+            v
+        }
+    }
+};
+
+Comma<T>: Vec<T> = {
+    <mut v:(<T> ",")*> <e:T?> => match e {
+        None => v,
+        Some(e) => {
+            v.push(e);
+            v
+        }
+    }
+};
+
+SemiColon<T>: Vec<T> = {
+    <mut v:(<T> ";")*> <e:T?> => match e {
+        None => v,
+        Some(e) => {
+            v.push(e);
+            v
+        }
+    }
+};
+
+PlusSeparated<T>: Vec<T> = {
+    <mut v:(<T> "+")*> <e:T?> => match e {
+        None => v,
+        Some(e) => {
+            v.push(e);
+            v
+        }
+    }
+};
+
+pub(crate) Ident: ast::Ident = {
+  <lo:@L> <name:"identifier"> <hi:@R> => ast::Ident {
+    name,
+    span: ast::Span::new(lo, hi),
+  }
+}

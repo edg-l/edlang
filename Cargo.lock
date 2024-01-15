@@ -539,12 +539,14 @@ dependencies = [
 name = "edlang_codegen_mlir"
 version = "0.1.0"
 dependencies = [
+ "cc",
  "edlang_ast",
  "edlang_parser",
  "edlang_session",
  "llvm-sys",
  "melior",
  "mlir-sys",
+ "tracing",
 ]
 
 [[package]]
@@ -566,6 +568,7 @@ dependencies = [
 name = "edlang_parser"
 version = "0.1.0"
 dependencies = [
+ "ariadne",
  "edlang_ast",
  "lalrpop",
  "lalrpop-util",
@@ -576,6 +579,9 @@ dependencies = [
 [[package]]
 name = "edlang_session"
 version = "0.1.0"
+dependencies = [
+ "ariadne",
+]
 
 [[package]]
 name = "either"

@@ -1,6 +1,9 @@
 use std::{error::Error, path::PathBuf, time::Instant};
 
+use ariadne::Source;
 use clap::Parser;
+use edlang_codegen_mlir::linker::{link_binary, link_shared_lib};
+use edlang_session::{DebugInfo, OptLevel, Session};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -24,21 +27,17 @@ pub fn main() -> Result<(), Box<dyn Error>> {
 
     let args = CompilerArgs::parse();
 
-    /*
-    let db = crate::db::Database::default();
-    let source = ProgramSource::new(&db, std::fs::read_to_string(args.input.clone())?);
-    tracing::debug!("source code:\n{}", source.input(&db));
-    let program = match concrete_parser::parse_ast(&db, source) {
-        Some(x) => x,
-        None => {
-            Diagnostics::dump(
-                &db,
-                source,
-                &concrete_parser::parse_ast::accumulated::<concrete_parser::error::Diagnostics>(
-                    &db, source,
-                ),
-            );
-            panic!();
+    let path = args.input.display().to_string();
+    let source = std::fs::read_to_string(&args.input)?;
+
+    let module = edlang_parser::parse_ast(&source);
+
+    let module = match module {
+        Ok(module) => module,
+        Err(error) => {
+            let report = edlang_parser::error_to_report(&path, &error)?;
+            edlang_parser::print_report(&path, &source, report)?;
+            std::process::exit(1)
         }
     };
 
@@ -64,21 +63,20 @@ pub fn main() -> Result<(), Box<dyn Error>> {
         } else {
             OptLevel::None
         },
-        source: source.input(&db).to_string(),
+        source: Source::from(source),
         library: args.library,
         target_dir,
         output_file,
     };
     tracing::debug!("Compiling with session: {:#?}", session);
 
-    // let object_path = concrete_codegen_mlir::compile(&session, &program)?;
+    let object_path = edlang_codegen_mlir::compile(&session, &module)?;
 
     if session.library {
         link_shared_lib(&object_path, &session.output_file.with_extension("so"))?;
     } else {
         link_binary(&object_path, &session.output_file.with_extension(""))?;
     }
-     */
 
     let elapsed = start_time.elapsed();
     tracing::debug!("Done in {:?}", elapsed);

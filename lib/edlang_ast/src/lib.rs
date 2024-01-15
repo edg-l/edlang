@@ -12,6 +12,7 @@ impl Span {
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Module {
+    pub name: Ident,
     pub imports: Vec<Import>,
     pub contents: Vec<ModuleStatement>,
     pub span: Span,
@@ -22,6 +23,7 @@ pub enum ModuleStatement {
     Function(Function),
     Constant(Constant),
     Struct(Struct),
+    Module(Module),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -56,6 +58,7 @@ pub struct Ident {
 pub struct Type {
     pub name: Ident,
     pub generics: Vec<Type>,
+    pub span: Span,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -73,13 +76,59 @@ pub struct Block {
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Statement {
-    Let,
-    Assign,
-    For,
-    While,
-    If,
-    Return,
+    Let(LetStmt),
+    Assign(AssignStmt),
+    For(ForStmt),
+    While(WhileStmt),
+    If(IfStmt),
+    Return(ReturnStmt),
     FnCall(FnCallExpr),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct LetStmt {
+    pub name: Ident,
+    pub is_mut: bool,
+    pub r#type: Type,
+    pub value: Expression,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct AssignStmt {
+    pub name: PathExpr,
+    pub value: Expression,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct IfStmt {
+    pub condition: Expression,
+    pub then_block: Block,
+    pub else_block: Option<Block>,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct ForStmt {
+    pub name: Ident,
+    pub from: Expression,
+    pub to: Option<Expression>,
+    pub block: Block,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct WhileStmt {
+    pub condition: Expression,
+    pub block: Block,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct ReturnStmt {
+    pub value: Option<Expression>,
+    pub span: Span,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -102,7 +151,7 @@ pub struct Constant {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct Field {
+pub struct StructField {
     pub name: Ident,
     pub r#type: Type,
     pub span: Span,
@@ -112,7 +161,7 @@ pub struct Field {
 pub struct Struct {
     pub name: Ident,
     pub generics: Vec<Type>,
-    pub fields: Vec<Field>,
+    pub fields: Vec<StructField>,
     pub span: Span,
 }
 
@@ -137,7 +186,6 @@ pub enum ValueExpr {
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct FnCallExpr {
     pub name: Ident,
-    pub generic_params: Vec<Type>,
     pub params: Vec<Expression>,
     pub span: Span,
 }

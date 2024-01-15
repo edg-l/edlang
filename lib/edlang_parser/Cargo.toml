@@ -13,6 +13,7 @@ categories = ["compilers"]
 [dependencies]
 ariadne = { version = "0.4.0", features = ["auto-color"] }
 edlang_ast = { version = "0.1.0", path = "../edlang_ast" }
+itertools = "0.12.0"
 lalrpop-util = { version = "0.20.0", features = ["lexer"] }
 logos = "0.13.0"
 tracing = { workspace = true }

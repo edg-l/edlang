@@ -1,9 +1,11 @@
-fn add(a: i32, b: i32) -> i32 {
-    return a + b;
-}
+mod Main {
+    fn add(a: i32, b: i32) -> i32 {
+        return a + b;
+    }
 
-fn main() -> i32 {
-    let x = 2 + 3;
-    let y = add(x, 4);
-    return y;
+    fn main() -> i32 {
+        let x: i32 = 2 + 3;
+        let y: i32 = add(x, 4);
+        return y;
+    }
 }

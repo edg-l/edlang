@@ -11,6 +11,7 @@ categories = ["compilers"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+ariadne = { version = "0.4.0", features = ["auto-color"] }
 clap = { version = "4.4.16", features = ["derive"] }
 color-eyre = "0.6.2"
 edlang_ast = { version = "0.1.0", path = "../edlang_ast" }

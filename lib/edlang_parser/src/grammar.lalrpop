@@ -403,4 +403,5 @@ pub(crate) ModuleStatement: ast::ModuleStatement = {
     <Function> => ast::ModuleStatement::Function(<>),
     <Constant> => ast::ModuleStatement::Constant(<>),
     <Struct> => ast::ModuleStatement::Struct(<>),
+    <Module> => ast::ModuleStatement::Module(<>),
 }

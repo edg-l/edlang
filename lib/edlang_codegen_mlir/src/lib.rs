@@ -8,6 +8,8 @@ use std::{
     sync::OnceLock,
 };
 
+use context::Context;
+use edlang_ast::Module;
 use edlang_session::{OptLevel, Session};
 use llvm_sys::{
     core::{LLVMContextCreate, LLVMContextDispose, LLVMDisposeMessage, LLVMDisposeModule},
@@ -22,13 +24,23 @@ use llvm_sys::{
         LLVMTargetRef,
     },
 };
-use melior::ir::Module;
+use melior::ir::Module as MeliorModule;
 
 use crate::ffi::mlirTranslateModuleToLLVMIR;
 
 pub mod codegen;
+mod context;
 mod ffi;
 pub mod linker;
+
+pub fn compile(session: &Session, program: &Module) -> Result<PathBuf, Box<dyn std::error::Error>> {
+    let context = Context::new();
+    let mlir_module = context.compile(session, program)?;
+
+    let object_path = compile_to_object(session, &mlir_module)?;
+
+    Ok(object_path)
+}
 
 /// Converts a module to an object.
 /// The object will be written to the specified target path.
@@ -37,7 +49,7 @@ pub mod linker;
 /// Returns the path to the object.
 pub fn compile_to_object(
     session: &Session,
-    module: &Module,
+    module: &MeliorModule,
 ) -> Result<PathBuf, Box<dyn std::error::Error>> {
     tracing::debug!("Compiling to object file");
     if !session.target_dir.exists() {

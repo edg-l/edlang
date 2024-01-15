@@ -1,13 +1,13 @@
-use std::{cell::Cell, collections::HashMap, error::Error};
+use std::{collections::HashMap, error::Error};
 
 use bumpalo::Bump;
 use edlang_ast::{
     ArithOp, AssignStmt, BinaryOp, Constant, Expression, Function, LetStmt, Module,
-    ModuleStatement, ReturnStmt, Span, Statement, Struct, ValueExpr,
+    ModuleStatement, ReturnStmt, Statement, Struct, ValueExpr,
 };
 use edlang_session::Session;
 use melior::{
-    dialect::{arith, cf, func, memref},
+    dialect::{arith, func, memref},
     ir::{
         attribute::{FlatSymbolRefAttribute, IntegerAttribute, StringAttribute, TypeAttribute},
         r#type::{FunctionType, IntegerType, MemRefType},
@@ -16,8 +16,6 @@ use melior::{
     },
     Context as MeliorContext,
 };
-
-use crate::context::Context;
 #[derive(Debug, Clone)]
 pub struct LocalVar<'ctx, 'parent: 'ctx> {
     pub ast_type: edlang_ast::Type,

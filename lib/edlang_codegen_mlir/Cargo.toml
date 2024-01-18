@@ -16,7 +16,7 @@ edlang_ast = { version = "0.1.0", path = "../edlang_ast" }
 edlang_parser = { version = "0.1.0", path = "../edlang_parser" }
 edlang_session = { version = "0.1.0", path = "../edlang_session" }
 llvm-sys = "170.0.1"
-melior = { version = "0.15.0", features = ["ods-dialects"] }
+melior = { version = "0.15.2", features = ["ods-dialects"] }
 mlir-sys = "0.2.1"
 tracing = { workspace = true }
 

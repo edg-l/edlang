@@ -14,13 +14,12 @@ use melior::{
     ir::{
         attribute::{FlatSymbolRefAttribute, IntegerAttribute, StringAttribute, TypeAttribute},
         r#type::{FunctionType, IntegerType, MemRefType},
-        Attribute, Block, BlockRef, Location, Module as MeliorModule, Region, Type, TypeLike,
-        Value, ValueLike,
+        Attribute, Block, BlockRef, Location, Module as MeliorModule, Region, Type, Value,
+        ValueLike,
     },
     Context as MeliorContext,
 };
 
-use crate::util::call_site;
 #[derive(Debug, Clone)]
 pub struct LocalVar<'ctx, 'parent: 'ctx> {
     pub ast_type: edlang_ast::Type,
@@ -645,7 +644,7 @@ fn compile_fn_call<'ctx, 'parent: 'ctx>(
         &info.name.name,
         get_location(context, session, scope_ctx.function.unwrap().span.lo),
     );
-    let location = call_site(location_callee, location_caller);
+    let location = Location::call_site(location_callee, location_caller);
 
     let target_fn = scope_ctx
         .functions

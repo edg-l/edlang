@@ -160,6 +160,22 @@ fn get_location<'c>(context: &'c MeliorContext, session: &Session, offset: usize
     )
 }
 
+fn get_di_file<'c>(context: &'c MeliorContext, session: &Session) -> Attribute<'c> {
+    Attribute::parse(
+        context,
+        &format!(r#"#llvm.di_file<"{}">"#, session.file_path.display()),
+    )
+    .unwrap()
+}
+
+fn get_di<'c>(context: &'c MeliorContext, session: &Session) -> Attribute<'c> {
+    Attribute::parse(
+        context,
+        &format!(r#"#llvm.di_file<"{}">"#, session.file_path.display()),
+    )
+    .unwrap()
+}
+
 fn compile_function_def<'ctx, 'parent>(
     session: &Session,
     context: &'ctx MeliorContext,
@@ -171,7 +187,6 @@ fn compile_function_def<'ctx, 'parent>(
     let region = Region::new();
 
     let location = get_location(context, session, info.name.span.lo);
-    let location = Location::name(context, &info.name.name, location);
 
     let mut args = Vec::with_capacity(info.params.len());
     let mut fn_args_types = Vec::with_capacity(info.params.len());
@@ -179,7 +194,7 @@ fn compile_function_def<'ctx, 'parent>(
     for param in &info.params {
         let param_type = scope_ctx.resolve_type(context, &param.arg_type)?;
         let loc = get_location(context, session, param.name.span.lo);
-        let loc = Location::name(context, &param.name.name, loc);
+        // let loc = Location::name(context, &param.name.name, loc);
         args.push((param_type, loc));
         fn_args_types.push(param_type);
     }
@@ -223,11 +238,7 @@ fn compile_function_def<'ctx, 'parent>(
         if final_block.terminator().is_none() {
             final_block.append_operation(func::r#return(
                 &[],
-                Location::name(
-                    context,
-                    "return",
-                    get_location(context, session, info.span.hi),
-                ),
+                get_location(context, session, info.span.hi),
             ));
         }
     }
@@ -383,7 +394,6 @@ fn compile_return<'ctx, 'parent: 'ctx>(
 ) -> Result<(), Box<dyn std::error::Error>> {
     tracing::debug!("compiling return");
     let location = get_location(context, session, info.span.lo);
-    let location = Location::name(context, "return", location);
 
     let ret_type = scope_ctx.function.and_then(|x| x.return_type.clone());
 
@@ -471,7 +481,6 @@ fn compile_expression<'ctx, 'parent: 'ctx>(
                     .expect("local not found");
 
                 let location = get_location(context, session, path.first.span.lo);
-                let location = Location::name(context, &path.first.name, location);
 
                 if local.is_alloca {
                     let k0 = block
@@ -638,13 +647,18 @@ fn compile_fn_call<'ctx, 'parent: 'ctx>(
 ) -> Result<Value<'ctx, 'parent>, Box<dyn Error>> {
     let mut args = Vec::with_capacity(info.params.len());
     let location = get_location(context, session, info.name.span.lo);
+    /*
     let location_callee = Location::name(context, &info.name.name, location);
     let location_caller = Location::name(
         context,
         &info.name.name,
         get_location(context, session, scope_ctx.function.unwrap().span.lo),
     );
-    let location = Location::call_site(location_callee, location_caller);
+    */
+    let location = Location::call_site(
+        location,
+        get_location(context, session, scope_ctx.function.unwrap().span.lo),
+    );
 
     let target_fn = scope_ctx
         .functions
@@ -718,7 +732,7 @@ fn compile_if_stmt<'c, 'this: 'c>(
         else_successor,
         &[],
         &[],
-        Location::name(context, "if", location),
+        location,
     ));
 
     let mut then_successor = then_successor;

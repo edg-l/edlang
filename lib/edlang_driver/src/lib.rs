@@ -18,6 +18,12 @@ pub struct CompilerArgs {
     /// Build as a library.
     #[arg(short, long, default_value_t = false)]
     library: bool,
+
+    #[arg(long, default_value_t = false)]
+    mlir: bool,
+
+    #[arg(long, default_value_t = false)]
+    ast: bool,
 }
 
 pub fn main() -> Result<(), Box<dyn Error>> {
@@ -69,6 +75,16 @@ pub fn main() -> Result<(), Box<dyn Error>> {
         output_file,
     };
     tracing::debug!("Compiling with session: {:#?}", session);
+
+    if args.ast {
+        println!("{:#?}", module);
+        return Ok(());
+    }
+
+    if args.mlir {
+        println!("{}", edlang_codegen_mlir::compile_mlir(&session, &module)?);
+        return Ok(());
+    }
 
     let object_path = edlang_codegen_mlir::compile(&session, &module)?;
 

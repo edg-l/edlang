@@ -24,7 +24,7 @@ use llvm_sys::{
         LLVMTargetRef,
     },
 };
-use melior::ir::Module as MeliorModule;
+use melior::ir::{operation::OperationPrintingFlags, Module as MeliorModule};
 
 use crate::ffi::mlirTranslateModuleToLLVMIR;
 
@@ -32,6 +32,18 @@ pub mod codegen;
 mod context;
 mod ffi;
 pub mod linker;
+
+pub fn compile_mlir(
+    session: &Session,
+    program: &Module,
+) -> Result<String, Box<dyn std::error::Error>> {
+    let context = Context::new();
+    let mlir_module = context.compile(session, program)?;
+
+    Ok(mlir_module
+        .as_operation()
+        .to_string_with_flags(OperationPrintingFlags::new().enable_debug_info(true, false))?)
+}
 
 pub fn compile(session: &Session, program: &Module) -> Result<PathBuf, Box<dyn std::error::Error>> {
     let context = Context::new();

@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
 
-members = [ "bin/edlang", "lib/edlang_ast", "lib/edlang_check", "lib/edlang_codegen_mlir", "lib/edlang_driver","lib/edlang_parser", "lib/edlang_session"]
+members = [ "bin/edlang", "lib/edlang_ast", "lib/edlang_check", "lib/edlang_codegen_mlir", "lib/edlang_driver", "lib/edlang_ir", "lib/edlang_lowering","lib/edlang_parser", "lib/edlang_session", "lib/edlang_span"]
 
 [profile.release]
 lto = true

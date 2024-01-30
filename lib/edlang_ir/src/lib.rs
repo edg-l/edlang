@@ -1,59 +1,80 @@
 // Based on a cfg
 
+use std::collections::BTreeMap;
+
 use edlang_span::Span;
 use smallvec::SmallVec;
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct Body {
-    pub locals: SmallVec<[Local; 4]>,
-    pub blocks: SmallVec<[BasicBlock; 8]>,
-    pub debug_info: SmallVec<[DebugInfo; 4]>,
+pub mod scalar_int;
+
+#[derive(Debug, Clone)]
+pub struct ModuleBody {
+    pub module_id: usize,
+    pub functions: BTreeMap<DefId, Body>,
+    pub modules: BTreeMap<DefId, Self>,
+    pub span: Span,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+/// Definition id.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct DefId {
+    pub module_id: usize,
+    pub id: usize,
+}
+
+#[derive(Debug, Clone)]
+pub struct Body {
+    pub def_id: DefId,
+    pub is_pub: bool,
+    pub is_extern: bool,
+    pub ret_type: Option<TypeInfo>,
+    pub locals: SmallVec<[Local; 4]>,
+    pub blocks: SmallVec<[BasicBlock; 8]>,
+    pub fn_span: Span,
+}
+
+#[derive(Debug, Clone)]
 pub struct DebugInfo {
     pub id: usize,
     pub span: Span,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone)]
 pub struct BasicBlock {
     pub id: usize,
     pub statements: SmallVec<[Statement; 8]>,
     pub terminator: Terminator,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone)]
 pub struct Local {
-    pub id: usize,
     pub mutable: bool,
-    pub debug_info: Option<usize>,
-    pub ty: usize,
+    pub span: Option<Span>,
+    pub ty: TypeInfo,
     pub kind: LocalKind,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub enum LocalKind {
     Temp,
     Arg,
     ReturnPointer,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone)]
 pub struct Statement {
-    pub id: usize,
-    pub debug_info: Option<usize>,
+    pub span: Option<Span>,
     pub kind: StatementKind,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone)]
 pub enum StatementKind {
     Assign(Place, RValue),
     StorageLive(usize),
     StorageDead(usize),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone)]
 pub enum Terminator {
     Target(usize),
     Return,
@@ -68,24 +89,23 @@ pub enum Terminator {
     Unreachable,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone)]
 pub struct TypeInfo {
-    pub id: usize,
-    pub debug_info: Option<usize>,
+    pub span: Option<Span>,
     pub kind: TypeKind,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone)]
 pub enum TypeKind {
     Bool,
     Char,
     Int(IntTy),
     Uint(UintTy),
-    Float(FloatTY),
+    Float(FloatTy),
     FuncDef { name: String, args: Vec<Self> },
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone)]
 pub enum IntTy {
     I128,
     I64,
@@ -95,7 +115,7 @@ pub enum IntTy {
     Isize,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone)]
 pub enum UintTy {
     U128,
     U64,
@@ -105,57 +125,51 @@ pub enum UintTy {
     Usize,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum FloatTY {
+#[derive(Debug, Clone)]
+pub enum FloatTy {
     F32,
     F64,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone)]
 pub struct ConstData {
-    pub debug_info: Option<usize>,
-    pub type_info: usize,
+    pub span: Option<Span>,
+    pub type_info: TypeInfo,
     pub kind: ConstKind,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone)]
 pub enum ConstKind {
     Value(ValueTree),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Copy)]
-pub struct ScalarInt {
-    pub data: u128,
-    pub size: u8,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone)]
 pub enum ValueTree {
-    Leaf(ScalarInt),
+    Leaf(ConstValue),
     Branch(Vec<Self>),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone)]
 pub enum RValue {
     Use(Operand),
     BinOp(BinOp, Operand, Operand),
     UnOp(UnOp, Operand),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone)]
 pub enum Operand {
     Copy(Place),
     Move(Place),
     Constant(ConstData),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone)]
 pub struct Place {
     pub local: usize,
     pub projection: SmallVec<[PlaceElem; 1]>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub enum PlaceElem {
     Deref,
     Field { field_idx: usize, type_info: usize },
@@ -204,11 +218,11 @@ impl TypeKind {
     }
 
     pub fn get_f32() -> Self {
-        Self::Float(FloatTY::F32)
+        Self::Float(FloatTy::F32)
     }
 
     pub fn get_f64() -> Self {
-        Self::Float(FloatTY::F64)
+        Self::Float(FloatTy::F64)
     }
 
     pub fn get_bool() -> Self {
@@ -220,7 +234,7 @@ impl TypeKind {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub enum BinOp {
     Add,
     Sub,
@@ -241,8 +255,25 @@ pub enum BinOp {
     Offset,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub enum UnOp {
     Not,
     Neg,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub enum ConstValue {
+    Bool(bool),
+    I8(i8),
+    I16(i16),
+    I32(i32),
+    I64(i64),
+    I128(i128),
+    U8(u8),
+    U16(u16),
+    U32(u32),
+    U64(u64),
+    U128(u128),
+    F32(f32),
+    F64(f64),
 }

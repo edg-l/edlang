@@ -3,6 +3,7 @@ use std::{error::Error, path::PathBuf, time::Instant};
 use ariadne::Source;
 use clap::Parser;
 use edlang_codegen_mlir::linker::{link_binary, link_shared_lib};
+use edlang_lowering::{lower_module, IdGenerator};
 use edlang_session::{DebugInfo, OptLevel, Session};
 
 #[derive(Parser, Debug)]
@@ -24,6 +25,9 @@ pub struct CompilerArgs {
 
     #[arg(long, default_value_t = false)]
     ast: bool,
+
+    #[arg(long, default_value_t = false)]
+    ir: bool,
 }
 
 pub fn main() -> Result<(), Box<dyn Error>> {
@@ -78,6 +82,14 @@ pub fn main() -> Result<(), Box<dyn Error>> {
 
     if args.ast {
         println!("{:#?}", module);
+        return Ok(());
+    }
+
+    let mut gen = IdGenerator::new(0);
+    let ir = lower_module(&mut gen, &module);
+
+    if args.ir {
+        println!("{:#?}", ir);
         return Ok(());
     }
 

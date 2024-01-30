@@ -563,6 +563,8 @@ dependencies = [
  "edlang_ast",
  "edlang_check",
  "edlang_codegen_mlir",
+ "edlang_ir",
+ "edlang_lowering",
  "edlang_parser",
  "edlang_session",
  "tracing",

@@ -17,6 +17,8 @@ color-eyre = "0.6.2"
 edlang_ast = { version = "0.1.0", path = "../edlang_ast" }
 edlang_check = { version = "0.1.0", path = "../edlang_check" }
 edlang_codegen_mlir = { version = "0.1.0", path = "../edlang_codegen_mlir" }
+edlang_ir = { version = "0.1.0", path = "../edlang_ir" }
+edlang_lowering = { version = "0.1.0", path = "../edlang_lowering" }
 edlang_parser = { version = "0.1.0", path = "../edlang_parser" }
 edlang_session = { version = "0.1.0", path = "../edlang_session" }
 tracing = { workspace = true }

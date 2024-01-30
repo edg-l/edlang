@@ -1,0 +1,7 @@
+mod Main {
+
+    fn main() -> i32 {
+        let x: i32 = 2;
+        return x;
+    }
+}

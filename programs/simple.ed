@@ -1,7 +1,8 @@
 mod Main {
 
-    fn main() -> i32 {
-        let x: i32 = 2;
+    fn main(argc: i32) -> i32 {
+        let mut x: i32 = 2;
+        x = 4;
         return x;
     }
 }

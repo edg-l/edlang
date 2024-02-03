@@ -85,19 +85,14 @@ pub fn main() -> Result<(), Box<dyn Error>> {
         return Ok(());
     }
 
-    let (_symbols, module_irs) = lower_modules(&[module.clone()]);
+    let (symbols, module_irs) = lower_modules(&[module.clone()]);
 
     if args.ir {
         println!("{:#?}", module_irs);
         return Ok(());
     }
 
-    if args.mlir {
-        println!("{}", edlang_codegen_mlir::compile_mlir(&session, &module)?);
-        return Ok(());
-    }
-
-    let object_path = edlang_codegen_mlir::compile(&session, &module)?;
+    let object_path = edlang_codegen_mlir::compile(&session, &module_irs, symbols)?;
 
     if session.library {
         link_shared_lib(&object_path, &session.output_file.with_extension("so"))?;

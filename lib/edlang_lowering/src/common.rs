@@ -12,7 +12,7 @@ impl IdGenerator {
     pub const fn new(module_id: usize) -> Self {
         Self {
             current_id: 0,
-            module_id: 0,
+            module_id,
         }
     }
 

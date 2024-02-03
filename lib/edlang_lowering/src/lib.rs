@@ -7,7 +7,9 @@ use ir::{ConstData, ConstKind, DefId, Local, Operand, Place, Statement, Terminat
 
 mod common;
 
-pub fn lower_modules(modules: &[ast::Module]) -> (HashMap<DefId, String>, Vec<ir::ModuleBody>) {
+pub fn lower_modules(
+    modules: &[ast::Module],
+) -> (HashMap<DefId, String>, HashMap<DefId, ir::ModuleBody>) {
     let mut ctx = BuildCtx::default();
 
     for m in modules {
@@ -28,14 +30,14 @@ pub fn lower_modules(modules: &[ast::Module]) -> (HashMap<DefId, String>, Vec<ir
         ctx.gen.next_module_defid();
     }
 
-    let mut lowered_modules = Vec::with_capacity(modules.len());
+    let mut lowered_modules = HashMap::with_capacity(modules.len());
 
     // todo: maybe should do a prepass here populating all symbols
 
     for module in modules {
         let ir;
         (ctx, ir) = lower_module(ctx, module);
-        lowered_modules.push(ir);
+        lowered_modules.insert(ir.module_id, ir);
     }
 
     (ctx.symbol_names, lowered_modules)

@@ -1,6 +1,8 @@
 #![allow(clippy::too_many_arguments)]
 
+use edlang_ir as ir;
 use std::{
+    collections::HashMap,
     ffi::{CStr, CString},
     mem::MaybeUninit,
     path::PathBuf,
@@ -8,9 +10,10 @@ use std::{
     sync::OnceLock,
 };
 
-use context::Context;
-use edlang_ast::Module;
 use edlang_session::{OptLevel, Session};
+use inkwell::context::Context;
+use ir::DefId;
+/*
 use llvm_sys::{
     core::{LLVMContextCreate, LLVMContextDispose, LLVMDisposeMessage, LLVMDisposeModule},
     target::{
@@ -24,41 +27,26 @@ use llvm_sys::{
         LLVMTargetRef,
     },
 };
-use melior::ir::{operation::OperationPrintingFlags, Module as MeliorModule};
-
-use crate::ffi::mlirTranslateModuleToLLVMIR;
+*/
 
 pub mod codegen;
-mod context;
-mod ffi;
 pub mod linker;
 
-pub fn compile_mlir(
+pub fn compile(
     session: &Session,
-    program: &Module,
-) -> Result<String, Box<dyn std::error::Error>> {
-    let context = Context::new();
-    let mlir_module = context.compile(session, program)?;
-
-    Ok(mlir_module
-        .as_operation()
-        .to_string_with_flags(OperationPrintingFlags::new().enable_debug_info(true, false))?)
+    modules: &HashMap<DefId, ir::ModuleBody>,
+    symbols: HashMap<DefId, String>,
+) -> Result<PathBuf, Box<dyn std::error::Error>> {
+    codegen::compile(session, modules, &symbols)
 }
 
-pub fn compile(session: &Session, program: &Module) -> Result<PathBuf, Box<dyn std::error::Error>> {
-    let context = Context::new();
-    let mlir_module = context.compile(session, program)?;
+// Converts a module to an object.
+// The object will be written to the specified target path.
+// TODO: error handling
+//
+// Returns the path to the object.ç
 
-    let object_path = compile_to_object(session, &mlir_module)?;
-
-    Ok(object_path)
-}
-
-/// Converts a module to an object.
-/// The object will be written to the specified target path.
-/// TODO: error handling
-///
-/// Returns the path to the object.
+/*
 pub fn compile_to_object(
     session: &Session,
     module: &MeliorModule,
@@ -175,3 +163,4 @@ pub fn compile_to_object(
         Ok(target_path)
     }
 }
+*/

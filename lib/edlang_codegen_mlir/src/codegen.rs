@@ -1,789 +1,440 @@
-use std::{collections::HashMap, error::Error};
+use std::{collections::HashMap, error::Error, path::PathBuf};
 
-use bumpalo::Bump;
-use edlang_ast::{
-    ArithOp, AssignStmt, BinaryOp, CmpOp, Constant, Expression, FnCallExpr, Function, IfStmt,
-    LetStmt, LogicOp, Module, ModuleStatement, ReturnStmt, Statement, Struct, ValueExpr,
-};
+use edlang_ir as ir;
+use edlang_ir::DefId;
 use edlang_session::Session;
-use melior::{
-    dialect::{
-        arith::{self, CmpiPredicate},
-        cf, func, memref,
-    },
-    ir::{
-        attribute::{FlatSymbolRefAttribute, IntegerAttribute, StringAttribute, TypeAttribute},
-        r#type::{FunctionType, IntegerType, MemRefType},
-        Attribute, Block, BlockRef, Location, Module as MeliorModule, Region, Type, Value,
-        ValueLike,
-    },
-    Context as MeliorContext,
+use inkwell::{
+    builder::{Builder, BuilderError},
+    context::Context,
+    debug_info::{DICompileUnit, DebugInfoBuilder},
+    module::Module,
+    targets::{InitializationConfig, Target, TargetData, TargetMachine, TargetTriple},
+    types::{AnyType, BasicMetadataTypeEnum, BasicType},
+    values::{AnyValue, AnyValueEnum, BasicValue, BasicValueEnum},
 };
+use ir::ValueTree;
+use tracing::info;
 
-#[derive(Debug, Clone)]
-pub struct LocalVar<'ctx, 'parent: 'ctx> {
-    pub ast_type: edlang_ast::Type,
-    // If it's none its on a register, otherwise allocated on the stack.
-    pub is_alloca: bool,
-    pub value: Value<'ctx, 'parent>,
+#[derive(Debug, Clone, Copy)]
+struct CompileCtx<'a> {
+    context: &'a Context,
+    session: &'a Session,
+    modules: &'a HashMap<DefId, ir::ModuleBody>,
+    symbols: &'a HashMap<DefId, String>,
 }
 
-impl<'ctx, 'parent> LocalVar<'ctx, 'parent> {
-    pub fn param(value: Value<'ctx, 'parent>, ast_type: edlang_ast::Type) -> Self {
-        Self {
-            value,
-            ast_type,
-            is_alloca: false,
-        }
-    }
-
-    pub fn alloca(value: Value<'ctx, 'parent>, ast_type: edlang_ast::Type) -> Self {
-        Self {
-            value,
-            ast_type,
-            is_alloca: true,
-        }
-    }
+struct ModuleCompileCtx<'ctx, 'm> {
+    ctx: CompileCtx<'ctx>,
+    builder: &'m Builder<'ctx>,
+    module: Module<'m>,
+    di_builder: DebugInfoBuilder<'ctx>,
+    di_unit: DICompileUnit<'ctx>,
+    target_data: TargetData,
 }
 
-#[derive(Debug, Clone, Default)]
-struct ScopeContext<'ctx, 'parent: 'ctx> {
-    pub locals: HashMap<String, LocalVar<'ctx, 'parent>>,
-    pub functions: HashMap<String, &'parent Function>,
-    pub structs: HashMap<String, &'parent Struct>,
-    pub constants: HashMap<String, &'parent Constant>,
-    pub function: Option<&'parent edlang_ast::Function>,
-}
-
-impl<'ctx, 'parent: 'ctx> ScopeContext<'ctx, 'parent> {
-    fn is_type_signed(&self, type_info: &edlang_ast::Type) -> bool {
-        let signed = ["i8", "i16", "i32", "i64", "i128"];
-        signed.contains(&type_info.name.name.as_str())
-    }
-
-    fn is_float(&self, type_info: &edlang_ast::Type) -> bool {
-        let signed = ["f32", "f64"];
-        signed.contains(&type_info.name.name.as_str())
-    }
-}
-
-struct BlockHelper<'ctx, 'this: 'ctx> {
-    region: &'this Region<'ctx>,
-    blocks_arena: &'this Bump,
-}
-
-impl<'ctx, 'this: 'ctx> BlockHelper<'ctx, 'this> {
-    pub fn append_block(&self, block: Block<'ctx>) -> &'this BlockRef<'ctx, 'this> {
-        let block = self.region.append_block(block);
-
-        let block_ref: &'this mut BlockRef<'ctx, 'this> = self.blocks_arena.alloc(block);
-        block_ref
-    }
-}
-
-impl<'ctx, 'parent: 'ctx> ScopeContext<'ctx, 'parent> {
-    fn resolve_type_name(
-        &self,
-        context: &'ctx MeliorContext,
-        name: &str,
-    ) -> Result<Type<'ctx>, Box<dyn Error>> {
-        Ok(match name {
-            "u128" | "i128" => IntegerType::new(context, 128).into(),
-            "u64" | "i64" => IntegerType::new(context, 64).into(),
-            "u32" | "i32" => IntegerType::new(context, 32).into(),
-            "u16" | "i16" => IntegerType::new(context, 16).into(),
-            "u8" | "i8" => IntegerType::new(context, 8).into(),
-            "f32" => Type::float32(context),
-            "f64" => Type::float64(context),
-            "bool" => IntegerType::new(context, 1).into(),
-            _ => todo!("custom type lookup"),
-        })
-    }
-
-    fn resolve_type(
-        &self,
-        context: &'ctx MeliorContext,
-        r#type: &edlang_ast::Type,
-    ) -> Result<Type<'ctx>, Box<dyn Error>> {
-        self.resolve_type_name(context, &r#type.name.name)
-    }
-}
-
-pub fn compile_module(
+pub fn compile(
     session: &Session,
-    context: &MeliorContext,
-    mlir_module: &MeliorModule,
-    module: &Module,
-) -> Result<(), Box<dyn Error>> {
-    let mut scope_ctx: ScopeContext = Default::default();
-    let block = mlir_module.body();
+    modules: &HashMap<DefId, ir::ModuleBody>,
+    symbols: &HashMap<DefId, String>,
+) -> Result<PathBuf, Box<dyn Error>> {
+    let context = Context::create();
+    let builder = context.create_builder();
 
-    // Save types
-    for statement in &module.contents {
-        match statement {
-            ModuleStatement::Function(info) => {
-                scope_ctx.functions.insert(info.name.name.clone(), info);
-            }
-            ModuleStatement::Constant(info) => {
-                scope_ctx.constants.insert(info.name.name.clone(), info);
-            }
-            ModuleStatement::Struct(info) => {
-                scope_ctx.structs.insert(info.name.name.clone(), info);
-            }
-            ModuleStatement::Module(_) => todo!(),
-        }
-    }
-
-    for statement in &module.contents {
-        match statement {
-            ModuleStatement::Function(info) => {
-                compile_function_def(session, context, &scope_ctx, &block, info)?;
-            }
-            ModuleStatement::Constant(_) => todo!(),
-            ModuleStatement::Struct(_) => todo!(),
-            ModuleStatement::Module(_) => todo!(),
-        }
-    }
-
-    tracing::debug!("compiled module");
-
-    Ok(())
-}
-
-fn get_location<'c>(context: &'c MeliorContext, session: &Session, offset: usize) -> Location<'c> {
-    let (_, line, col) = session.source.get_offset_line(offset).unwrap();
-    Location::new(
-        context,
-        &session.file_path.display().to_string(),
-        line + 1,
-        col + 1,
-    )
-}
-
-fn get_di_file<'c>(context: &'c MeliorContext, session: &Session) -> Attribute<'c> {
-    Attribute::parse(
-        context,
-        &format!(r#"#llvm.di_file<"{}">"#, session.file_path.display()),
-    )
-    .unwrap()
-}
-
-fn get_di<'c>(context: &'c MeliorContext, session: &Session) -> Attribute<'c> {
-    Attribute::parse(
-        context,
-        &format!(r#"#llvm.di_file<"{}">"#, session.file_path.display()),
-    )
-    .unwrap()
-}
-
-fn compile_function_def<'ctx, 'parent>(
-    session: &Session,
-    context: &'ctx MeliorContext,
-    scope_ctx: &ScopeContext<'ctx, 'parent>,
-    block: &'parent Block<'ctx>,
-    info: &Function,
-) -> Result<(), Box<dyn Error>> {
-    tracing::debug!("compiling function: {}", info.name.name);
-    let region = Region::new();
-
-    let location = get_location(context, session, info.name.span.lo);
-
-    let mut args = Vec::with_capacity(info.params.len());
-    let mut fn_args_types = Vec::with_capacity(info.params.len());
-
-    for param in &info.params {
-        let param_type = scope_ctx.resolve_type(context, &param.arg_type)?;
-        let loc = get_location(context, session, param.name.span.lo);
-        // let loc = Location::name(context, &param.name.name, loc);
-        args.push((param_type, loc));
-        fn_args_types.push(param_type);
-    }
-
-    let return_type = if let Some(return_type) = &info.return_type {
-        vec![scope_ctx.resolve_type(context, return_type)?]
-    } else {
-        vec![]
+    let ctx = CompileCtx {
+        context: &context,
+        session,
+        modules,
+        symbols,
     };
 
-    let func_type =
-        TypeAttribute::new(FunctionType::new(context, &fn_args_types, &return_type).into());
+    let mut llvm_modules = Vec::new();
 
-    let blocks_arena = Bump::new();
-    {
-        let helper = BlockHelper {
-            region: &region,
-            blocks_arena: &blocks_arena,
+    Target::initialize_native(&InitializationConfig::default())?;
+    let triple = TargetMachine::get_default_triple();
+    let cpu_features = TargetMachine::get_host_cpu_features();
+    let cpu_name = TargetMachine::get_host_cpu_name();
+    let target = Target::from_triple(&triple)?;
+    let machine = target
+        .create_target_machine(
+            &triple,
+            cpu_name.to_str()?,
+            cpu_features.to_str()?,
+            inkwell::OptimizationLevel::Aggressive,
+            inkwell::targets::RelocMode::Default,
+            inkwell::targets::CodeModel::Default,
+        )
+        .unwrap();
+
+    let filename = session.file_path.file_name().unwrap().to_string_lossy();
+    let dir = session.file_path.parent().unwrap().to_string_lossy();
+    for (id, module) in modules.iter() {
+        let name = ctx.symbols.get(id).unwrap();
+        let llvm_module = context.create_module(name);
+        llvm_module.set_source_file_name(&filename);
+        llvm_module.set_triple(&triple);
+        let (di_builder, di_unit) = llvm_module.create_debug_info_builder(
+            true,
+            inkwell::debug_info::DWARFSourceLanguage::Rust,
+            &filename,
+            &dir,
+            "edlang",
+            true,
+            "", // compiler flags
+            1,
+            "", // split name
+            inkwell::debug_info::DWARFEmissionKind::Full,
+            module.module_id.module_id.try_into().unwrap(), // compile unit id?
+            false,
+            false,
+            "",
+            "edlang-sdk",
+        );
+
+        let module_ctx = ModuleCompileCtx {
+            ctx,
+            module: llvm_module,
+            di_builder,
+            di_unit,
+            builder: &builder,
+            target_data: machine.get_target_data(),
         };
-        let fn_block = helper.append_block(Block::new(&args));
-        let mut scope_ctx = scope_ctx.clone();
-        scope_ctx.function = Some(info);
 
-        // Push arguments into locals
-        for (i, param) in info.params.iter().enumerate() {
-            scope_ctx.locals.insert(
-                param.name.name.clone(),
-                LocalVar::param(fn_block.argument(i)?.into(), param.arg_type.clone()),
-            );
-        }
+        compile_module(&module_ctx, module);
 
-        let final_block = compile_block(
-            session,
-            context,
-            &mut scope_ctx,
-            &helper,
-            fn_block,
-            &info.body,
+        module_ctx.module.verify()?;
+
+        module_ctx
+            .module
+            .print_to_file(session.output_file.with_extension("ll"))?;
+
+        machine.write_to_file(
+            &module_ctx.module,
+            inkwell::targets::FileType::Assembly,
+            &session.output_file.with_extension("asm"),
         )?;
-
-        if final_block.terminator().is_none() {
-            final_block.append_operation(func::r#return(
-                &[],
-                get_location(context, session, info.span.hi),
-            ));
-        }
-    }
-
-    let op = func::func(
-        context,
-        StringAttribute::new(context, &info.name.name),
-        func_type,
-        region,
-        &[],
-        location,
-    );
-    assert!(op.verify());
-
-    block.append_operation(op);
-
-    Ok(())
-}
-
-fn compile_block<'ctx, 'parent: 'ctx>(
-    session: &Session,
-    context: &'ctx MeliorContext,
-    scope_ctx: &mut ScopeContext<'ctx, 'parent>,
-    helper: &BlockHelper<'ctx, 'parent>,
-    mut block: &'parent BlockRef<'ctx, 'parent>,
-    info: &'parent edlang_ast::Block,
-) -> Result<&'parent BlockRef<'ctx, 'parent>, Box<dyn std::error::Error>> {
-    tracing::debug!("compiling block");
-    for stmt in &info.body {
-        match stmt {
-            Statement::Let(info) => {
-                compile_let(session, context, scope_ctx, helper, block, info)?;
-            }
-            Statement::Assign(info) => {
-                compile_assign(session, context, scope_ctx, helper, block, info)?;
-            }
-            Statement::For(_) => todo!(),
-            Statement::While(_) => todo!(),
-            Statement::If(info) => {
-                block = compile_if_stmt(session, context, scope_ctx, helper, block, info)?;
-            }
-            Statement::Return(info) => {
-                compile_return(session, context, scope_ctx, helper, block, info)?;
-            }
-            Statement::FnCall(info) => {
-                compile_fn_call(session, context, scope_ctx, helper, block, info)?;
-            }
-        }
-    }
-
-    Ok(block)
-}
-
-fn compile_let<'ctx, 'parent: 'ctx>(
-    session: &Session,
-    context: &'ctx MeliorContext,
-    scope_ctx: &mut ScopeContext<'ctx, 'parent>,
-    helper: &BlockHelper<'ctx, 'parent>,
-    block: &'parent BlockRef<'ctx, 'parent>,
-    info: &'parent LetStmt,
-) -> Result<(), Box<dyn std::error::Error>> {
-    tracing::debug!("compiling let");
-    let value = compile_expression(
-        session,
-        context,
-        scope_ctx,
-        helper,
-        block,
-        &info.value,
-        Some(&info.r#type),
-    )?;
-    let location = get_location(context, session, info.name.span.lo);
-
-    let memref_type = MemRefType::new(value.r#type(), &[1], None, None);
-
-    let alloca: Value = block
-        .append_operation(memref::alloca(
-            context,
-            memref_type,
-            &[],
-            &[],
-            None,
-            location,
-        ))
-        .result(0)?
-        .into();
-    let k0 = block
-        .append_operation(arith::constant(
-            context,
-            IntegerAttribute::new(0, Type::index(context)).into(),
-            location,
-        ))
-        .result(0)?
-        .into();
-    block.append_operation(memref::store(value, alloca, &[k0], location));
-
-    scope_ctx.locals.insert(
-        info.name.name.clone(),
-        LocalVar::alloca(alloca, info.r#type.clone()),
-    );
-
-    Ok(())
-}
-
-fn compile_assign<'ctx, 'parent: 'ctx>(
-    session: &Session,
-    context: &'ctx MeliorContext,
-    scope_ctx: &mut ScopeContext<'ctx, 'parent>,
-    helper: &BlockHelper<'ctx, 'parent>,
-    block: &'parent BlockRef<'ctx, 'parent>,
-    info: &AssignStmt,
-) -> Result<(), Box<dyn std::error::Error>> {
-    tracing::debug!("compiling assign");
-    let local = scope_ctx
-        .locals
-        .get(&info.name.first.name)
-        .expect("local should exist")
-        .clone();
-
-    assert!(local.is_alloca, "can only mutate local stack variables");
-
-    let location = get_location(context, session, info.name.first.span.lo);
-
-    let value = compile_expression(
-        session,
-        context,
-        scope_ctx,
-        helper,
-        block,
-        &info.value,
-        Some(&local.ast_type),
-    )?;
-
-    let k0 = block
-        .append_operation(arith::constant(
-            context,
-            IntegerAttribute::new(0, Type::index(context)).into(),
-            location,
-        ))
-        .result(0)?
-        .into();
-    block.append_operation(memref::store(value, local.value, &[k0], location));
-    Ok(())
-}
-
-fn compile_return<'ctx, 'parent: 'ctx>(
-    session: &Session,
-    context: &'ctx MeliorContext,
-    scope_ctx: &mut ScopeContext<'ctx, 'parent>,
-    helper: &BlockHelper<'ctx, 'parent>,
-    block: &'parent BlockRef<'ctx, 'parent>,
-    info: &ReturnStmt,
-) -> Result<(), Box<dyn std::error::Error>> {
-    tracing::debug!("compiling return");
-    let location = get_location(context, session, info.span.lo);
-
-    let ret_type = scope_ctx.function.and_then(|x| x.return_type.clone());
-
-    if let Some(value) = &info.value {
-        let value = compile_expression(
-            session,
-            context,
-            scope_ctx,
-            helper,
-            block,
-            value,
-            ret_type.as_ref(),
+        machine.write_to_file(
+            &module_ctx.module,
+            inkwell::targets::FileType::Object,
+            &session.output_file.with_extension("o"),
         )?;
-        block.append_operation(func::r#return(&[value], location));
-    } else {
-        block.append_operation(func::r#return(&[], location));
+        // todo link modules together
+        llvm_modules.push(module_ctx.module);
     }
 
-    Ok(())
+    Ok(session.output_file.with_extension("o"))
 }
 
-fn compile_expression<'ctx, 'parent: 'ctx>(
-    session: &Session,
-    context: &'ctx MeliorContext,
-    scope_ctx: &ScopeContext<'ctx, 'parent>,
-    helper: &BlockHelper<'ctx, 'parent>,
-    block: &'parent BlockRef<'ctx, 'parent>,
-    info: &Expression,
-    type_hint: Option<&'parent edlang_ast::Type>,
-) -> Result<Value<'ctx, 'parent>, Box<dyn std::error::Error>> {
-    tracing::debug!("compiling expression");
-    Ok(match info {
-        Expression::Value(info) => match info {
-            ValueExpr::Bool { value, span } => block
-                .append_operation(arith::constant(
-                    context,
-                    IntegerAttribute::new((*value) as i64, IntegerType::new(context, 1).into())
-                        .into(),
-                    get_location(context, session, span.lo),
-                ))
-                .result(0)?
-                .into(),
-            ValueExpr::Char { value, span } => block
-                .append_operation(arith::constant(
-                    context,
-                    IntegerAttribute::new((*value) as i64, IntegerType::new(context, 32).into())
-                        .into(),
-                    get_location(context, session, span.lo),
-                ))
-                .result(0)?
-                .into(),
-            ValueExpr::Int { value, span } => {
-                let type_it = match type_hint.map(|x| scope_ctx.resolve_type(context, x)) {
-                    Some(info) => info,
-                    None => Ok(IntegerType::new(context, 32).into()),
-                }?;
-                block
-                    .append_operation(arith::constant(
-                        context,
-                        IntegerAttribute::new((*value) as i64, type_it).into(),
-                        get_location(context, session, span.lo),
-                    ))
-                    .result(0)?
-                    .into()
+fn compile_module(ctx: &ModuleCompileCtx, module: &ir::ModuleBody) {
+    info!("compiling module");
+    for (fn_id, func) in module.functions.iter() {
+        compile_fn_signature(ctx, func);
+    }
+
+    for (fn_id, func) in module.functions.iter() {
+        compile_fn(ctx, func).unwrap();
+    }
+}
+
+fn compile_fn_signature(ctx: &ModuleCompileCtx, body: &ir::Body) {
+    let (args, ret_type) = { (body.get_args(), body.ret_type.clone().unwrap()) };
+
+    let args: Vec<BasicMetadataTypeEnum> = args
+        .iter()
+        .map(|x| compile_basic_type(ctx, &x.ty).into())
+        .collect();
+    let ret_type = compile_basic_type(ctx, &ret_type);
+    let name = ctx.ctx.symbols.get(&body.def_id).unwrap();
+    info!("compiling fn sig: {}", name);
+
+    ctx.module.add_function(
+        name,
+        ret_type.fn_type(&args, false),
+        Some(if body.is_extern {
+            inkwell::module::Linkage::AvailableExternally
+        } else if body.is_pub {
+            inkwell::module::Linkage::External
+        } else {
+            inkwell::module::Linkage::Private
+        }),
+    );
+}
+
+fn compile_fn(ctx: &ModuleCompileCtx, body: &ir::Body) -> Result<(), BuilderError> {
+    let name = ctx.ctx.symbols.get(&body.def_id).unwrap();
+    info!("compiling fn body: {}", name);
+    // let (args, ret_type) = { (body.get_args(), body.ret_type.clone().unwrap()) };
+
+    let fn_value = ctx.module.get_function(name).unwrap();
+
+    let block = ctx.ctx.context.append_basic_block(fn_value, "entry");
+    ctx.builder.position_at_end(block);
+
+    let mut locals = HashMap::new();
+    let mut ret_local = None;
+
+    let mut arg_counter = 0;
+
+    for (index, local) in body.locals.iter().enumerate() {
+        match local.kind {
+            ir::LocalKind::Temp => {
+                let ptr = ctx
+                    .builder
+                    .build_alloca(compile_basic_type(ctx, &local.ty), &index.to_string())?;
+                locals.insert(index, ptr);
             }
-            ValueExpr::Float { value, span } => {
-                let type_it = match type_hint.map(|x| scope_ctx.resolve_type(context, x)) {
-                    Some(info) => info,
-                    None => Ok(Type::float32(context)),
-                }?;
-                block
-                    .append_operation(arith::constant(
-                        context,
-                        Attribute::parse(context, &format!("{value} : {type_it}")).unwrap(),
-                        get_location(context, session, span.lo),
-                    ))
-                    .result(0)?
-                    .into()
+            ir::LocalKind::Arg => {
+                let ptr = ctx
+                    .builder
+                    .build_alloca(compile_basic_type(ctx, &local.ty), &index.to_string())?;
+                ctx.builder
+                    .build_store(ptr, fn_value.get_nth_param(arg_counter).unwrap())?;
+                arg_counter += 1;
+                locals.insert(index, ptr);
             }
-            ValueExpr::Str { value: _, span: _ } => todo!(),
-            ValueExpr::Path(path) => {
-                let local = scope_ctx
-                    .locals
-                    .get(&path.first.name)
-                    .expect("local not found");
-
-                let location = get_location(context, session, path.first.span.lo);
-
-                if local.is_alloca {
-                    let k0 = block
-                        .append_operation(arith::constant(
-                            context,
-                            IntegerAttribute::new(0, Type::index(context)).into(),
-                            location,
-                        ))
-                        .result(0)?
-                        .into();
-
-                    block
-                        .append_operation(memref::load(local.value, &[k0], location))
-                        .result(0)?
-                        .into()
+            ir::LocalKind::ReturnPointer => {
+                if let ir::TypeKind::Unit = &local.ty.kind {
                 } else {
-                    local.value
+                    ret_local = Some(index);
+                    let ptr = ctx
+                        .builder
+                        .build_alloca(compile_basic_type(ctx, &local.ty), &index.to_string())?;
+                    locals.insert(index, ptr);
                 }
             }
+        }
+    }
+
+    let mut blocks = Vec::with_capacity(body.blocks.len());
+
+    for (index, _block) in body.blocks.iter().enumerate() {
+        let llvm_block = ctx
+            .ctx
+            .context
+            .append_basic_block(fn_value, &format!("block_{index}"));
+        blocks.push(llvm_block);
+    }
+
+    ctx.builder.build_unconditional_branch(blocks[0])?;
+
+    for (block, llvm_block) in body.blocks.iter().zip(&blocks) {
+        info!("compiling block");
+        ctx.builder.position_at_end(*llvm_block);
+        for stmt in &block.statements {
+            info!("compiling stmt");
+            match &stmt.kind {
+                ir::StatementKind::Assign(place, rvalue) => {
+                    match rvalue {
+                        ir::RValue::Use(op) => match op {
+                            ir::Operand::Copy(other_place) => {
+                                // should this just copy the local?
+                                let pointee_ty =
+                                    compile_basic_type(ctx, &body.locals[other_place.local].ty);
+                                let value = ctx.builder.build_load(
+                                    pointee_ty,
+                                    *locals.get(&other_place.local).unwrap(),
+                                    "",
+                                )?;
+                                ctx.builder
+                                    .build_store(*locals.get(&place.local).unwrap(), value)?;
+                            }
+                            ir::Operand::Move(other_place) => {
+                                let pointee_ty =
+                                    compile_basic_type(ctx, &body.locals[other_place.local].ty);
+                                let value = ctx.builder.build_load(
+                                    pointee_ty,
+                                    *locals.get(&other_place.local).unwrap(),
+                                    "",
+                                )?;
+                                ctx.builder
+                                    .build_store(*locals.get(&place.local).unwrap(), value)?;
+                            }
+                            ir::Operand::Constant(data) => match &data.kind {
+                                ir::ConstKind::Value(val) => {
+                                    let value = compile_value(ctx, val, &data.type_info);
+                                    ctx.builder
+                                        .build_store(*locals.get(&place.local).unwrap(), value)?;
+                                }
+                                ir::ConstKind::ZeroSized => todo!(),
+                            },
+                        },
+                        ir::RValue::Ref(_, _) => todo!(),
+                        ir::RValue::BinOp(_, _, _) => todo!(),
+                        ir::RValue::LogicOp(_, _, _) => todo!(),
+                        ir::RValue::UnOp(_, _) => todo!(),
+                    }
+                }
+                ir::StatementKind::StorageLive(_) => {
+                    // https://llvm.org/docs/LangRef.html#int-lifestart
+                }
+                ir::StatementKind::StorageDead(_) => {}
+            }
+        }
+
+        info!("compiling terminator");
+        match &block.terminator {
+            ir::Terminator::Target(id) => {
+                ctx.builder.build_unconditional_branch(blocks[*id])?;
+            }
+            ir::Terminator::Return => match ret_local {
+                Some(local) => {
+                    let ptr = *locals.get(&local).unwrap();
+                    let pointee_ty = compile_basic_type(ctx, &body.locals[local].ty);
+                    let value = ctx.builder.build_load(pointee_ty, ptr, "")?;
+                    ctx.builder.build_return(Some(&value))?;
+                }
+                None => {
+                    ctx.builder.build_return(None)?;
+                }
+            },
+            ir::Terminator::Switch => todo!(),
+            ir::Terminator::Call {
+                func,
+                args,
+                dest,
+                target,
+            } => todo!(),
+            ir::Terminator::Unreachable => todo!(),
+        }
+    }
+
+    Ok(())
+}
+
+fn compile_value<'ctx>(
+    ctx: &ModuleCompileCtx<'ctx, '_>,
+    val: &ValueTree,
+    ty: &ir::TypeInfo,
+) -> BasicValueEnum<'ctx> {
+    let ty = compile_basic_type(ctx, ty);
+    match val {
+        ValueTree::Leaf(const_val) => match const_val {
+            ir::ConstValue::Bool(x) => ty
+                .into_int_type()
+                .const_int((*x) as u64, false)
+                .as_basic_value_enum(),
+            ir::ConstValue::I8(x) => ty
+                .into_int_type()
+                .const_int((*x) as u64, true)
+                .as_basic_value_enum(),
+            ir::ConstValue::I16(x) => ty
+                .into_int_type()
+                .const_int((*x) as u64, true)
+                .as_basic_value_enum(),
+            ir::ConstValue::I32(x) => ty
+                .into_int_type()
+                .const_int((*x) as u64, true)
+                .as_basic_value_enum(),
+            ir::ConstValue::I64(x) => ty
+                .into_int_type()
+                .const_int((*x) as u64, true)
+                .as_basic_value_enum(),
+            ir::ConstValue::I128(x) => ty
+                .into_int_type()
+                .const_int_from_string(&x.to_string(), inkwell::types::StringRadix::Decimal)
+                .unwrap()
+                .as_basic_value_enum(),
+            ir::ConstValue::U8(x) => ty
+                .into_int_type()
+                .const_int((*x) as u64, true)
+                .as_basic_value_enum(),
+            ir::ConstValue::U16(x) => ty
+                .into_int_type()
+                .const_int((*x) as u64, true)
+                .as_basic_value_enum(),
+            ir::ConstValue::U32(x) => ty
+                .into_int_type()
+                .const_int((*x) as u64, true)
+                .as_basic_value_enum(),
+            ir::ConstValue::U64(x) => ty
+                .into_int_type()
+                .const_int((*x) as u64, true)
+                .as_basic_value_enum(),
+            ir::ConstValue::U128(x) => ty
+                .into_int_type()
+                .const_int((*x) as u64, true)
+                .as_basic_value_enum(),
+            ir::ConstValue::F32(x) => ty
+                .into_float_type()
+                .const_float((*x) as f64)
+                .as_basic_value_enum(),
+            ir::ConstValue::F64(x) => ty.into_float_type().const_float(*x).as_basic_value_enum(),
         },
-        Expression::FnCall(info) => {
-            compile_fn_call(session, context, scope_ctx, helper, block, info)?
-        }
-        Expression::Unary(_, _) => todo!(),
-        Expression::Binary(lhs, op, rhs) => {
-            let lhs =
-                compile_expression(session, context, scope_ctx, helper, block, lhs, type_hint)?;
-            let rhs =
-                compile_expression(session, context, scope_ctx, helper, block, rhs, type_hint)?;
-
-            match op {
-                BinaryOp::Arith(arith_op, span) => {
-                    let location = get_location(context, session, span.lo);
-                    let ast_type_hint = type_hint.expect("type info missing");
-
-                    block.append_operation(if scope_ctx.is_float(ast_type_hint) {
-                        match arith_op {
-                            ArithOp::Add => arith::addf(lhs, rhs, location),
-                            ArithOp::Sub => arith::subf(lhs, rhs, location),
-                            ArithOp::Mul => arith::mulf(lhs, rhs, location),
-                            ArithOp::Div => arith::divf(lhs, rhs, location),
-                            ArithOp::Mod => arith::remf(lhs, rhs, location),
-                        }
-                    } else {
-                        match arith_op {
-                            ArithOp::Add => arith::addi(lhs, rhs, location),
-                            ArithOp::Sub => arith::subi(lhs, rhs, location),
-                            ArithOp::Mul => arith::muli(lhs, rhs, location),
-                            ArithOp::Div => {
-                                if scope_ctx.is_type_signed(ast_type_hint) {
-                                    arith::divsi(lhs, rhs, location)
-                                } else {
-                                    arith::divui(lhs, rhs, location)
-                                }
-                            }
-                            ArithOp::Mod => {
-                                if scope_ctx.is_type_signed(ast_type_hint) {
-                                    arith::remsi(lhs, rhs, location)
-                                } else {
-                                    arith::remui(lhs, rhs, location)
-                                }
-                            }
-                        }
-                    })
-                }
-                BinaryOp::Logic(logic_op, span) => {
-                    let location = get_location(context, session, span.lo);
-
-                    block.append_operation(match logic_op {
-                        LogicOp::And => {
-                            dbg!(lhs.r#type());
-                            dbg!(rhs.r#type());
-                            let const_true = block
-                                .append_operation(arith::constant(
-                                    context,
-                                    IntegerAttribute::new(1, IntegerType::new(context, 1).into())
-                                        .into(),
-                                    location,
-                                ))
-                                .result(0)?
-                                .into();
-                            let lhs_bool = block
-                                .append_operation(arith::cmpi(
-                                    context,
-                                    CmpiPredicate::Eq,
-                                    lhs,
-                                    const_true,
-                                    location,
-                                ))
-                                .result(0)?
-                                .into();
-                            let rhs_bool = block
-                                .append_operation(arith::cmpi(
-                                    context,
-                                    CmpiPredicate::Eq,
-                                    rhs,
-                                    const_true,
-                                    location,
-                                ))
-                                .result(0)?
-                                .into();
-                            arith::andi(lhs_bool, rhs_bool, location)
-                        }
-                        LogicOp::Or => {
-                            let const_true = block
-                                .append_operation(arith::constant(
-                                    context,
-                                    IntegerAttribute::new(1, IntegerType::new(context, 1).into())
-                                        .into(),
-                                    location,
-                                ))
-                                .result(0)?
-                                .into();
-                            let lhs_bool = block
-                                .append_operation(arith::cmpi(
-                                    context,
-                                    CmpiPredicate::Eq,
-                                    lhs,
-                                    const_true,
-                                    location,
-                                ))
-                                .result(0)?
-                                .into();
-                            let rhs_bool = block
-                                .append_operation(arith::cmpi(
-                                    context,
-                                    CmpiPredicate::Eq,
-                                    rhs,
-                                    const_true,
-                                    location,
-                                ))
-                                .result(0)?
-                                .into();
-                            arith::ori(lhs_bool, rhs_bool, location)
-                        }
-                    })
-                }
-                BinaryOp::Compare(cmp_op, span) => {
-                    let location = get_location(context, session, span.lo);
-                    block.append_operation(match cmp_op {
-                        CmpOp::Eq => arith::cmpi(context, CmpiPredicate::Eq, lhs, rhs, location),
-                        CmpOp::NotEq => arith::cmpi(context, CmpiPredicate::Ne, lhs, rhs, location),
-                        CmpOp::Lt => arith::cmpi(context, CmpiPredicate::Slt, lhs, rhs, location),
-                        CmpOp::LtEq => arith::cmpi(context, CmpiPredicate::Sle, lhs, rhs, location),
-                        CmpOp::Gt => arith::cmpi(context, CmpiPredicate::Sgt, lhs, rhs, location),
-                        CmpOp::GtEq => arith::cmpi(context, CmpiPredicate::Sge, lhs, rhs, location),
-                    })
-                }
-                BinaryOp::Bitwise(_, _) => todo!(),
-            }
-            .result(0)?
-            .into()
-        }
-    })
+        ValueTree::Branch(_) => todo!(),
+    }
 }
 
-fn compile_fn_call<'ctx, 'parent: 'ctx>(
-    session: &Session,
-    context: &'ctx MeliorContext,
-    scope_ctx: &ScopeContext<'ctx, 'parent>,
-    _helper: &BlockHelper<'ctx, 'parent>,
-    block: &'parent BlockRef<'ctx, 'parent>,
-    info: &FnCallExpr,
-) -> Result<Value<'ctx, 'parent>, Box<dyn Error>> {
-    let mut args = Vec::with_capacity(info.params.len());
-    let location = get_location(context, session, info.name.span.lo);
-    /*
-    let location_callee = Location::name(context, &info.name.name, location);
-    let location_caller = Location::name(
-        context,
-        &info.name.name,
-        get_location(context, session, scope_ctx.function.unwrap().span.lo),
-    );
-    */
-    let location = Location::call_site(
-        location,
-        get_location(context, session, scope_ctx.function.unwrap().span.lo),
-    );
+fn compile_type<'a>(
+    ctx: &'a ModuleCompileCtx,
+    ty: &ir::TypeInfo,
+) -> inkwell::types::AnyTypeEnum<'a> {
+    // ctx.di_builder.create_basic_type(name, size_in_bits, encoding, flags)
+    let context = ctx.module.get_context();
+    match &ty.kind {
+        ir::TypeKind::Unit => context.void_type().as_any_type_enum(),
+        ir::TypeKind::FnDef(def_id, _generic_args) => {
+            let (args, ret_type) = {
+                let fn_body = ctx
+                    .ctx
+                    .modules
+                    .get(&def_id.get_module_defid())
+                    .unwrap()
+                    .functions
+                    .get(def_id)
+                    .unwrap();
+                (fn_body.get_args(), fn_body.ret_type.clone().unwrap())
+            };
 
-    let target_fn = scope_ctx
-        .functions
-        .get(&info.name.name)
-        .expect("function not found");
+            let args: Vec<BasicMetadataTypeEnum> = args
+                .iter()
+                .map(|x| compile_basic_type(ctx, &x.ty).into())
+                .collect();
+            let ret_type = compile_basic_type(ctx, &ret_type);
 
-    assert_eq!(
-        info.params.len(),
-        target_fn.params.len(),
-        "parameter length doesnt match"
-    );
-
-    for (arg, arg_info) in info.params.iter().zip(&target_fn.params) {
-        let value = compile_expression(
-            session,
-            context,
-            scope_ctx,
-            _helper,
-            block,
-            arg,
-            Some(&arg_info.arg_type),
-        )?;
-        args.push(value);
+            ret_type.fn_type(&args, false).as_any_type_enum()
+        }
+        _ => compile_basic_type(ctx, ty).as_any_type_enum(),
     }
-
-    let return_type = if let Some(ret_type) = &target_fn.return_type {
-        vec![scope_ctx.resolve_type(context, ret_type)?]
-    } else {
-        vec![]
-    };
-
-    Ok(block
-        .append_operation(func::call(
-            context,
-            FlatSymbolRefAttribute::new(context, &info.name.name),
-            &args,
-            &return_type,
-            location,
-        ))
-        .result(0)?
-        .into())
 }
 
-fn compile_if_stmt<'c, 'this: 'c>(
-    session: &Session,
-    context: &'c MeliorContext,
-    scope_ctx: &mut ScopeContext<'c, 'this>,
-    helper: &BlockHelper<'c, 'this>,
-    block: &'this BlockRef<'c, 'this>,
-    info: &'this IfStmt,
-) -> Result<&'this BlockRef<'c, 'this>, Box<dyn Error>> {
-    let condition = compile_expression(
-        session,
-        context,
-        scope_ctx,
-        helper,
-        block,
-        &info.condition,
-        None,
-    )?;
-
-    let then_successor = helper.append_block(Block::new(&[]));
-    let else_successor = helper.append_block(Block::new(&[]));
-
-    let location = get_location(context, session, info.span.lo);
-
-    block.append_operation(cf::cond_br(
-        context,
-        condition,
-        then_successor,
-        else_successor,
-        &[],
-        &[],
-        location,
-    ));
-
-    let mut then_successor = then_successor;
-    let mut else_successor = else_successor;
-
-    {
-        let mut then_scope_ctx = scope_ctx.clone();
-        then_successor = compile_block(
-            session,
-            context,
-            &mut then_scope_ctx,
-            helper,
-            then_successor,
-            &info.then_block,
-        )?;
+fn compile_basic_type<'ctx>(
+    ctx: &ModuleCompileCtx<'ctx, '_>,
+    ty: &ir::TypeInfo,
+) -> inkwell::types::BasicTypeEnum<'ctx> {
+    // ctx.di_builder.create_basic_type(name, size_in_bits, encoding, flags)
+    match &ty.kind {
+        ir::TypeKind::Unit => panic!(),
+        ir::TypeKind::Bool => ctx.ctx.context.bool_type().as_basic_type_enum(),
+        ir::TypeKind::Char => ctx.ctx.context.i32_type().as_basic_type_enum(),
+        ir::TypeKind::Int(ty) => match ty {
+            ir::IntTy::I128 => ctx.ctx.context.i128_type().as_basic_type_enum(),
+            ir::IntTy::I64 => ctx.ctx.context.i64_type().as_basic_type_enum(),
+            ir::IntTy::I32 => ctx.ctx.context.i32_type().as_basic_type_enum(),
+            ir::IntTy::I16 => ctx.ctx.context.i16_type().as_basic_type_enum(),
+            ir::IntTy::I8 => ctx.ctx.context.i8_type().as_basic_type_enum(),
+            ir::IntTy::Isize => ctx
+                .ctx
+                .context
+                .ptr_sized_int_type(&ctx.target_data, None)
+                .as_basic_type_enum(),
+        },
+        ir::TypeKind::Uint(ty) => match ty {
+            ir::UintTy::U128 => ctx.ctx.context.i128_type().as_basic_type_enum(),
+            ir::UintTy::U64 => ctx.ctx.context.i64_type().as_basic_type_enum(),
+            ir::UintTy::U32 => ctx.ctx.context.i32_type().as_basic_type_enum(),
+            ir::UintTy::U16 => ctx.ctx.context.i16_type().as_basic_type_enum(),
+            ir::UintTy::U8 => ctx.ctx.context.i8_type().as_basic_type_enum(),
+            ir::UintTy::Usize => ctx
+                .ctx
+                .context
+                .ptr_sized_int_type(&ctx.target_data, None)
+                .as_basic_type_enum(),
+        },
+        ir::TypeKind::Float(ty) => match ty {
+            ir::FloatTy::F32 => ctx.ctx.context.f32_type().as_basic_type_enum(),
+            ir::FloatTy::F64 => ctx.ctx.context.f64_type().as_basic_type_enum(),
+        },
+        ir::TypeKind::FnDef(_def_id, _generic_args) => {
+            panic!()
+        }
     }
-
-    if let Some(else_block) = info.else_block.as_ref() {
-        let mut else_scope_ctx = scope_ctx.clone();
-        else_successor = compile_block(
-            session,
-            context,
-            &mut else_scope_ctx,
-            helper,
-            else_successor,
-            else_block,
-        )?;
-    }
-
-    // both return
-    if then_successor.terminator().is_some() && else_successor.terminator().is_some() {
-        return Ok(then_successor);
-    }
-
-    let final_block = helper.append_block(Block::new(&[]));
-
-    if then_successor.terminator().is_none() {
-        then_successor.append_operation(cf::br(
-            final_block,
-            &[],
-            get_location(context, session, info.span.hi),
-        ));
-    }
-
-    if else_successor.terminator().is_none() {
-        else_successor.append_operation(cf::br(
-            final_block,
-            &[],
-            get_location(context, session, info.span.hi),
-        ));
-    }
-
-    Ok(final_block)
 }

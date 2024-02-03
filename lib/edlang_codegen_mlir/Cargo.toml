@@ -12,12 +12,11 @@ categories = ["compilers"]
 
 [dependencies]
 bumpalo = { version = "3.14.0", features = ["std"] }
-edlang_ast = { version = "0.1.0", path = "../edlang_ast" }
+edlang_ir = { version = "0.1.0", path = "../edlang_ir" }
 edlang_parser = { version = "0.1.0", path = "../edlang_parser" }
 edlang_session = { version = "0.1.0", path = "../edlang_session" }
 llvm-sys = "170.0.1"
-melior = { version = "0.15.2", features = ["ods-dialects"] }
-mlir-sys = "0.2.1"
+inkwell = { git = "https://github.com/TheDan64/inkwell", rev = "0cdaa34bd612464f310b3fdefa00a75d1324687d", features = ["llvm17-0"] }
 tracing = { workspace = true }
 
 [build-dependencies]

@@ -22,6 +22,15 @@ pub struct DefId {
     pub id: usize,
 }
 
+impl DefId {
+    pub fn get_module_defid(&self) -> Self {
+        Self {
+            module_id: self.module_id,
+            id: 0,
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Body {
     pub def_id: DefId,
@@ -31,6 +40,24 @@ pub struct Body {
     pub locals: SmallVec<[Local; 4]>,
     pub blocks: SmallVec<[BasicBlock; 8]>,
     pub fn_span: Span,
+}
+
+impl Body {
+    pub fn get_args(&self) -> SmallVec<[Local; 4]> {
+        let mut args = SmallVec::default();
+
+        for x in &self.locals {
+            if let LocalKind::Arg = x.kind {
+                args.push(x.clone());
+            }
+        }
+
+        args
+    }
+
+    pub fn get_return_local(&self) -> Local {
+        self.locals[0].clone()
+    }
 }
 
 #[derive(Debug, Clone)]

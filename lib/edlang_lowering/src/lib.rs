@@ -30,13 +30,13 @@ pub fn lower_modules(modules: &[ast::Module]) -> Vec<ir::ModuleBody> {
 }
 
 fn lower_module(mut ctx: BuildCtx, module: &ast::Module) -> (BuildCtx, ir::ModuleBody) {
+    let module_id = *ctx.module_name_to_id.get(&module.name.name).unwrap();
     let mut body = ir::ModuleBody {
-        module_id: ctx.module_id_counter,
+        module_id,
         functions: Default::default(),
         modules: Default::default(),
         span: module.span,
     };
-    ctx.module_id_counter += 1;
 
     let mut module_ctx = ModuleCtx {
         id: body.module_id,

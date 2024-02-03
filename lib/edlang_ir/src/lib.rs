@@ -84,7 +84,6 @@ pub enum Terminator {
         args: Vec<Operand>,
         dest: Place,
         target: Option<usize>, // block
-        fn_span: Span,
     },
     Unreachable,
 }
@@ -97,12 +96,13 @@ pub struct TypeInfo {
 
 #[derive(Debug, Clone)]
 pub enum TypeKind {
+    Unit,
     Bool,
     Char,
     Int(IntTy),
     Uint(UintTy),
     Float(FloatTy),
-    FuncDef { name: String, args: Vec<Self> },
+    FnDef(DefId, Vec<TypeInfo>), // The vec are generic types, not arg types
 }
 
 #[derive(Debug, Clone)]
@@ -141,6 +141,7 @@ pub struct ConstData {
 #[derive(Debug, Clone)]
 pub enum ConstKind {
     Value(ValueTree),
+    ZeroSized,
 }
 
 #[derive(Debug, Clone)]

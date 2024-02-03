@@ -3,6 +3,11 @@ mod Main {
     fn main(argc: i32) -> i32 {
         let mut x: i32 = 2;
         x = 4;
+        let y: i32 = other(2);
         return x;
+    }
+
+    fn other(a: i32) -> i32 {
+        return a;
     }
 }

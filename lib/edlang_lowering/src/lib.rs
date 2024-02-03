@@ -1,71 +1,90 @@
 use std::collections::HashMap;
 
-use ast::Function;
+use common::{BodyBuilder, BuildCtx, IdGenerator, ModuleCtx};
 use edlang_ast as ast;
 use edlang_ir as ir;
-use ir::{DefId, Local, Operand, Place, Statement, TypeInfo};
+use ir::{ConstData, ConstKind, Local, Operand, Place, Statement, Terminator, TypeInfo};
 
-pub struct IdGenerator {
-    pub current_id: usize,
-    pub module_id: usize,
-}
+mod common;
 
-impl IdGenerator {
-    pub const fn new(module_id: usize) -> Self {
-        Self {
-            current_id: 0,
-            module_id: 0,
-        }
+pub fn lower_modules(modules: &[ast::Module]) -> Vec<ir::ModuleBody> {
+    let mut ctx = BuildCtx::default();
+
+    for m in modules {
+        ctx.module_name_to_id
+            .insert(m.name.name.clone(), ctx.module_id_counter);
+        ctx.module_id_counter += 1;
     }
 
-    pub fn next_id(&mut self) -> usize {
-        self.current_id += 1;
-        self.current_id
+    let mut lowered_modules = Vec::with_capacity(modules.len());
+
+    // todo: maybe should do a prepass here populating all symbols
+
+    for module in modules {
+        let ir;
+        (ctx, ir) = lower_module(ctx, module);
+        lowered_modules.push(ir);
     }
 
-    pub fn next_defid(&mut self) -> DefId {
-        let id = self.next_id();
-
-        DefId {
-            module_id: self.module_id,
-            id,
-        }
-    }
+    lowered_modules
 }
 
-struct BuildCtx {
-    pub func_ids: HashMap<String, DefId>,
-    pub functions: HashMap<DefId, Function>,
-    pub gen: IdGenerator,
-}
-
-pub fn lower_module(gen: &mut IdGenerator, module: &ast::Module) -> ir::ModuleBody {
+fn lower_module(mut ctx: BuildCtx, module: &ast::Module) -> (BuildCtx, ir::ModuleBody) {
     let mut body = ir::ModuleBody {
-        module_id: gen.next_id(),
+        module_id: ctx.module_id_counter,
         functions: Default::default(),
         modules: Default::default(),
         span: module.span,
     };
+    ctx.module_id_counter += 1;
 
-    let mut ctx = BuildCtx {
-        func_ids: Default::default(),
-        functions: Default::default(),
+    let mut module_ctx = ModuleCtx {
+        id: body.module_id,
         gen: IdGenerator::new(body.module_id),
+        ..Default::default()
     };
 
     for stmt in &module.contents {
         match stmt {
             ast::ModuleStatement::Function(func) => {
-                ctx.func_ids.insert(func.name.name.clone(), ctx.gen.next_defid());
+                let next_id = module_ctx.gen.next_defid();
+                module_ctx
+                    .func_name_to_id
+                    .insert(func.name.name.clone(), next_id);
+
+                let mut args = Vec::new();
+                let ret_type;
+
+                if let Some(ret) = func.return_type.as_ref() {
+                    ret_type = lower_type(&mut ctx, ret);
+                } else {
+                    ret_type = TypeInfo {
+                        span: None,
+                        kind: ir::TypeKind::Unit,
+                    };
+                }
+
+                for arg in &func.params {
+                    let ty = lower_type(&mut ctx, &arg.arg_type);
+                    args.push(ty);
+                }
+
+                module_ctx.functions.insert(next_id, (args, ret_type));
             }
-            _ => {}
+            ast::ModuleStatement::Constant(_) => todo!(),
+            ast::ModuleStatement::Struct(_) => todo!(),
+            ast::ModuleStatement::Module(_) => todo!(),
         }
     }
+
+    ctx.module_name_to_id
+        .insert(module.name.name.clone(), body.module_id);
+    ctx.modules.insert(body.module_id, module_ctx);
 
     for stmt in &module.contents {
         match stmt {
             ast::ModuleStatement::Function(func) => {
-                let (res, new_ctx) = lower_function(ctx, func);
+                let (res, new_ctx) = lower_function(ctx, func, body.module_id);
                 body.functions.insert(res.def_id, res);
                 ctx = new_ctx;
             }
@@ -75,20 +94,24 @@ pub fn lower_module(gen: &mut IdGenerator, module: &ast::Module) -> ir::ModuleBo
         }
     }
 
-    body
+    (ctx, body)
 }
 
-struct BodyBuilder {
-    pub body: ir::Body,
-    pub statements: Vec<ir::Statement>,
-    pub locals: HashMap<String, usize>,
-    pub ret_local: Option<usize>,
-    pub ctx: BuildCtx,
-}
+fn lower_function(
+    mut ctx: BuildCtx,
+    func: &ast::Function,
+    module_id: usize,
+) -> (ir::Body, BuildCtx) {
+    let def_id = *ctx
+        .modules
+        .get(&module_id)
+        .unwrap()
+        .func_name_to_id
+        .get(&func.name.name)
+        .unwrap();
 
-fn lower_function(mut ctx: BuildCtx, func: &ast::Function) -> (ir::Body, BuildCtx) {
     let body = ir::Body {
-        def_id: *ctx.func_ids.get(&func.name.name).unwrap(),
+        def_id,
         ret_type: func.return_type.as_ref().map(|x| lower_type(&mut ctx, x)),
         locals: Default::default(),
         blocks: Default::default(),
@@ -102,7 +125,8 @@ fn lower_function(mut ctx: BuildCtx, func: &ast::Function) -> (ir::Body, BuildCt
         statements: Vec::new(),
         locals: HashMap::new(),
         ret_local: None,
-        ctx
+        ctx,
+        local_module: module_id,
     };
 
     // store args ret
@@ -189,7 +213,7 @@ fn lower_assign(builder: &mut BodyBuilder, info: &ast::AssignStmt) {
 
     builder.statements.push(Statement {
         span: Some(info.span),
-        kind: ir::StatementKind::Assign(place, rvalue)
+        kind: ir::StatementKind::Assign(place, rvalue),
     })
 }
 
@@ -200,10 +224,93 @@ fn lower_expr(
 ) -> ir::RValue {
     match info {
         ast::Expression::Value(info) => ir::RValue::Use(lower_value(builder, info, type_hint)),
-        ast::Expression::FnCall(_) => todo!(),
+        ast::Expression::FnCall(info) => ir::RValue::Use(lower_fn_call(builder, info)),
         ast::Expression::Unary(_, _) => todo!(),
         ast::Expression::Binary(_, _, _) => todo!(),
     }
+}
+
+fn lower_fn_call(builder: &mut BodyBuilder, info: &ast::FnCallExpr) -> ir::Operand {
+    let (arg_types, ret_type) = builder.get_fn_by_name(&info.name.name).unwrap().clone();
+
+    let mut args = Vec::new();
+
+    let target_local = builder.add_local(Local {
+        mutable: false,
+        span: None,
+        ty: ret_type,
+        kind: ir::LocalKind::Temp,
+    });
+
+    let dest_place = Place {
+        local: target_local,
+        projection: Default::default(),
+    };
+
+    for (expr, ty) in info.params.iter().zip(arg_types) {
+        let rvalue = lower_expr(builder, expr, Some(&ty));
+
+        let local = builder.add_local(Local {
+            mutable: false,
+            span: None,
+            ty,
+            kind: ir::LocalKind::Temp,
+        });
+
+        let place = Place {
+            local,
+            projection: Default::default(),
+        };
+
+        builder.statements.push(Statement {
+            span: None,
+            kind: ir::StatementKind::StorageLive(local),
+        });
+
+        builder.statements.push(Statement {
+            span: None,
+            kind: ir::StatementKind::Assign(place.clone(), rvalue),
+        });
+
+        args.push(Operand::Move(place))
+    }
+
+    builder.statements.push(Statement {
+        span: None,
+        kind: ir::StatementKind::StorageLive(target_local),
+    });
+
+    let fn_id = *builder
+        .get_current_module()
+        .func_name_to_id
+        .get(&info.name.name)
+        .unwrap();
+
+    let next_block = builder.body.blocks.len() + 1;
+
+    let terminator = Terminator::Call {
+        func: Operand::Constant(ConstData {
+            span: Some(info.span),
+            type_info: TypeInfo {
+                span: None,
+                kind: ir::TypeKind::FnDef(fn_id, vec![]),
+            },
+            kind: ConstKind::ZeroSized,
+        }),
+        args,
+        dest: dest_place.clone(),
+        target: Some(next_block),
+    };
+
+    let statements = std::mem::take(&mut builder.statements);
+
+    builder.body.blocks.push(ir::BasicBlock {
+        id: builder.body.blocks.len(),
+        statements: statements.into(),
+        terminator,
+    });
+
+    Operand::Move(dest_place)
 }
 
 fn lower_value(
@@ -339,8 +446,12 @@ fn lower_path(builder: &mut BodyBuilder, info: &ast::PathExpr) -> ir::Place {
     }
 }
 
-pub fn lower_type(gen: &mut BuildCtx, t: &ast::Type) -> ir::TypeInfo {
+pub fn lower_type(ctx: &mut BuildCtx, t: &ast::Type) -> ir::TypeInfo {
     match t.name.name.as_str() {
+        "()" => ir::TypeInfo {
+            span: Some(t.span),
+            kind: ir::TypeKind::Unit,
+        },
         "u8" => ir::TypeInfo {
             span: Some(t.span),
             kind: ir::TypeKind::Uint(ir::UintTy::U8),

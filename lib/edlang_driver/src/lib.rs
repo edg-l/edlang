@@ -54,6 +54,9 @@ pub fn main() -> Result<(), Box<dyn Error>> {
     let cwd = std::env::current_dir()?;
     // todo: find a better name, "target" would clash with rust if running in the source tree.
     let target_dir = cwd.join("target_ed/");
+    if !target_dir.exists() {
+        std::fs::create_dir_all(&target_dir)?;
+    }
     let output_file = target_dir.join(PathBuf::from(args.input.file_name().unwrap()));
     let output_file = if args.library {
         output_file.with_extension("so")

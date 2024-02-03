@@ -126,11 +126,11 @@ pub fn compile(
 
 fn compile_module(ctx: &ModuleCompileCtx, module: &ir::ModuleBody) {
     info!("compiling module");
-    for (fn_id, func) in module.functions.iter() {
+    for (_fn_id, func) in module.functions.iter() {
         compile_fn_signature(ctx, func);
     }
 
-    for (fn_id, func) in module.functions.iter() {
+    for (_fn_id, func) in module.functions.iter() {
         compile_fn(ctx, func).unwrap();
     }
 }

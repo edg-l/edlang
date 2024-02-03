@@ -3,17 +3,29 @@ use std::collections::HashMap;
 use common::{BodyBuilder, BuildCtx, IdGenerator, ModuleCtx};
 use edlang_ast as ast;
 use edlang_ir as ir;
-use ir::{ConstData, ConstKind, Local, Operand, Place, Statement, Terminator, TypeInfo};
+use ir::{ConstData, ConstKind, DefId, Local, Operand, Place, Statement, Terminator, TypeInfo};
 
 mod common;
 
-pub fn lower_modules(modules: &[ast::Module]) -> Vec<ir::ModuleBody> {
+pub fn lower_modules(modules: &[ast::Module]) -> (HashMap<DefId, String>, Vec<ir::ModuleBody>) {
     let mut ctx = BuildCtx::default();
 
     for m in modules {
+        let module_id = ctx.gen.module_defid();
         ctx.module_name_to_id
-            .insert(m.name.name.clone(), ctx.module_id_counter);
-        ctx.module_id_counter += 1;
+            .insert(m.name.name.clone(), ctx.gen.module_defid());
+        ctx.symbol_names.insert(module_id, m.name.name.clone());
+
+        ctx.modules.insert(
+            module_id,
+            ModuleCtx {
+                id: module_id,
+                gen: IdGenerator::new(module_id.module_id),
+                ..Default::default()
+            },
+        );
+
+        ctx.gen.next_module_defid();
     }
 
     let mut lowered_modules = Vec::with_capacity(modules.len());
@@ -26,7 +38,7 @@ pub fn lower_modules(modules: &[ast::Module]) -> Vec<ir::ModuleBody> {
         lowered_modules.push(ir);
     }
 
-    lowered_modules
+    (ctx.symbol_names, lowered_modules)
 }
 
 fn lower_module(mut ctx: BuildCtx, module: &ast::Module) -> (BuildCtx, ir::ModuleBody) {
@@ -38,19 +50,18 @@ fn lower_module(mut ctx: BuildCtx, module: &ast::Module) -> (BuildCtx, ir::Modul
         span: module.span,
     };
 
-    let mut module_ctx = ModuleCtx {
-        id: body.module_id,
-        gen: IdGenerator::new(body.module_id),
-        ..Default::default()
-    };
-
     for stmt in &module.contents {
         match stmt {
             ast::ModuleStatement::Function(func) => {
-                let next_id = module_ctx.gen.next_defid();
-                module_ctx
-                    .func_name_to_id
-                    .insert(func.name.name.clone(), next_id);
+                let next_id = {
+                    let module_ctx = ctx.modules.get_mut(&module_id).unwrap();
+                    let next_id = module_ctx.gen.next_defid();
+                    module_ctx
+                        .func_name_to_id
+                        .insert(func.name.name.clone(), next_id);
+                    ctx.symbol_names.insert(next_id, func.name.name.clone());
+                    next_id
+                };
 
                 let mut args = Vec::new();
                 let ret_type;
@@ -69,17 +80,14 @@ fn lower_module(mut ctx: BuildCtx, module: &ast::Module) -> (BuildCtx, ir::Modul
                     args.push(ty);
                 }
 
+                let module_ctx = ctx.modules.get_mut(&module_id).unwrap();
                 module_ctx.functions.insert(next_id, (args, ret_type));
             }
             ast::ModuleStatement::Constant(_) => todo!(),
             ast::ModuleStatement::Struct(_) => todo!(),
-            ast::ModuleStatement::Module(_) => todo!(),
+            ast::ModuleStatement::Module(_) => {}
         }
     }
-
-    ctx.module_name_to_id
-        .insert(module.name.name.clone(), body.module_id);
-    ctx.modules.insert(body.module_id, module_ctx);
 
     for stmt in &module.contents {
         match stmt {
@@ -100,7 +108,7 @@ fn lower_module(mut ctx: BuildCtx, module: &ast::Module) -> (BuildCtx, ir::Modul
 fn lower_function(
     mut ctx: BuildCtx,
     func: &ast::Function,
-    module_id: usize,
+    module_id: DefId,
 ) -> (ir::Body, BuildCtx) {
     let def_id = *ctx
         .modules
@@ -226,7 +234,130 @@ fn lower_expr(
         ast::Expression::Value(info) => ir::RValue::Use(lower_value(builder, info, type_hint)),
         ast::Expression::FnCall(info) => ir::RValue::Use(lower_fn_call(builder, info)),
         ast::Expression::Unary(_, _) => todo!(),
-        ast::Expression::Binary(_, _, _) => todo!(),
+        ast::Expression::Binary(lhs, op, rhs) => {
+            lower_binary_expr(builder, lhs, op, rhs, type_hint)
+        }
+    }
+}
+
+fn lower_binary_expr(
+    builder: &mut BodyBuilder,
+    lhs: &ast::Expression,
+    op: &ast::BinaryOp,
+    rhs: &ast::Expression,
+    type_hint: Option<&TypeInfo>,
+) -> ir::RValue {
+    let expr_type = type_hint.expect("type hint needed");
+    let lhs = {
+        let rvalue = lower_expr(builder, lhs, type_hint);
+        let local = builder.add_local(Local {
+            mutable: false,
+            span: None,
+            ty: expr_type.clone(),
+            kind: ir::LocalKind::Temp,
+        });
+
+        builder.statements.push(Statement {
+            span: None,
+            kind: ir::StatementKind::StorageLive(local),
+        });
+
+        let place = Place {
+            local,
+            projection: Default::default(),
+        };
+
+        builder.statements.push(Statement {
+            span: None,
+            kind: ir::StatementKind::Assign(place.clone(), rvalue),
+        });
+
+        place
+    };
+    let rhs = {
+        let rvalue = lower_expr(builder, rhs, type_hint);
+        let local = builder.add_local(Local {
+            mutable: false,
+            span: None,
+            ty: expr_type.clone(),
+            kind: ir::LocalKind::Temp,
+        });
+
+        builder.statements.push(Statement {
+            span: None,
+            kind: ir::StatementKind::StorageLive(local),
+        });
+
+        let place = Place {
+            local,
+            projection: Default::default(),
+        };
+
+        builder.statements.push(Statement {
+            span: None,
+            kind: ir::StatementKind::Assign(place.clone(), rvalue),
+        });
+
+        place
+    };
+
+    match op {
+        ast::BinaryOp::Arith(op, _) => match op {
+            ast::ArithOp::Add => {
+                ir::RValue::BinOp(ir::BinOp::Add, Operand::Move(lhs), Operand::Move(rhs))
+            }
+            ast::ArithOp::Sub => {
+                ir::RValue::BinOp(ir::BinOp::Sub, Operand::Move(lhs), Operand::Move(rhs))
+            }
+            ast::ArithOp::Mul => {
+                ir::RValue::BinOp(ir::BinOp::Mul, Operand::Move(lhs), Operand::Move(rhs))
+            }
+            ast::ArithOp::Div => {
+                ir::RValue::BinOp(ir::BinOp::Div, Operand::Move(lhs), Operand::Move(rhs))
+            }
+            ast::ArithOp::Mod => {
+                ir::RValue::BinOp(ir::BinOp::Rem, Operand::Move(lhs), Operand::Move(rhs))
+            }
+        },
+        ast::BinaryOp::Logic(op, _) => match op {
+            ast::LogicOp::And => {
+                ir::RValue::LogicOp(ir::LogicalOp::And, Operand::Move(lhs), Operand::Move(rhs))
+            }
+            ast::LogicOp::Or => {
+                ir::RValue::LogicOp(ir::LogicalOp::Or, Operand::Move(lhs), Operand::Move(rhs))
+            }
+        },
+        ast::BinaryOp::Compare(op, _) => match op {
+            ast::CmpOp::Eq => {
+                ir::RValue::BinOp(ir::BinOp::Eq, Operand::Move(lhs), Operand::Move(rhs))
+            }
+            ast::CmpOp::NotEq => {
+                ir::RValue::BinOp(ir::BinOp::Ne, Operand::Move(lhs), Operand::Move(rhs))
+            }
+            ast::CmpOp::Lt => {
+                ir::RValue::BinOp(ir::BinOp::Lt, Operand::Move(lhs), Operand::Move(rhs))
+            }
+            ast::CmpOp::LtEq => {
+                ir::RValue::BinOp(ir::BinOp::Le, Operand::Move(lhs), Operand::Move(rhs))
+            }
+            ast::CmpOp::Gt => {
+                ir::RValue::BinOp(ir::BinOp::Gt, Operand::Move(lhs), Operand::Move(rhs))
+            }
+            ast::CmpOp::GtEq => {
+                ir::RValue::BinOp(ir::BinOp::Ge, Operand::Move(lhs), Operand::Move(rhs))
+            }
+        },
+        ast::BinaryOp::Bitwise(op, _) => match op {
+            ast::BitwiseOp::And => {
+                ir::RValue::BinOp(ir::BinOp::BitAnd, Operand::Move(lhs), Operand::Move(rhs))
+            }
+            ast::BitwiseOp::Or => {
+                ir::RValue::BinOp(ir::BinOp::BitOr, Operand::Move(lhs), Operand::Move(rhs))
+            }
+            ast::BitwiseOp::Xor => {
+                ir::RValue::BinOp(ir::BinOp::BitXor, Operand::Move(lhs), Operand::Move(rhs))
+            }
+        },
     }
 }
 
@@ -446,7 +577,7 @@ fn lower_path(builder: &mut BodyBuilder, info: &ast::PathExpr) -> ir::Place {
     }
 }
 
-pub fn lower_type(ctx: &mut BuildCtx, t: &ast::Type) -> ir::TypeInfo {
+pub fn lower_type(_ctx: &mut BuildCtx, t: &ast::Type) -> ir::TypeInfo {
     match t.name.name.as_str() {
         "()" => ir::TypeInfo {
             span: Some(t.span),

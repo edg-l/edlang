@@ -85,7 +85,7 @@ pub fn main() -> Result<(), Box<dyn Error>> {
         return Ok(());
     }
 
-    let module_irs = lower_modules(&[module.clone()]);
+    let (_symbols, module_irs) = lower_modules(&[module.clone()]);
 
     if args.ir {
         println!("{:#?}", module_irs);

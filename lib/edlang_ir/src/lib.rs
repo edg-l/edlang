@@ -9,14 +9,14 @@ pub mod scalar_int;
 
 #[derive(Debug, Clone)]
 pub struct ModuleBody {
-    pub module_id: usize,
+    pub module_id: DefId,
     pub functions: BTreeMap<DefId, Body>,
     pub modules: BTreeMap<DefId, Self>,
     pub span: Span,
 }
 
 /// Definition id.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct DefId {
     pub module_id: usize,
     pub id: usize,
@@ -105,6 +105,34 @@ pub enum TypeKind {
     FnDef(DefId, Vec<TypeInfo>), // The vec are generic types, not arg types
 }
 
+impl TypeKind {
+    pub fn get_falsy_value(&self) -> ValueTree {
+        match self {
+            Self::Bool => ValueTree::Leaf(ConstValue::Bool(false)),
+            Self::Char => todo!(),
+            Self::Int(ty) => match ty {
+                IntTy::I8 => ValueTree::Leaf(ConstValue::I8(0)),
+                IntTy::I16 => ValueTree::Leaf(ConstValue::I16(0)),
+                IntTy::I32 => ValueTree::Leaf(ConstValue::I32(0)),
+                IntTy::I64 => ValueTree::Leaf(ConstValue::I64(0)),
+                IntTy::I128 => ValueTree::Leaf(ConstValue::I128(0)),
+                IntTy::Isize => todo!(),
+            },
+            Self::Uint(ty) => match ty {
+                UintTy::U8 => ValueTree::Leaf(ConstValue::U8(0)),
+                UintTy::U16 => ValueTree::Leaf(ConstValue::U16(0)),
+                UintTy::U32 => ValueTree::Leaf(ConstValue::U32(0)),
+                UintTy::U64 => ValueTree::Leaf(ConstValue::U64(0)),
+                UintTy::U128 => ValueTree::Leaf(ConstValue::U128(0)),
+                UintTy::Usize => todo!(),
+            },
+            Self::Float(_) => todo!(),
+            TypeKind::Unit => unreachable!(),
+            TypeKind::FnDef(_, _) => unreachable!(),
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub enum IntTy {
     I128,
@@ -153,7 +181,9 @@ pub enum ValueTree {
 #[derive(Debug, Clone)]
 pub enum RValue {
     Use(Operand),
+    Ref(bool, Operand),
     BinOp(BinOp, Operand, Operand),
+    LogicOp(LogicalOp, Operand, Operand),
     UnOp(UnOp, Operand),
 }
 
@@ -254,6 +284,13 @@ pub enum BinOp {
     Ge,
     Gt,
     Offset,
+}
+
+// Diferent than BinOp because operands needs to be lazily evaluated.
+#[derive(Debug, Clone, Copy)]
+pub enum LogicalOp {
+    And,
+    Or,
 }
 
 #[derive(Debug, Clone, Copy)]

@@ -21,6 +21,13 @@ impl IdGenerator {
         self.current_id
     }
 
+    pub fn module_defid(&self) -> DefId {
+        DefId {
+            module_id: self.module_id,
+            id: 0,
+        }
+    }
+
     pub fn next_defid(&mut self) -> DefId {
         let id = self.next_id();
 
@@ -29,19 +36,27 @@ impl IdGenerator {
             id,
         }
     }
+
+    pub fn next_module_defid(&mut self) -> DefId {
+        self.module_id += 1;
+        self.current_id = 0;
+
+        self.module_defid()
+    }
 }
 
 #[derive(Debug, Clone, Default)]
 pub struct BuildCtx {
-    pub module_name_to_id: HashMap<String, usize>,
-    pub modules: HashMap<usize, ModuleCtx>,
+    pub module_name_to_id: HashMap<String, DefId>,
+    pub modules: HashMap<DefId, ModuleCtx>,
     pub functions: HashMap<DefId, Body>,
-    pub module_id_counter: usize,
+    pub gen: IdGenerator,
+    pub symbol_names: HashMap<DefId, String>,
 }
 
 #[derive(Debug, Clone, Default)]
 pub struct ModuleCtx {
-    pub id: usize,
+    pub id: DefId,
     pub func_name_to_id: HashMap<String, DefId>,
     pub functions: HashMap<DefId, (Vec<TypeInfo>, TypeInfo)>,
     pub gen: IdGenerator,
@@ -49,7 +64,7 @@ pub struct ModuleCtx {
 
 #[derive(Debug, Clone)]
 pub struct BodyBuilder {
-    pub local_module: usize,
+    pub local_module: DefId,
     pub body: Body,
     pub statements: Vec<Statement>,
     pub locals: HashMap<String, usize>,

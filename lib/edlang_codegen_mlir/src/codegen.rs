@@ -395,17 +395,173 @@ fn compile_bin_op<'ctx>(
                     .as_basic_value_enum()
             }
         }
-        ir::BinOp::BitXor => todo!(),
-        ir::BinOp::BitAnd => todo!(),
-        ir::BinOp::BitOr => todo!(),
-        ir::BinOp::Shl => todo!(),
-        ir::BinOp::Shr => todo!(),
-        ir::BinOp::Eq => todo!(),
-        ir::BinOp::Lt => todo!(),
-        ir::BinOp::Le => todo!(),
-        ir::BinOp::Ne => todo!(),
-        ir::BinOp::Ge => todo!(),
-        ir::BinOp::Gt => todo!(),
+        ir::BinOp::BitXor => ctx
+            .builder
+            .build_xor(lhs_value.into_int_value(), rhs_value.into_int_value(), "")?
+            .as_basic_value_enum(),
+        ir::BinOp::BitAnd => ctx
+            .builder
+            .build_and(lhs_value.into_int_value(), rhs_value.into_int_value(), "")?
+            .as_basic_value_enum(),
+        ir::BinOp::BitOr => ctx
+            .builder
+            .build_or(lhs_value.into_int_value(), rhs_value.into_int_value(), "")?
+            .as_basic_value_enum(),
+        ir::BinOp::Shl => ctx
+            .builder
+            .build_left_shift(lhs_value.into_int_value(), rhs_value.into_int_value(), "")?
+            .as_basic_value_enum(),
+        ir::BinOp::Shr => ctx
+            .builder
+            .build_right_shift(
+                lhs_value.into_int_value(),
+                rhs_value.into_int_value(),
+                is_signed,
+                "",
+            )?
+            .as_basic_value_enum(),
+        ir::BinOp::Eq => {
+            if is_float {
+                ctx.builder
+                    .build_float_compare(
+                        inkwell::FloatPredicate::OEQ,
+                        lhs_value.into_float_value(),
+                        rhs_value.into_float_value(),
+                        "",
+                    )?
+                    .as_basic_value_enum()
+            } else {
+                ctx.builder
+                    .build_int_compare(
+                        inkwell::IntPredicate::EQ,
+                        lhs_value.into_int_value(),
+                        rhs_value.into_int_value(),
+                        "",
+                    )?
+                    .as_basic_value_enum()
+            }
+        }
+        ir::BinOp::Lt => {
+            if is_float {
+                ctx.builder
+                    .build_float_compare(
+                        inkwell::FloatPredicate::OLT,
+                        lhs_value.into_float_value(),
+                        rhs_value.into_float_value(),
+                        "",
+                    )?
+                    .as_basic_value_enum()
+            } else {
+                ctx.builder
+                    .build_int_compare(
+                        if is_signed {
+                            inkwell::IntPredicate::SLT
+                        } else {
+                            inkwell::IntPredicate::ULT
+                        },
+                        lhs_value.into_int_value(),
+                        rhs_value.into_int_value(),
+                        "",
+                    )?
+                    .as_basic_value_enum()
+            }
+        }
+        ir::BinOp::Le => {
+            if is_float {
+                ctx.builder
+                    .build_float_compare(
+                        inkwell::FloatPredicate::OLE,
+                        lhs_value.into_float_value(),
+                        rhs_value.into_float_value(),
+                        "",
+                    )?
+                    .as_basic_value_enum()
+            } else {
+                ctx.builder
+                    .build_int_compare(
+                        if is_signed {
+                            inkwell::IntPredicate::SLE
+                        } else {
+                            inkwell::IntPredicate::ULE
+                        },
+                        lhs_value.into_int_value(),
+                        rhs_value.into_int_value(),
+                        "",
+                    )?
+                    .as_basic_value_enum()
+            }
+        }
+        ir::BinOp::Ne => {
+            if is_float {
+                ctx.builder
+                    .build_float_compare(
+                        inkwell::FloatPredicate::ONE,
+                        lhs_value.into_float_value(),
+                        rhs_value.into_float_value(),
+                        "",
+                    )?
+                    .as_basic_value_enum()
+            } else {
+                ctx.builder
+                    .build_int_compare(
+                        inkwell::IntPredicate::NE,
+                        lhs_value.into_int_value(),
+                        rhs_value.into_int_value(),
+                        "",
+                    )?
+                    .as_basic_value_enum()
+            }
+        }
+        ir::BinOp::Ge => {
+            if is_float {
+                ctx.builder
+                    .build_float_compare(
+                        inkwell::FloatPredicate::OGE,
+                        lhs_value.into_float_value(),
+                        rhs_value.into_float_value(),
+                        "",
+                    )?
+                    .as_basic_value_enum()
+            } else {
+                ctx.builder
+                    .build_int_compare(
+                        if is_signed {
+                            inkwell::IntPredicate::SGE
+                        } else {
+                            inkwell::IntPredicate::UGE
+                        },
+                        lhs_value.into_int_value(),
+                        rhs_value.into_int_value(),
+                        "",
+                    )?
+                    .as_basic_value_enum()
+            }
+        }
+        ir::BinOp::Gt => {
+            if is_float {
+                ctx.builder
+                    .build_float_compare(
+                        inkwell::FloatPredicate::OGT,
+                        lhs_value.into_float_value(),
+                        rhs_value.into_float_value(),
+                        "",
+                    )?
+                    .as_basic_value_enum()
+            } else {
+                ctx.builder
+                    .build_int_compare(
+                        if is_signed {
+                            inkwell::IntPredicate::SGT
+                        } else {
+                            inkwell::IntPredicate::UGT
+                        },
+                        lhs_value.into_int_value(),
+                        rhs_value.into_int_value(),
+                        "",
+                    )?
+                    .as_basic_value_enum()
+            }
+        }
         ir::BinOp::Offset => todo!(),
     })
 }

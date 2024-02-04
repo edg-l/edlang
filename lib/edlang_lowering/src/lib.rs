@@ -184,7 +184,9 @@ fn lower_function(
             ast::Statement::While(_) => todo!(),
             ast::Statement::If(_) => todo!(),
             ast::Statement::Return(info) => lower_return(&mut builder, info),
-            ast::Statement::FnCall(_) => todo!(),
+            ast::Statement::FnCall(info) => {
+                lower_fn_call_no_ret(&mut builder, info);
+            }
         }
     }
 
@@ -370,6 +372,70 @@ fn lower_binary_expr(
     }
 }
 
+fn lower_fn_call_no_ret(builder: &mut BodyBuilder, info: &ast::FnCallExpr) {
+    let (arg_types, _ret_type) = builder.get_fn_by_name(&info.name.name).unwrap().clone();
+
+    let mut args = Vec::new();
+
+    for (expr, ty) in info.params.iter().zip(arg_types) {
+        let rvalue = lower_expr(builder, expr, Some(&ty));
+
+        let local = builder.add_local(Local {
+            mutable: false,
+            span: None,
+            ty,
+            kind: ir::LocalKind::Temp,
+        });
+
+        let place = Place {
+            local,
+            projection: Default::default(),
+        };
+
+        builder.statements.push(Statement {
+            span: None,
+            kind: ir::StatementKind::StorageLive(local),
+        });
+
+        builder.statements.push(Statement {
+            span: None,
+            kind: ir::StatementKind::Assign(place.clone(), rvalue),
+        });
+
+        args.push(Operand::Move(place))
+    }
+
+    let fn_id = *builder
+        .get_current_module()
+        .func_name_to_id
+        .get(&info.name.name)
+        .unwrap();
+
+    let next_block = builder.body.blocks.len() + 1;
+
+    let terminator = Terminator::Call {
+        func: Operand::Constant(ConstData {
+            span: Some(info.span),
+            type_info: TypeInfo {
+                span: None,
+                kind: ir::TypeKind::FnDef(fn_id, vec![]),
+            },
+            kind: ConstKind::ZeroSized,
+        }),
+        args,
+        dest: None,
+        target: Some(next_block),
+    };
+
+    let statements = std::mem::take(&mut builder.statements);
+
+    builder.body.blocks.push(ir::BasicBlock {
+        id: builder.body.blocks.len(),
+        statements: statements.into(),
+        terminator,
+    });
+}
+
 fn lower_fn_call(builder: &mut BodyBuilder, info: &ast::FnCallExpr) -> ir::Operand {
     let (arg_types, ret_type) = builder.get_fn_by_name(&info.name.name).unwrap().clone();
 
@@ -438,7 +504,7 @@ fn lower_fn_call(builder: &mut BodyBuilder, info: &ast::FnCallExpr) -> ir::Opera
             kind: ConstKind::ZeroSized,
         }),
         args,
-        dest: dest_place.clone(),
+        dest: Some(dest_place.clone()),
         target: Some(next_block),
     };
 

@@ -109,7 +109,7 @@ pub enum Terminator {
     Call {
         func: Operand,
         args: Vec<Operand>,
-        dest: Place,
+        dest: Option<Place>,
         target: Option<usize>, // block
     },
     Unreachable,
@@ -133,6 +133,10 @@ pub enum TypeKind {
 }
 
 impl TypeKind {
+    pub fn is_unit(&self) -> bool {
+        matches!(self, Self::Unit)
+    }
+
     pub fn get_falsy_value(&self) -> ValueTree {
         match self {
             Self::Bool => ValueTree::Leaf(ConstValue::Bool(false)),

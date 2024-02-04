@@ -4,6 +4,7 @@ use edlang_ir as ir;
 use edlang_ir::DefId;
 use edlang_session::Session;
 use inkwell::{
+    attributes::Attribute,
     builder::{Builder, BuilderError},
     context::Context,
     debug_info::{DICompileUnit, DebugInfoBuilder},
@@ -12,7 +13,7 @@ use inkwell::{
     types::{AnyType, BasicMetadataTypeEnum, BasicType},
     values::{AnyValue, AnyValueEnum, BasicValue, BasicValueEnum, PointerValue},
 };
-use ir::{TypeInfo, ValueTree};
+use ir::{ConstData, Operand, TypeInfo, ValueTree};
 use tracing::info;
 
 #[derive(Debug, Clone, Copy)]
@@ -153,7 +154,7 @@ fn compile_fn_signature(ctx: &ModuleCompileCtx, body: &ir::Body) {
         compile_basic_type(ctx, &ret_type).fn_type(&args, false)
     };
 
-    ctx.module.add_function(
+    let fn_value = ctx.module.add_function(
         name,
         fn_type,
         Some(if body.is_extern {
@@ -163,6 +164,12 @@ fn compile_fn_signature(ctx: &ModuleCompileCtx, body: &ir::Body) {
         } else {
             inkwell::module::Linkage::Private
         }),
+    );
+
+    // nonlazybind
+    fn_value.add_attribute(
+        inkwell::attributes::AttributeLoc::Function,
+        ctx.ctx.context.create_enum_attribute(37, 0),
     );
 }
 
@@ -273,8 +280,47 @@ fn compile_fn(ctx: &ModuleCompileCtx, body: &ir::Body) -> Result<(), BuilderErro
                 args,
                 dest,
                 target,
-            } => todo!(),
-            ir::Terminator::Unreachable => todo!(),
+            } => {
+                if let Operand::Constant(c) = func {
+                    if let ir::TypeKind::FnDef(fn_id, generics) = &c.type_info.kind {
+                        let fn_symbol = ctx.ctx.symbols.get(fn_id).unwrap();
+                        let fn_value = ctx.module.get_function(fn_symbol).unwrap();
+                        let args: Vec<_> = args
+                            .iter()
+                            .map(|x| {
+                                compile_load_operand(ctx, body, &locals, x)
+                                    .unwrap()
+                                    .0
+                                    .into()
+                            })
+                            .collect();
+                        let result = ctx.builder.build_call(fn_value, &args, "")?;
+
+                        if let Some(dest) = dest {
+                            let is_void =
+                                matches!(body.locals[dest.local].ty.kind, ir::TypeKind::Unit);
+
+                            if !is_void {
+                                ctx.builder.build_store(
+                                    *locals.get(&dest.local).unwrap(),
+                                    result.try_as_basic_value().expect_left("value was right"),
+                                )?;
+                            }
+                        }
+
+                        if let Some(target) = target {
+                            ctx.builder.build_unconditional_branch(blocks[*target])?;
+                        }
+                    } else {
+                        todo!()
+                    }
+                } else {
+                    todo!()
+                }
+            }
+            ir::Terminator::Unreachable => {
+                ctx.builder.build_unreachable()?;
+            }
         }
     }
 
@@ -645,10 +691,7 @@ fn compile_value<'ctx>(
                 .into_int_type()
                 .const_int((*x) as u64, true)
                 .as_basic_value_enum(),
-            ir::ConstValue::U64(x) => ty
-                .into_int_type()
-                .const_int((*x) as u64, true)
-                .as_basic_value_enum(),
+            ir::ConstValue::U64(x) => ty.into_int_type().const_int(*x, true).as_basic_value_enum(),
             ir::ConstValue::U128(x) => ty
                 .into_int_type()
                 .const_int((*x) as u64, true)
@@ -702,7 +745,7 @@ fn compile_basic_type<'ctx>(
 ) -> inkwell::types::BasicTypeEnum<'ctx> {
     // ctx.di_builder.create_basic_type(name, size_in_bits, encoding, flags)
     match &ty.kind {
-        ir::TypeKind::Unit => panic!(),
+        ir::TypeKind::Unit => todo!(),
         ir::TypeKind::Bool => ctx.ctx.context.bool_type().as_basic_type_enum(),
         ir::TypeKind::Char => ctx.ctx.context.i32_type().as_basic_type_enum(),
         ir::TypeKind::Int(ty) => match ty {

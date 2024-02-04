@@ -5,4 +5,10 @@ mod Main {
         x = 4;
         return x;
     }
+
+     pub fn a() {
+        let mut x: i32 = 2;
+        x = 4;
+        return;
+    }
 }

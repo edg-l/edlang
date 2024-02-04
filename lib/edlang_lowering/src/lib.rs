@@ -122,7 +122,14 @@ fn lower_function(
 
     let body = ir::Body {
         def_id,
-        ret_type: func.return_type.as_ref().map(|x| lower_type(&mut ctx, x)),
+        ret_type: func
+            .return_type
+            .as_ref()
+            .map(|x| lower_type(&mut ctx, x))
+            .unwrap_or_else(|| TypeInfo {
+                span: None,
+                kind: ir::TypeKind::Unit,
+            }),
         locals: Default::default(),
         blocks: Default::default(),
         fn_span: func.span,
@@ -543,7 +550,7 @@ fn lower_value(
 fn lower_return(builder: &mut BodyBuilder, info: &ast::ReturnStmt) {
     let ret_type = builder.body.ret_type.clone();
     if let Some(value) = &info.value {
-        let rvalue = lower_expr(builder, value, ret_type.as_ref());
+        let rvalue = lower_expr(builder, value, Some(&ret_type));
         let ret_local = builder.ret_local.unwrap();
 
         builder.statements.push(Statement {

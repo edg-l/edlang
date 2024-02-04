@@ -136,19 +136,26 @@ fn compile_module(ctx: &ModuleCompileCtx, module: &ir::ModuleBody) {
 }
 
 fn compile_fn_signature(ctx: &ModuleCompileCtx, body: &ir::Body) {
-    let (args, ret_type) = { (body.get_args(), body.ret_type.clone().unwrap()) };
+    let name = ctx.ctx.symbols.get(&body.def_id).unwrap();
+    info!("compiling fn sig: {}", name);
+
+    let (args, ret_type) = { (body.get_args(), body.ret_type.clone()) };
 
     let args: Vec<BasicMetadataTypeEnum> = args
         .iter()
         .map(|x| compile_basic_type(ctx, &x.ty).into())
         .collect();
-    let ret_type = compile_basic_type(ctx, &ret_type);
-    let name = ctx.ctx.symbols.get(&body.def_id).unwrap();
-    info!("compiling fn sig: {}", name);
+    // let ret_type = compile_basic_type(ctx, &ret_type);
+
+    let fn_type = if let ir::TypeKind::Unit = ret_type.kind {
+        ctx.ctx.context.void_type().fn_type(&args, false)
+    } else {
+        compile_basic_type(ctx, &ret_type).fn_type(&args, false)
+    };
 
     ctx.module.add_function(
         name,
-        ret_type.fn_type(&args, false),
+        fn_type,
         Some(if body.is_extern {
             inkwell::module::Linkage::AvailableExternally
         } else if body.is_pub {
@@ -381,7 +388,7 @@ fn compile_type<'a>(
                     .functions
                     .get(def_id)
                     .unwrap();
-                (fn_body.get_args(), fn_body.ret_type.clone().unwrap())
+                (fn_body.get_args(), fn_body.ret_type.clone())
             };
 
             let args: Vec<BasicMetadataTypeEnum> = args

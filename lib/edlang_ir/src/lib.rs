@@ -36,7 +36,7 @@ pub struct Body {
     pub def_id: DefId,
     pub is_pub: bool,
     pub is_extern: bool,
-    pub ret_type: Option<TypeInfo>,
+    pub ret_type: TypeInfo,
     pub locals: SmallVec<[Local; 4]>,
     pub blocks: SmallVec<[BasicBlock; 8]>,
     pub fn_span: Span,

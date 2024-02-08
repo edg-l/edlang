@@ -1,222 +1,196 @@
 use std::collections::HashMap;
 
-use common::{BodyBuilder, BuildCtx, IdGenerator, ModuleCtx};
+use ast::ModuleStatement;
+use common::{BodyBuilder, BuildCtx, IdGenerator};
 use edlang_ast as ast;
 use edlang_ir as ir;
-use ir::{ConstData, ConstKind, DefId, Local, Operand, Place, Statement, Terminator, TypeInfo};
+use ir::{
+    BasicBlock, Body, ConstData, ConstKind, DefId, Local, LocalKind, Operand, Place, ProgramBody,
+    RValue, Statement, StatementKind, Terminator, TypeInfo, TypeKind,
+};
 
 mod common;
+mod prepass;
 
-pub fn lower_modules(
-    modules: &[ast::Module],
-) -> (HashMap<DefId, String>, HashMap<DefId, ir::ModuleBody>) {
+pub fn lower_modules(modules: &[ast::Module]) -> ProgramBody {
     let mut ctx = BuildCtx::default();
 
-    for m in modules {
-        let module_id = ctx.gen.module_defid();
-        ctx.module_name_to_id
-            .insert(m.name.name.clone(), ctx.gen.module_defid());
-        ctx.symbol_names.insert(module_id, m.name.name.clone());
-
-        ctx.modules.insert(
-            module_id,
-            ModuleCtx {
-                id: module_id,
-                gen: IdGenerator::new(module_id.module_id),
-                ..Default::default()
-            },
-        );
-
-        ctx.gen.next_module_defid();
-    }
-
-    let mut lowered_modules = HashMap::with_capacity(modules.len());
-
-    // todo: maybe should do a prepass here populating all symbols
-
+    // resolve symbols
     for module in modules {
-        let ir;
-        (ctx, ir) = lower_module(ctx, module);
-        lowered_modules.insert(ir.module_id, ir);
+        ctx = prepass::prepass_module(ctx, module);
     }
 
-    (ctx.symbol_names, lowered_modules)
+    // resolve imports
+    for module in modules {
+        ctx = prepass::prepass_imports(ctx, module);
+    }
+
+    for mod_def in modules {
+        let id = *ctx
+            .body
+            .top_level_module_names
+            .get(&mod_def.name.name)
+            .expect("module should exist");
+
+        ctx = lower_module(ctx, mod_def, id);
+    }
+
+    ctx.body
 }
 
-fn lower_module(mut ctx: BuildCtx, module: &ast::Module) -> (BuildCtx, ir::ModuleBody) {
-    let module_id = *ctx.module_name_to_id.get(&module.name.name).unwrap();
-    let mut body = ir::ModuleBody {
-        module_id,
-        functions: Default::default(),
-        modules: Default::default(),
-        span: module.span,
-    };
+fn lower_module(mut ctx: BuildCtx, module: &ast::Module, id: DefId) -> BuildCtx {
+    let body = ctx.body.modules.get(&id).unwrap();
 
-    for stmt in &module.contents {
-        match stmt {
-            ast::ModuleStatement::Function(func) => {
-                let next_id = {
-                    let module_ctx = ctx.modules.get_mut(&module_id).unwrap();
-                    let next_id = module_ctx.gen.next_defid();
-                    module_ctx
-                        .func_name_to_id
-                        .insert(func.name.name.clone(), next_id);
-                    ctx.symbol_names.insert(next_id, func.name.name.clone());
-                    next_id
+    // fill fn sigs
+    for content in &module.contents {
+        if let ModuleStatement::Function(fn_def) = content {
+            let fn_id = *body.symbols.functions.get(&fn_def.name.name).unwrap();
+
+            let mut args = Vec::new();
+            let ret_type;
+
+            for arg in &fn_def.params {
+                let ty = lower_type(&ctx, &arg.arg_type);
+                args.push(ty);
+            }
+
+            if let Some(ty) = &fn_def.return_type {
+                ret_type = lower_type(&ctx, ty);
+            } else {
+                ret_type = TypeInfo {
+                    span: None,
+                    kind: ir::TypeKind::Unit,
                 };
-
-                let mut args = Vec::new();
-                let ret_type;
-
-                if let Some(ret) = func.return_type.as_ref() {
-                    ret_type = lower_type(&mut ctx, ret);
-                } else {
-                    ret_type = TypeInfo {
-                        span: None,
-                        kind: ir::TypeKind::Unit,
-                    };
-                }
-
-                for arg in &func.params {
-                    let ty = lower_type(&mut ctx, &arg.arg_type);
-                    args.push(ty);
-                }
-
-                let module_ctx = ctx.modules.get_mut(&module_id).unwrap();
-                module_ctx.functions.insert(next_id, (args, ret_type));
             }
-            ast::ModuleStatement::Constant(_) => todo!(),
-            ast::ModuleStatement::Struct(_) => todo!(),
-            ast::ModuleStatement::Module(_) => {}
+
+            ctx.body.function_signatures.insert(fn_id, (args, ret_type));
         }
     }
 
-    for stmt in &module.contents {
-        match stmt {
-            ast::ModuleStatement::Function(func) => {
-                let (res, new_ctx) = lower_function(ctx, func, body.module_id);
-                body.functions.insert(res.def_id, res);
-                ctx = new_ctx;
+    for content in &module.contents {
+        match content {
+            ModuleStatement::Constant(_) => todo!(),
+            ModuleStatement::Function(fn_def) => {
+                ctx = lower_function(ctx, fn_def, id);
             }
-            ast::ModuleStatement::Constant(_) => todo!(),
-            ast::ModuleStatement::Struct(_) => todo!(),
-            ast::ModuleStatement::Module(_) => todo!(),
+            ModuleStatement::Struct(_) => todo!(),
+            // ModuleStatement::Type(_) => todo!(),
+            ModuleStatement::Module(_mod_def) => {}
         }
     }
 
-    (ctx, body)
+    ctx
 }
 
-fn lower_function(
-    mut ctx: BuildCtx,
-    func: &ast::Function,
-    module_id: DefId,
-) -> (ir::Body, BuildCtx) {
-    let def_id = *ctx
-        .modules
-        .get(&module_id)
-        .unwrap()
-        .func_name_to_id
-        .get(&func.name.name)
-        .unwrap();
-
-    let body = ir::Body {
-        def_id,
-        ret_type: func
-            .return_type
-            .as_ref()
-            .map(|x| lower_type(&mut ctx, x))
-            .unwrap_or_else(|| TypeInfo {
-                span: None,
-                kind: ir::TypeKind::Unit,
-            }),
-        locals: Default::default(),
-        blocks: Default::default(),
-        fn_span: func.span,
-        is_pub: func.is_public,
-        is_extern: func.is_extern,
-    };
-
+fn lower_function(ctx: BuildCtx, func: &ast::Function, module_id: DefId) -> BuildCtx {
     let mut builder = BodyBuilder {
-        body,
-        statements: Vec::new(),
-        locals: HashMap::new(),
-        ret_local: None,
-        ctx,
+        body: Body {
+            blocks: Default::default(),
+            locals: Default::default(),
+            name: func.name.name.clone(),
+            def_id: {
+                let body = ctx.body.modules.get(&module_id).unwrap();
+                *body.symbols.functions.get(&func.name.name).unwrap()
+            },
+            is_pub: func.is_public,
+            is_extern: func.is_extern,
+            fn_span: func.span,
+        },
         local_module: module_id,
+        ret_local: 0,
+        name_to_local: HashMap::new(),
+        statements: Vec::new(),
+        ctx,
     };
+
+    let fn_id = builder.body.def_id;
+
+    let (args_ty, ret_ty) = builder
+        .ctx
+        .body
+        .function_signatures
+        .get(&fn_id)
+        .unwrap()
+        .clone();
 
     // store args ret
 
-    if let Some(ret_type) = func.return_type.as_ref() {
-        let ty = lower_type(&mut builder.ctx, ret_type);
+    builder.ret_local = builder.body.locals.len();
+    builder.body.locals.push(Local::new(
+        None,
+        LocalKind::ReturnPointer,
+        ret_ty.clone(),
+        None,
+        false,
+    ));
 
-        let local = Local {
-            mutable: false,
-            span: None,
-            ty,
-            kind: ir::LocalKind::ReturnPointer,
-        };
-
-        builder.ret_local = Some(builder.body.locals.len());
-        builder.body.locals.push(local);
-    }
-
-    for arg in &func.params {
-        let ty = lower_type(&mut builder.ctx, &arg.arg_type);
-        let local = Local {
-            mutable: false,
-            span: Some(arg.span),
-            ty,
-            kind: ir::LocalKind::Arg,
-        };
+    for (arg, ty) in func.params.iter().zip(args_ty) {
         builder
-            .locals
-            .insert(arg.name.name.clone(), builder.locals.len());
-        builder.body.locals.push(local);
+            .name_to_local
+            .insert(arg.name.name.clone(), builder.body.locals.len());
+        builder.body.locals.push(Local::new(
+            Some(arg.name.span),
+            LocalKind::Arg,
+            ty,
+            Some(arg.name.name.clone()),
+            false,
+        ));
     }
 
+    // Get all user defined locals
     for stmt in &func.body.body {
-        match stmt {
-            ast::Statement::Let(info) => lower_let(&mut builder, info),
-            ast::Statement::Assign(info) => lower_assign(&mut builder, info),
-            ast::Statement::For(_) => todo!(),
-            ast::Statement::While(_) => todo!(),
-            ast::Statement::If(_) => todo!(),
-            ast::Statement::Return(info) => lower_return(&mut builder, info),
-            ast::Statement::FnCall(info) => {
-                lower_fn_call_no_ret(&mut builder, info);
-            }
+        if let ast::Statement::Let(info) = stmt {
+            let ty = lower_type(&builder.ctx, &info.r#type);
+            builder
+                .name_to_local
+                .insert(info.name.name.clone(), builder.body.locals.len());
+            builder.body.locals.push(Local::new(
+                Some(info.name.span),
+                LocalKind::Temp,
+                ty,
+                Some(info.name.name.clone()),
+                info.is_mut,
+            ));
         }
     }
 
-    (builder.body, builder.ctx)
+    for stmt in &func.body.body {
+        lower_statement(&mut builder, stmt, &ret_ty);
+    }
+
+    let (mut ctx, body) = (builder.ctx, builder.body);
+    ctx.unresolved_function_signatures.remove(&body.def_id);
+    ctx.body.functions.insert(body.def_id, body);
+    ctx
+}
+
+fn lower_statement(builder: &mut BodyBuilder, info: &ast::Statement, ret_type: &TypeInfo) {
+    match info {
+        ast::Statement::Let(info) => lower_let(builder, info),
+        ast::Statement::Assign(info) => lower_assign(builder, info),
+        ast::Statement::For(_) => todo!(),
+        ast::Statement::While(_) => todo!(),
+        ast::Statement::If(_) => todo!(),
+        ast::Statement::Return(info) => lower_return(builder, info, ret_type),
+        ast::Statement::FnCall(info) => {
+            lower_fn_call(builder, info);
+        }
+    }
 }
 
 fn lower_let(builder: &mut BodyBuilder, info: &ast::LetStmt) {
-    let ty = lower_type(&mut builder.ctx, &info.r#type);
+    let ty = lower_type(&builder.ctx, &info.r#type);
     let rvalue = lower_expr(builder, &info.value, Some(&ty));
-
-    let local = ir::Local {
-        mutable: info.is_mut,
-        span: Some(info.span),
-        ty: lower_type(&mut builder.ctx, &info.r#type),
-        kind: ir::LocalKind::Temp,
-    };
-
-    let id = builder.body.locals.len();
-    builder.locals.insert(info.name.name.clone(), id);
-    builder.body.locals.push(local);
-
-    builder.statements.push(ir::Statement {
-        span: Some(info.span),
-        kind: ir::StatementKind::StorageLive(id),
+    let local_idx = builder.name_to_local.get(&info.name.name).copied().unwrap();
+    builder.statements.push(Statement {
+        span: Some(info.name.span),
+        kind: StatementKind::StorageLive(local_idx),
     });
-    builder.statements.push(ir::Statement {
-        span: Some(info.span),
-        kind: ir::StatementKind::Assign(
+    builder.statements.push(Statement {
+        span: Some(info.name.span),
+        kind: StatementKind::Assign(
             Place {
-                local: id,
+                local: local_idx,
                 projection: Default::default(),
             },
             rvalue,
@@ -225,14 +199,14 @@ fn lower_let(builder: &mut BodyBuilder, info: &ast::LetStmt) {
 }
 
 fn lower_assign(builder: &mut BodyBuilder, info: &ast::AssignStmt) {
-    let local = *builder.locals.get(&info.name.first.name).unwrap();
+    let local = *builder.name_to_local.get(&info.name.first.name).unwrap();
     let ty = builder.body.locals[local].ty.clone();
     let rvalue = lower_expr(builder, &info.value, Some(&ty));
     let place = lower_path(builder, &info.name);
 
     builder.statements.push(Statement {
-        span: Some(info.span),
-        kind: ir::StatementKind::Assign(place, rvalue),
+        span: Some(info.name.first.span),
+        kind: StatementKind::Assign(place, rvalue),
     })
 }
 
@@ -259,261 +233,140 @@ fn lower_binary_expr(
     type_hint: Option<&TypeInfo>,
 ) -> ir::RValue {
     let expr_type = type_hint.expect("type hint needed");
-    let lhs = {
-        let rvalue = lower_expr(builder, lhs, type_hint);
-        let local = builder.add_local(Local {
-            mutable: false,
-            span: None,
-            ty: expr_type.clone(),
-            kind: ir::LocalKind::Temp,
-        });
+    let lhs = lower_expr(builder, lhs, type_hint);
+    let rhs = lower_expr(builder, rhs, type_hint);
 
-        builder.statements.push(Statement {
-            span: None,
-            kind: ir::StatementKind::StorageLive(local),
-        });
-
-        let place = Place {
-            local,
-            projection: Default::default(),
-        };
-
-        builder.statements.push(Statement {
-            span: None,
-            kind: ir::StatementKind::Assign(place.clone(), rvalue),
-        });
-
-        place
+    let local_ty = expr_type;
+    let lhs_local = builder.add_local(Local::temp(local_ty.clone()));
+    let rhs_local = builder.add_local(Local::temp(local_ty.clone()));
+    let lhs_place = Place {
+        local: lhs_local,
+        projection: Default::default(),
     };
-    let rhs = {
-        let rvalue = lower_expr(builder, rhs, type_hint);
-        let local = builder.add_local(Local {
-            mutable: false,
-            span: None,
-            ty: expr_type.clone(),
-            kind: ir::LocalKind::Temp,
-        });
-
-        builder.statements.push(Statement {
-            span: None,
-            kind: ir::StatementKind::StorageLive(local),
-        });
-
-        let place = Place {
-            local,
-            projection: Default::default(),
-        };
-
-        builder.statements.push(Statement {
-            span: None,
-            kind: ir::StatementKind::Assign(place.clone(), rvalue),
-        });
-
-        place
-    };
-
-    match op {
-        ast::BinaryOp::Arith(op, _) => match op {
-            ast::ArithOp::Add => {
-                ir::RValue::BinOp(ir::BinOp::Add, Operand::Move(lhs), Operand::Move(rhs))
-            }
-            ast::ArithOp::Sub => {
-                ir::RValue::BinOp(ir::BinOp::Sub, Operand::Move(lhs), Operand::Move(rhs))
-            }
-            ast::ArithOp::Mul => {
-                ir::RValue::BinOp(ir::BinOp::Mul, Operand::Move(lhs), Operand::Move(rhs))
-            }
-            ast::ArithOp::Div => {
-                ir::RValue::BinOp(ir::BinOp::Div, Operand::Move(lhs), Operand::Move(rhs))
-            }
-            ast::ArithOp::Mod => {
-                ir::RValue::BinOp(ir::BinOp::Rem, Operand::Move(lhs), Operand::Move(rhs))
-            }
-        },
-        ast::BinaryOp::Logic(op, _) => match op {
-            ast::LogicOp::And => {
-                ir::RValue::LogicOp(ir::LogicalOp::And, Operand::Move(lhs), Operand::Move(rhs))
-            }
-            ast::LogicOp::Or => {
-                ir::RValue::LogicOp(ir::LogicalOp::Or, Operand::Move(lhs), Operand::Move(rhs))
-            }
-        },
-        ast::BinaryOp::Compare(op, _) => match op {
-            ast::CmpOp::Eq => {
-                ir::RValue::BinOp(ir::BinOp::Eq, Operand::Move(lhs), Operand::Move(rhs))
-            }
-            ast::CmpOp::NotEq => {
-                ir::RValue::BinOp(ir::BinOp::Ne, Operand::Move(lhs), Operand::Move(rhs))
-            }
-            ast::CmpOp::Lt => {
-                ir::RValue::BinOp(ir::BinOp::Lt, Operand::Move(lhs), Operand::Move(rhs))
-            }
-            ast::CmpOp::LtEq => {
-                ir::RValue::BinOp(ir::BinOp::Le, Operand::Move(lhs), Operand::Move(rhs))
-            }
-            ast::CmpOp::Gt => {
-                ir::RValue::BinOp(ir::BinOp::Gt, Operand::Move(lhs), Operand::Move(rhs))
-            }
-            ast::CmpOp::GtEq => {
-                ir::RValue::BinOp(ir::BinOp::Ge, Operand::Move(lhs), Operand::Move(rhs))
-            }
-        },
-        ast::BinaryOp::Bitwise(op, _) => match op {
-            ast::BitwiseOp::And => {
-                ir::RValue::BinOp(ir::BinOp::BitAnd, Operand::Move(lhs), Operand::Move(rhs))
-            }
-            ast::BitwiseOp::Or => {
-                ir::RValue::BinOp(ir::BinOp::BitOr, Operand::Move(lhs), Operand::Move(rhs))
-            }
-            ast::BitwiseOp::Xor => {
-                ir::RValue::BinOp(ir::BinOp::BitXor, Operand::Move(lhs), Operand::Move(rhs))
-            }
-        },
-    }
-}
-
-fn lower_fn_call_no_ret(builder: &mut BodyBuilder, info: &ast::FnCallExpr) {
-    let (arg_types, _ret_type) = builder.get_fn_by_name(&info.name.name).unwrap().clone();
-
-    let mut args = Vec::new();
-
-    for (expr, ty) in info.params.iter().zip(arg_types) {
-        let rvalue = lower_expr(builder, expr, Some(&ty));
-
-        let local = builder.add_local(Local {
-            mutable: false,
-            span: None,
-            ty,
-            kind: ir::LocalKind::Temp,
-        });
-
-        let place = Place {
-            local,
-            projection: Default::default(),
-        };
-
-        builder.statements.push(Statement {
-            span: None,
-            kind: ir::StatementKind::StorageLive(local),
-        });
-
-        builder.statements.push(Statement {
-            span: None,
-            kind: ir::StatementKind::Assign(place.clone(), rvalue),
-        });
-
-        args.push(Operand::Move(place))
-    }
-
-    let fn_id = *builder
-        .get_current_module()
-        .func_name_to_id
-        .get(&info.name.name)
-        .unwrap();
-
-    let next_block = builder.body.blocks.len() + 1;
-
-    let terminator = Terminator::Call {
-        func: Operand::Constant(ConstData {
-            span: Some(info.span),
-            type_info: TypeInfo {
-                span: None,
-                kind: ir::TypeKind::FnDef(fn_id, vec![]),
-            },
-            kind: ConstKind::ZeroSized,
-        }),
-        args,
-        dest: None,
-        target: Some(next_block),
-    };
-
-    let statements = std::mem::take(&mut builder.statements);
-
-    builder.body.blocks.push(ir::BasicBlock {
-        id: builder.body.blocks.len(),
-        statements: statements.into(),
-        terminator,
-    });
-}
-
-fn lower_fn_call(builder: &mut BodyBuilder, info: &ast::FnCallExpr) -> ir::Operand {
-    let (arg_types, ret_type) = builder.get_fn_by_name(&info.name.name).unwrap().clone();
-
-    let mut args = Vec::new();
-
-    let target_local = builder.add_local(Local {
-        mutable: false,
-        span: None,
-        ty: ret_type,
-        kind: ir::LocalKind::Temp,
-    });
-
-    let dest_place = Place {
-        local: target_local,
+    let rhs_place = Place {
+        local: lhs_local,
         projection: Default::default(),
     };
 
-    for (expr, ty) in info.params.iter().zip(arg_types) {
-        let rvalue = lower_expr(builder, expr, Some(&ty));
-
-        let local = builder.add_local(Local {
-            mutable: false,
-            span: None,
-            ty,
-            kind: ir::LocalKind::Temp,
-        });
-
-        let place = Place {
-            local,
-            projection: Default::default(),
-        };
-
-        builder.statements.push(Statement {
-            span: None,
-            kind: ir::StatementKind::StorageLive(local),
-        });
-
-        builder.statements.push(Statement {
-            span: None,
-            kind: ir::StatementKind::Assign(place.clone(), rvalue),
-        });
-
-        args.push(Operand::Move(place))
-    }
+    builder.statements.push(Statement {
+        span: None,
+        kind: StatementKind::StorageLive(lhs_local),
+    });
 
     builder.statements.push(Statement {
         span: None,
-        kind: ir::StatementKind::StorageLive(target_local),
+        kind: StatementKind::Assign(lhs_place.clone(), lhs),
     });
 
-    let fn_id = *builder
-        .get_current_module()
-        .func_name_to_id
-        .get(&info.name.name)
-        .unwrap();
+    builder.statements.push(Statement {
+        span: None,
+        kind: StatementKind::StorageLive(rhs_local),
+    });
 
-    let next_block = builder.body.blocks.len() + 1;
+    builder.statements.push(Statement {
+        span: None,
+        kind: StatementKind::Assign(rhs_place.clone(), rhs),
+    });
 
-    let terminator = Terminator::Call {
-        func: Operand::Constant(ConstData {
-            span: Some(info.span),
-            type_info: TypeInfo {
-                span: None,
-                kind: ir::TypeKind::FnDef(fn_id, vec![]),
-            },
-            kind: ConstKind::ZeroSized,
-        }),
+    let lhs = Operand::Move(lhs_place);
+    let rhs = Operand::Move(rhs_place);
+
+    match op {
+        ast::BinaryOp::Arith(op, _) => match op {
+            ast::ArithOp::Add => ir::RValue::BinOp(ir::BinOp::Add, lhs, rhs),
+            ast::ArithOp::Sub => ir::RValue::BinOp(ir::BinOp::Sub, lhs, rhs),
+            ast::ArithOp::Mul => ir::RValue::BinOp(ir::BinOp::Mul, lhs, rhs),
+            ast::ArithOp::Div => ir::RValue::BinOp(ir::BinOp::Div, lhs, rhs),
+            ast::ArithOp::Mod => ir::RValue::BinOp(ir::BinOp::Rem, lhs, rhs),
+        },
+        ast::BinaryOp::Logic(op, _) => match op {
+            ast::LogicOp::And => ir::RValue::LogicOp(ir::LogicalOp::And, lhs, rhs),
+            ast::LogicOp::Or => ir::RValue::LogicOp(ir::LogicalOp::Or, lhs, rhs),
+        },
+        ast::BinaryOp::Compare(op, _) => match op {
+            ast::CmpOp::Eq => ir::RValue::BinOp(ir::BinOp::Eq, lhs, rhs),
+            ast::CmpOp::NotEq => ir::RValue::BinOp(ir::BinOp::Ne, lhs, rhs),
+            ast::CmpOp::Lt => ir::RValue::BinOp(ir::BinOp::Lt, lhs, rhs),
+            ast::CmpOp::LtEq => ir::RValue::BinOp(ir::BinOp::Le, lhs, rhs),
+            ast::CmpOp::Gt => ir::RValue::BinOp(ir::BinOp::Gt, lhs, rhs),
+            ast::CmpOp::GtEq => ir::RValue::BinOp(ir::BinOp::Ge, lhs, rhs),
+        },
+        ast::BinaryOp::Bitwise(op, _) => match op {
+            ast::BitwiseOp::And => ir::RValue::BinOp(ir::BinOp::BitAnd, lhs, rhs),
+            ast::BitwiseOp::Or => ir::RValue::BinOp(ir::BinOp::BitOr, lhs, rhs),
+            ast::BitwiseOp::Xor => ir::RValue::BinOp(ir::BinOp::BitXor, lhs, rhs),
+        },
+    }
+}
+
+fn lower_fn_call(builder: &mut BodyBuilder, info: &ast::FnCallExpr) -> Operand {
+    let fn_id = {
+        let mod_body = builder.get_module_body();
+
+        if let Some(id) = mod_body.symbols.functions.get(&info.name.name) {
+            *id
+        } else {
+            *mod_body
+                .imports
+                .get(&info.name.name)
+                .expect("function call not found")
+        }
+    };
+    let (args_ty, ret_ty) = {
+        if let Some(x) = builder.ctx.body.function_signatures.get(&fn_id).cloned() {
+            x
+        } else {
+            let (args, ret) = builder
+                .ctx
+                .unresolved_function_signatures
+                .get(&fn_id)
+                .unwrap();
+
+            let args: Vec<_> = args.iter().map(|x| lower_type(&builder.ctx, x)).collect();
+            let ret = ret
+                .as_ref()
+                .map(|x| lower_type(&builder.ctx, x))
+                .unwrap_or(TypeInfo {
+                    span: None,
+                    kind: TypeKind::Unit,
+                });
+            builder
+                .ctx
+                .body
+                .function_signatures
+                .insert(fn_id, (args.clone(), ret.clone()));
+            (args, ret)
+        }
+    };
+
+    let mut args = Vec::new();
+
+    for (arg, arg_ty) in info.params.iter().zip(args_ty) {
+        let rvalue = lower_expr(builder, arg, Some(&arg_ty));
+        args.push(rvalue);
+    }
+
+    let dest_local = builder.add_local(Local::temp(ret_ty));
+
+    let dest_place = Place {
+        local: dest_local,
+        projection: Default::default(),
+    };
+
+    let target_block = builder.body.blocks.len() + 1;
+
+    // todo: check if function is diverging such as exit().
+    let kind = Terminator::Call {
+        func: fn_id,
         args,
-        dest: Some(dest_place.clone()),
-        target: Some(next_block),
+        destination: dest_place.clone(),
+        target: Some(target_block),
     };
 
     let statements = std::mem::take(&mut builder.statements);
-
-    builder.body.blocks.push(ir::BasicBlock {
-        id: builder.body.blocks.len(),
+    builder.body.blocks.push(BasicBlock {
         statements: statements.into(),
-        terminator,
+        terminator: kind,
     });
 
     Operand::Move(dest_place)
@@ -542,51 +395,61 @@ fn lower_value(
             kind: ir::ConstKind::Value(ir::ValueTree::Leaf(ir::ConstValue::U32((*value) as u32))),
         }),
         ast::ValueExpr::Int { value, span } => {
-            let (ty, val) = match type_hint {
+            let (ty, val, type_span) = match type_hint {
                 Some(type_hint) => match &type_hint.kind {
-                    ir::TypeKind::Int(type_hint) => match type_hint {
+                    ir::TypeKind::Int(int_type) => match int_type {
                         ir::IntTy::I128 => (
                             ir::TypeKind::Int(ir::IntTy::I128),
                             ir::ConstValue::I128((*value) as i128),
+                            type_hint.span,
                         ),
                         ir::IntTy::I64 => (
                             ir::TypeKind::Int(ir::IntTy::I64),
                             ir::ConstValue::I64((*value) as i64),
+                            type_hint.span,
                         ),
                         ir::IntTy::I32 => (
                             ir::TypeKind::Int(ir::IntTy::I32),
                             ir::ConstValue::I32((*value) as i32),
+                            type_hint.span,
                         ),
                         ir::IntTy::I16 => (
                             ir::TypeKind::Int(ir::IntTy::I16),
                             ir::ConstValue::I16((*value) as i16),
+                            type_hint.span,
                         ),
                         ir::IntTy::I8 => (
                             ir::TypeKind::Int(ir::IntTy::I8),
                             ir::ConstValue::I8((*value) as i8),
+                            type_hint.span,
                         ),
                         ir::IntTy::Isize => todo!(),
                     },
-                    ir::TypeKind::Uint(type_hint) => match type_hint {
+                    ir::TypeKind::Uint(int_type) => match int_type {
                         ir::UintTy::U128 => (
                             ir::TypeKind::Uint(ir::UintTy::U128),
                             ir::ConstValue::U128(*value),
+                            type_hint.span,
                         ),
                         ir::UintTy::U64 => (
                             ir::TypeKind::Uint(ir::UintTy::U64),
                             ir::ConstValue::U64((*value) as u64),
+                            type_hint.span,
                         ),
                         ir::UintTy::U32 => (
                             ir::TypeKind::Uint(ir::UintTy::U32),
                             ir::ConstValue::U32((*value) as u32),
+                            type_hint.span,
                         ),
                         ir::UintTy::U16 => (
                             ir::TypeKind::Uint(ir::UintTy::U16),
                             ir::ConstValue::U16((*value) as u16),
+                            type_hint.span,
                         ),
                         ir::UintTy::U8 => (
                             ir::TypeKind::Uint(ir::UintTy::U8),
                             ir::ConstValue::U8((*value) as u8),
+                            type_hint.span,
                         ),
                         _ => todo!(),
                     },
@@ -598,14 +461,41 @@ fn lower_value(
             ir::Operand::Constant(ir::ConstData {
                 span: Some(*span),
                 type_info: ir::TypeInfo {
-                    span: None,
+                    span: type_span,
                     kind: ty,
                 },
                 kind: ir::ConstKind::Value(ir::ValueTree::Leaf(val)),
             })
         }
-        ast::ValueExpr::Float { value, span } => todo!(),
-        ast::ValueExpr::Str { value, span } => todo!(),
+        ast::ValueExpr::Float { value, span } => match type_hint {
+            Some(type_hint) => match &type_hint.kind {
+                TypeKind::Float(float_ty) => match float_ty {
+                    ir::FloatTy::F32 => ir::Operand::Constant(ir::ConstData {
+                        span: Some(*span),
+                        type_info: ir::TypeInfo {
+                            span: type_hint.span,
+                            kind: ir::TypeKind::Float(ir::FloatTy::F32),
+                        },
+                        kind: ir::ConstKind::Value(ir::ValueTree::Leaf(ir::ConstValue::F32(
+                            value.parse().unwrap(),
+                        ))),
+                    }),
+                    ir::FloatTy::F64 => ir::Operand::Constant(ir::ConstData {
+                        span: Some(*span),
+                        type_info: ir::TypeInfo {
+                            span: type_hint.span,
+                            kind: ir::TypeKind::Float(ir::FloatTy::F64),
+                        },
+                        kind: ir::ConstKind::Value(ir::ValueTree::Leaf(ir::ConstValue::F64(
+                            value.parse().unwrap(),
+                        ))),
+                    }),
+                },
+                _ => unreachable!(),
+            },
+            None => todo!(),
+        },
+        ast::ValueExpr::Str { value: _, span: _ } => todo!(),
         ast::ValueExpr::Path(info) => {
             // add deref info to path
             Operand::Move(lower_path(builder, info))
@@ -613,36 +503,31 @@ fn lower_value(
     }
 }
 
-fn lower_return(builder: &mut BodyBuilder, info: &ast::ReturnStmt) {
-    let ret_type = builder.body.ret_type.clone();
-    if let Some(value) = &info.value {
-        let rvalue = lower_expr(builder, value, Some(&ret_type));
-        let ret_local = builder.ret_local.unwrap();
-
+fn lower_return(builder: &mut BodyBuilder, info: &ast::ReturnStmt, return_type: &TypeInfo) {
+    if let Some(value_expr) = &info.value {
+        let value = lower_expr(builder, value_expr, Some(return_type));
         builder.statements.push(Statement {
-            span: Some(info.span),
-            kind: ir::StatementKind::Assign(
+            span: None,
+            kind: StatementKind::Assign(
                 Place {
-                    local: ret_local,
+                    local: builder.ret_local,
                     projection: Default::default(),
                 },
-                rvalue,
+                value,
             ),
-        })
+        });
     }
 
     let statements = std::mem::take(&mut builder.statements);
-
-    builder.body.blocks.push(ir::BasicBlock {
-        id: builder.body.blocks.len(),
+    builder.body.blocks.push(BasicBlock {
         statements: statements.into(),
-        terminator: ir::Terminator::Return,
+        terminator: Terminator::Return,
     });
 }
 
 fn lower_path(builder: &mut BodyBuilder, info: &ast::PathExpr) -> ir::Place {
     let local = *builder
-        .locals
+        .name_to_local
         .get(&info.first.name)
         .expect("local not found");
 
@@ -652,7 +537,7 @@ fn lower_path(builder: &mut BodyBuilder, info: &ast::PathExpr) -> ir::Place {
     }
 }
 
-pub fn lower_type(_ctx: &mut BuildCtx, t: &ast::Type) -> ir::TypeInfo {
+pub fn lower_type(_ctx: &BuildCtx, t: &ast::Type) -> ir::TypeInfo {
     match t.name.name.as_str() {
         "()" => ir::TypeInfo {
             span: Some(t.span),

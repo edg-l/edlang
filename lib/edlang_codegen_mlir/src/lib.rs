@@ -1,18 +1,10 @@
 #![allow(clippy::too_many_arguments)]
 
 use edlang_ir as ir;
-use std::{
-    collections::HashMap,
-    ffi::{CStr, CString},
-    mem::MaybeUninit,
-    path::PathBuf,
-    ptr::{addr_of_mut, null_mut},
-    sync::OnceLock,
-};
+use std::path::PathBuf;
 
-use edlang_session::{OptLevel, Session};
-use inkwell::context::Context;
-use ir::DefId;
+use edlang_session::Session;
+use ir::ProgramBody;
 /*
 use llvm_sys::{
     core::{LLVMContextCreate, LLVMContextDispose, LLVMDisposeMessage, LLVMDisposeModule},
@@ -34,10 +26,9 @@ pub mod linker;
 
 pub fn compile(
     session: &Session,
-    modules: &HashMap<DefId, ir::ModuleBody>,
-    symbols: HashMap<DefId, String>,
+    program: &ProgramBody,
 ) -> Result<PathBuf, Box<dyn std::error::Error>> {
-    codegen::compile(session, modules, &symbols)
+    codegen::compile(session, program)
 }
 
 // Converts a module to an object.

@@ -86,6 +86,8 @@ pub enum Token {
     Semicolon,
     #[token(":")]
     Colon,
+    #[token("::")]
+    DoubleColon,
     #[token("->")]
     Arrow,
     #[token(",")]

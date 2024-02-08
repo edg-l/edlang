@@ -45,6 +45,7 @@ extern {
     "=" => Token::Assign,
     ";" => Token::Semicolon,
     ":" => Token::Colon,
+    "::" => Token::DoubleColon,
     "->" => Token::Arrow,
     "," => Token::Coma,
     "<" => Token::LessThanSign,
@@ -96,6 +97,16 @@ Comma<T>: Vec<T> = {
 
 SemiColon<T>: Vec<T> = {
     <mut v:(<T> ";")*> <e:T?> => match e {
+        None => v,
+        Some(e) => {
+            v.push(e);
+            v
+        }
+    }
+};
+
+DoubleColon<T>: Vec<T> = {
+    <mut v:(<T> "::")*> <e:T?> => match e {
         None => v,
         Some(e) => {
             v.push(e);
@@ -383,8 +394,8 @@ pub(crate) Struct: ast::Struct = {
 }
 
 pub(crate) Import: ast::Import = {
-    <lo:@L> "use" <path:PathExpr> <symbols:("{" <Comma<Ident>> "}")?> ";" <hi:@R> => ast::Import {
-        path,
+    <lo:@L> "use" <module:DoubleColon<Ident>> <symbols:("{" <Comma<Ident>> "}")?> ";" <hi:@R> => ast::Import {
+        module,
         symbols: symbols.unwrap_or(vec![]),
         span: ast::Span::new(lo, hi),
     }

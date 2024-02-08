@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use edlang_ir::{Body, DefId, Local, Statement, TypeInfo};
+use edlang_ir::{Body, DefId, Local, ModuleBody, ProgramBody, Statement, TypeInfo, TypeKind};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Default)]
 pub struct IdGenerator {
@@ -23,7 +23,7 @@ impl IdGenerator {
 
     pub fn module_defid(&self) -> DefId {
         DefId {
-            module_id: self.module_id,
+            program_id: self.module_id,
             id: 0,
         }
     }
@@ -32,7 +32,7 @@ impl IdGenerator {
         let id = self.next_id();
 
         DefId {
-            module_id: self.module_id,
+            program_id: self.module_id,
             id,
         }
     }
@@ -47,18 +47,9 @@ impl IdGenerator {
 
 #[derive(Debug, Clone, Default)]
 pub struct BuildCtx {
-    pub module_name_to_id: HashMap<String, DefId>,
-    pub modules: HashMap<DefId, ModuleCtx>,
-    pub functions: HashMap<DefId, Body>,
-    pub gen: IdGenerator,
-    pub symbol_names: HashMap<DefId, String>,
-}
-
-#[derive(Debug, Clone, Default)]
-pub struct ModuleCtx {
-    pub id: DefId,
-    pub func_name_to_id: HashMap<String, DefId>,
-    pub functions: HashMap<DefId, (Vec<TypeInfo>, TypeInfo)>,
+    pub body: ProgramBody,
+    pub unresolved_function_signatures:
+        HashMap<DefId, (Vec<edlang_ast::Type>, Option<edlang_ast::Type>)>,
     pub gen: IdGenerator,
 }
 
@@ -67,8 +58,8 @@ pub struct BodyBuilder {
     pub local_module: DefId,
     pub body: Body,
     pub statements: Vec<Statement>,
-    pub locals: HashMap<String, usize>,
-    pub ret_local: Option<usize>,
+    pub name_to_local: HashMap<String, usize>,
+    pub ret_local: usize,
     pub ctx: BuildCtx,
 }
 
@@ -78,27 +69,21 @@ impl BodyBuilder {
         self.body.locals.push(local);
         id
     }
+
+    pub fn add_temp_local(&mut self, ty_kind: TypeKind) -> usize {
+        let id = self.body.locals.len();
+        self.body.locals.push(Local::temp(TypeInfo {
+            span: None,
+            kind: ty_kind,
+        }));
+        id
+    }
+
     pub fn get_local(&self, name: &str) -> Option<&Local> {
-        self.body.locals.get(*(self.locals.get(name)?))
+        self.body.locals.get(*(self.name_to_local.get(name)?))
     }
 
-    pub fn get_current_module(&self) -> &ModuleCtx {
-        self.ctx
-            .modules
-            .get(&self.local_module)
-            .expect("current module should exist")
-    }
-
-    pub fn get_current_module_mut(&mut self) -> &mut ModuleCtx {
-        self.ctx
-            .modules
-            .get_mut(&self.local_module)
-            .expect("current module should exist")
-    }
-
-    pub fn get_fn_by_name(&self, name: &str) -> Option<&(Vec<TypeInfo>, TypeInfo)> {
-        let id = self.get_current_module().func_name_to_id.get(name)?;
-        let f = self.get_current_module().functions.get(&id)?;
-        Some(f)
+    pub fn get_module_body(&self) -> &ModuleBody {
+        self.ctx.body.modules.get(&self.local_module).unwrap()
     }
 }

@@ -18,7 +18,7 @@ pub enum ModuleStatement {
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Import {
-    pub path: PathExpr,
+    pub module: Vec<Ident>,
     /// If symbols is empty then the last path ident is the symbol.
     pub symbols: Vec<Ident>,
     pub span: Span,

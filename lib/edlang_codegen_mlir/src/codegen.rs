@@ -4,24 +4,22 @@ use edlang_ir as ir;
 use edlang_ir::DefId;
 use edlang_session::Session;
 use inkwell::{
-    attributes::Attribute,
     builder::{Builder, BuilderError},
     context::Context,
     debug_info::{DICompileUnit, DebugInfoBuilder},
     module::Module,
-    targets::{InitializationConfig, Target, TargetData, TargetMachine, TargetTriple},
+    targets::{InitializationConfig, Target, TargetData, TargetMachine},
     types::{AnyType, BasicMetadataTypeEnum, BasicType},
-    values::{AnyValue, AnyValueEnum, BasicValue, BasicValueEnum, PointerValue},
+    values::{BasicValue, BasicValueEnum, PointerValue},
 };
-use ir::{ConstData, Operand, TypeInfo, ValueTree};
+use ir::{ModuleBody, ProgramBody, TypeInfo, ValueTree};
 use tracing::info;
 
 #[derive(Debug, Clone, Copy)]
 struct CompileCtx<'a> {
     context: &'a Context,
     session: &'a Session,
-    modules: &'a HashMap<DefId, ir::ModuleBody>,
-    symbols: &'a HashMap<DefId, String>,
+    program: &'a ProgramBody,
 }
 
 struct ModuleCompileCtx<'ctx, 'm> {
@@ -31,21 +29,23 @@ struct ModuleCompileCtx<'ctx, 'm> {
     di_builder: DebugInfoBuilder<'ctx>,
     di_unit: DICompileUnit<'ctx>,
     target_data: TargetData,
+    module_id: DefId,
 }
 
-pub fn compile(
-    session: &Session,
-    modules: &HashMap<DefId, ir::ModuleBody>,
-    symbols: &HashMap<DefId, String>,
-) -> Result<PathBuf, Box<dyn Error>> {
+impl<'ctx, 'm> ModuleCompileCtx<'ctx, 'm> {
+    pub fn get_module_body(&self) -> &ModuleBody {
+        self.ctx.program.modules.get(&self.module_id).unwrap()
+    }
+}
+
+pub fn compile(session: &Session, program: &ProgramBody) -> Result<PathBuf, Box<dyn Error>> {
     let context = Context::create();
     let builder = context.create_builder();
 
     let ctx = CompileCtx {
         context: &context,
         session,
-        modules,
-        symbols,
+        program,
     };
 
     let mut llvm_modules = Vec::new();
@@ -68,9 +68,9 @@ pub fn compile(
 
     let filename = session.file_path.file_name().unwrap().to_string_lossy();
     let dir = session.file_path.parent().unwrap().to_string_lossy();
-    for (id, module) in modules.iter() {
-        let name = ctx.symbols.get(id).unwrap();
-        let llvm_module = context.create_module(name);
+    for module_id in program.top_level_modules.iter() {
+        let module = ctx.program.modules.get(module_id).unwrap();
+        let llvm_module = context.create_module(&module.name);
         llvm_module.set_source_file_name(&filename);
         llvm_module.set_triple(&triple);
         let (di_builder, di_unit) = llvm_module.create_debug_info_builder(
@@ -84,7 +84,7 @@ pub fn compile(
             1,
             "", // split name
             inkwell::debug_info::DWARFEmissionKind::Full,
-            module.module_id.module_id.try_into().unwrap(), // compile unit id?
+            module.module_id.program_id.try_into().unwrap(), // compile unit id?
             false,
             false,
             "",
@@ -98,9 +98,10 @@ pub fn compile(
             di_unit,
             builder: &builder,
             target_data: machine.get_target_data(),
+            module_id: *module_id,
         };
 
-        compile_module(&module_ctx, module);
+        compile_module(&module_ctx, *module_id);
 
         module_ctx.module.verify()?;
 
@@ -125,37 +126,36 @@ pub fn compile(
     Ok(session.output_file.with_extension("o"))
 }
 
-fn compile_module(ctx: &ModuleCompileCtx, module: &ir::ModuleBody) {
+fn compile_module(ctx: &ModuleCompileCtx, module_id: DefId) {
+    let module = ctx.ctx.program.modules.get(&module_id).unwrap();
     info!("compiling module");
-    for (_fn_id, func) in module.functions.iter() {
-        compile_fn_signature(ctx, func);
+    for id in module.functions.iter() {
+        compile_fn_signature(ctx, *id);
     }
 
-    for (_fn_id, func) in module.functions.iter() {
-        compile_fn(ctx, func).unwrap();
+    for id in module.functions.iter() {
+        compile_fn(ctx, *id).unwrap();
     }
 }
 
-fn compile_fn_signature(ctx: &ModuleCompileCtx, body: &ir::Body) {
-    let name = ctx.ctx.symbols.get(&body.def_id).unwrap();
-    info!("compiling fn sig: {}", name);
+fn compile_fn_signature(ctx: &ModuleCompileCtx, fn_id: DefId) {
+    let (arg_types, ret_type) = ctx.ctx.program.function_signatures.get(&fn_id).unwrap();
+    let body = ctx.ctx.program.functions.get(&fn_id).unwrap();
+    info!("compiling fn sig: {}", body.name);
 
-    let (args, ret_type) = { (body.get_args(), body.ret_type.clone()) };
-
-    let args: Vec<BasicMetadataTypeEnum> = args
+    let args: Vec<BasicMetadataTypeEnum> = arg_types
         .iter()
-        .map(|x| compile_basic_type(ctx, &x.ty).into())
+        .map(|x| compile_basic_type(ctx, x).into())
         .collect();
-    // let ret_type = compile_basic_type(ctx, &ret_type);
 
     let fn_type = if let ir::TypeKind::Unit = ret_type.kind {
         ctx.ctx.context.void_type().fn_type(&args, false)
     } else {
-        compile_basic_type(ctx, &ret_type).fn_type(&args, false)
+        compile_basic_type(ctx, ret_type).fn_type(&args, false)
     };
 
     let fn_value = ctx.module.add_function(
-        name,
+        &body.name,
         fn_type,
         Some(if body.is_extern {
             inkwell::module::Linkage::AvailableExternally
@@ -173,12 +173,11 @@ fn compile_fn_signature(ctx: &ModuleCompileCtx, body: &ir::Body) {
     );
 }
 
-fn compile_fn(ctx: &ModuleCompileCtx, body: &ir::Body) -> Result<(), BuilderError> {
-    let name = ctx.ctx.symbols.get(&body.def_id).unwrap();
-    info!("compiling fn body: {}", name);
-    // let (args, ret_type) = { (body.get_args(), body.ret_type.clone().unwrap()) };
+fn compile_fn(ctx: &ModuleCompileCtx, fn_id: DefId) -> Result<(), BuilderError> {
+    let body = ctx.ctx.program.functions.get(&fn_id).unwrap();
+    info!("compiling fn body: {}", body.name);
 
-    let fn_value = ctx.module.get_function(name).unwrap();
+    let fn_value = ctx.module.get_function(&body.name).unwrap();
 
     let block = ctx.ctx.context.append_basic_block(fn_value, "entry");
     ctx.builder.position_at_end(block);
@@ -236,21 +235,11 @@ fn compile_fn(ctx: &ModuleCompileCtx, body: &ir::Body) -> Result<(), BuilderErro
         for stmt in &block.statements {
             info!("compiling stmt");
             match &stmt.kind {
-                ir::StatementKind::Assign(place, rvalue) => match rvalue {
-                    ir::RValue::Use(op) => {
-                        let value = compile_load_operand(ctx, body, &locals, op)?.0;
-                        ctx.builder
-                            .build_store(*locals.get(&place.local).unwrap(), value)?;
-                    }
-                    ir::RValue::Ref(_, _) => todo!(),
-                    ir::RValue::BinOp(op, lhs, rhs) => {
-                        let value = compile_bin_op(ctx, body, &locals, *op, lhs, rhs)?;
-                        ctx.builder
-                            .build_store(*locals.get(&place.local).unwrap(), value)?;
-                    }
-                    ir::RValue::LogicOp(_, _, _) => todo!(),
-                    ir::RValue::UnOp(_, _) => todo!(),
-                },
+                ir::StatementKind::Assign(place, rvalue) => {
+                    let (value, _value_ty) = compile_rvalue(ctx, fn_id, &locals, rvalue)?;
+                    ctx.builder
+                        .build_store(*locals.get(&place.local).unwrap(), value)?;
+                }
                 ir::StatementKind::StorageLive(_) => {
                     // https://llvm.org/docs/LangRef.html#int-lifestart
                 }
@@ -278,44 +267,28 @@ fn compile_fn(ctx: &ModuleCompileCtx, body: &ir::Body) -> Result<(), BuilderErro
             ir::Terminator::Call {
                 func,
                 args,
-                dest,
+                destination: dest,
                 target,
             } => {
-                if let Operand::Constant(c) = func {
-                    if let ir::TypeKind::FnDef(fn_id, generics) = &c.type_info.kind {
-                        let fn_symbol = ctx.ctx.symbols.get(fn_id).unwrap();
-                        let fn_value = ctx.module.get_function(fn_symbol).unwrap();
-                        let args: Vec<_> = args
-                            .iter()
-                            .map(|x| {
-                                compile_load_operand(ctx, body, &locals, x)
-                                    .unwrap()
-                                    .0
-                                    .into()
-                            })
-                            .collect();
-                        let result = ctx.builder.build_call(fn_value, &args, "")?;
+                let target_fn_body = ctx.ctx.program.functions.get(func).unwrap();
+                let fn_value = ctx.module.get_function(&target_fn_body.name).unwrap();
+                let args: Vec<_> = args
+                    .iter()
+                    .map(|x| compile_rvalue(ctx, fn_id, &locals, x).unwrap().0.into())
+                    .collect();
+                let result = ctx.builder.build_call(fn_value, &args, "")?;
 
-                        if let Some(dest) = dest {
-                            let is_void =
-                                matches!(body.locals[dest.local].ty.kind, ir::TypeKind::Unit);
+                let is_void = matches!(body.locals[dest.local].ty.kind, ir::TypeKind::Unit);
 
-                            if !is_void {
-                                ctx.builder.build_store(
-                                    *locals.get(&dest.local).unwrap(),
-                                    result.try_as_basic_value().expect_left("value was right"),
-                                )?;
-                            }
-                        }
+                if !is_void {
+                    ctx.builder.build_store(
+                        *locals.get(&dest.local).unwrap(),
+                        result.try_as_basic_value().expect_left("value was right"),
+                    )?;
+                }
 
-                        if let Some(target) = target {
-                            ctx.builder.build_unconditional_branch(blocks[*target])?;
-                        }
-                    } else {
-                        todo!()
-                    }
-                } else {
-                    todo!()
+                if let Some(target) = target {
+                    ctx.builder.build_unconditional_branch(blocks[*target])?;
                 }
             }
             ir::Terminator::Unreachable => {
@@ -329,21 +302,21 @@ fn compile_fn(ctx: &ModuleCompileCtx, body: &ir::Body) -> Result<(), BuilderErro
 
 fn compile_bin_op<'ctx>(
     ctx: &ModuleCompileCtx<'ctx, '_>,
-    body: &ir::Body,
+    fn_id: DefId,
     locals: &HashMap<usize, PointerValue<'ctx>>,
     op: ir::BinOp,
     lhs: &ir::Operand,
     rhs: &ir::Operand,
-) -> Result<BasicValueEnum<'ctx>, BuilderError> {
-    let (lhs_value, lhs_ty) = compile_load_operand(ctx, body, locals, lhs)?;
-    let (rhs_value, _rhs_ty) = compile_load_operand(ctx, body, locals, rhs)?;
+) -> Result<(BasicValueEnum<'ctx>, TypeInfo), BuilderError> {
+    let (lhs_value, lhs_ty) = compile_load_operand(ctx, fn_id, locals, lhs)?;
+    let (rhs_value, _rhs_ty) = compile_load_operand(ctx, fn_id, locals, rhs)?;
 
     let is_float = matches!(lhs_ty.kind, ir::TypeKind::Float(_));
     let is_signed = matches!(lhs_ty.kind, ir::TypeKind::Int(_));
 
     Ok(match op {
         ir::BinOp::Add => {
-            if is_float {
+            let value = if is_float {
                 ctx.builder
                     .build_float_add(
                         lhs_value.into_float_value(),
@@ -355,10 +328,11 @@ fn compile_bin_op<'ctx>(
                 ctx.builder
                     .build_int_add(lhs_value.into_int_value(), rhs_value.into_int_value(), "")?
                     .as_basic_value_enum()
-            }
+            };
+            (value, lhs_ty)
         }
         ir::BinOp::Sub => {
-            if is_float {
+            let value = if is_float {
                 ctx.builder
                     .build_float_sub(
                         lhs_value.into_float_value(),
@@ -370,10 +344,11 @@ fn compile_bin_op<'ctx>(
                 ctx.builder
                     .build_int_sub(lhs_value.into_int_value(), rhs_value.into_int_value(), "")?
                     .as_basic_value_enum()
-            }
+            };
+            (value, lhs_ty)
         }
         ir::BinOp::Mul => {
-            if is_float {
+            let value = if is_float {
                 ctx.builder
                     .build_float_mul(
                         lhs_value.into_float_value(),
@@ -385,10 +360,11 @@ fn compile_bin_op<'ctx>(
                 ctx.builder
                     .build_int_add(lhs_value.into_int_value(), rhs_value.into_int_value(), "")?
                     .as_basic_value_enum()
-            }
+            };
+            (value, lhs_ty)
         }
         ir::BinOp::Div => {
-            if is_float {
+            let value = if is_float {
                 ctx.builder
                     .build_float_div(
                         lhs_value.into_float_value(),
@@ -412,10 +388,11 @@ fn compile_bin_op<'ctx>(
                         "",
                     )?
                     .as_basic_value_enum()
-            }
+            };
+            (value, lhs_ty)
         }
         ir::BinOp::Rem => {
-            if is_float {
+            let value = if is_float {
                 ctx.builder
                     .build_float_rem(
                         lhs_value.into_float_value(),
@@ -439,35 +416,46 @@ fn compile_bin_op<'ctx>(
                         "",
                     )?
                     .as_basic_value_enum()
-            }
+            };
+            (value, lhs_ty)
         }
-        ir::BinOp::BitXor => ctx
-            .builder
-            .build_xor(lhs_value.into_int_value(), rhs_value.into_int_value(), "")?
-            .as_basic_value_enum(),
-        ir::BinOp::BitAnd => ctx
-            .builder
-            .build_and(lhs_value.into_int_value(), rhs_value.into_int_value(), "")?
-            .as_basic_value_enum(),
-        ir::BinOp::BitOr => ctx
-            .builder
-            .build_or(lhs_value.into_int_value(), rhs_value.into_int_value(), "")?
-            .as_basic_value_enum(),
-        ir::BinOp::Shl => ctx
-            .builder
-            .build_left_shift(lhs_value.into_int_value(), rhs_value.into_int_value(), "")?
-            .as_basic_value_enum(),
-        ir::BinOp::Shr => ctx
-            .builder
-            .build_right_shift(
-                lhs_value.into_int_value(),
-                rhs_value.into_int_value(),
-                is_signed,
-                "",
-            )?
-            .as_basic_value_enum(),
+        ir::BinOp::BitXor => (
+            ctx.builder
+                .build_xor(lhs_value.into_int_value(), rhs_value.into_int_value(), "")?
+                .as_basic_value_enum(),
+            lhs_ty,
+        ),
+        ir::BinOp::BitAnd => (
+            ctx.builder
+                .build_and(lhs_value.into_int_value(), rhs_value.into_int_value(), "")?
+                .as_basic_value_enum(),
+            lhs_ty,
+        ),
+        ir::BinOp::BitOr => (
+            ctx.builder
+                .build_or(lhs_value.into_int_value(), rhs_value.into_int_value(), "")?
+                .as_basic_value_enum(),
+            lhs_ty,
+        ),
+        ir::BinOp::Shl => (
+            ctx.builder
+                .build_left_shift(lhs_value.into_int_value(), rhs_value.into_int_value(), "")?
+                .as_basic_value_enum(),
+            lhs_ty,
+        ),
+        ir::BinOp::Shr => (
+            ctx.builder
+                .build_right_shift(
+                    lhs_value.into_int_value(),
+                    rhs_value.into_int_value(),
+                    is_signed,
+                    "",
+                )?
+                .as_basic_value_enum(),
+            lhs_ty,
+        ),
         ir::BinOp::Eq => {
-            if is_float {
+            let value = if is_float {
                 ctx.builder
                     .build_float_compare(
                         inkwell::FloatPredicate::OEQ,
@@ -485,10 +473,17 @@ fn compile_bin_op<'ctx>(
                         "",
                     )?
                     .as_basic_value_enum()
-            }
+            };
+            (
+                value,
+                TypeInfo {
+                    span: None,
+                    kind: ir::TypeKind::Bool,
+                },
+            )
         }
         ir::BinOp::Lt => {
-            if is_float {
+            let value = if is_float {
                 ctx.builder
                     .build_float_compare(
                         inkwell::FloatPredicate::OLT,
@@ -510,10 +505,17 @@ fn compile_bin_op<'ctx>(
                         "",
                     )?
                     .as_basic_value_enum()
-            }
+            };
+            (
+                value,
+                TypeInfo {
+                    span: None,
+                    kind: ir::TypeKind::Bool,
+                },
+            )
         }
         ir::BinOp::Le => {
-            if is_float {
+            let value = if is_float {
                 ctx.builder
                     .build_float_compare(
                         inkwell::FloatPredicate::OLE,
@@ -535,10 +537,17 @@ fn compile_bin_op<'ctx>(
                         "",
                     )?
                     .as_basic_value_enum()
-            }
+            };
+            (
+                value,
+                TypeInfo {
+                    span: None,
+                    kind: ir::TypeKind::Bool,
+                },
+            )
         }
         ir::BinOp::Ne => {
-            if is_float {
+            let value = if is_float {
                 ctx.builder
                     .build_float_compare(
                         inkwell::FloatPredicate::ONE,
@@ -556,10 +565,17 @@ fn compile_bin_op<'ctx>(
                         "",
                     )?
                     .as_basic_value_enum()
-            }
+            };
+            (
+                value,
+                TypeInfo {
+                    span: None,
+                    kind: ir::TypeKind::Bool,
+                },
+            )
         }
         ir::BinOp::Ge => {
-            if is_float {
+            let value = if is_float {
                 ctx.builder
                     .build_float_compare(
                         inkwell::FloatPredicate::OGE,
@@ -581,10 +597,17 @@ fn compile_bin_op<'ctx>(
                         "",
                     )?
                     .as_basic_value_enum()
-            }
+            };
+            (
+                value,
+                TypeInfo {
+                    span: None,
+                    kind: ir::TypeKind::Bool,
+                },
+            )
         }
         ir::BinOp::Gt => {
-            if is_float {
+            let value = if is_float {
                 ctx.builder
                     .build_float_compare(
                         inkwell::FloatPredicate::OGT,
@@ -606,19 +629,42 @@ fn compile_bin_op<'ctx>(
                         "",
                     )?
                     .as_basic_value_enum()
-            }
+            };
+            (
+                value,
+                TypeInfo {
+                    span: None,
+                    kind: ir::TypeKind::Bool,
+                },
+            )
         }
         ir::BinOp::Offset => todo!(),
     })
 }
 
+fn compile_rvalue<'ctx>(
+    ctx: &ModuleCompileCtx<'ctx, '_>,
+    fn_id: DefId,
+    locals: &HashMap<usize, PointerValue<'ctx>>,
+    rvalue: &ir::RValue,
+) -> Result<(BasicValueEnum<'ctx>, TypeInfo), BuilderError> {
+    Ok(match rvalue {
+        ir::RValue::Use(op) => compile_load_operand(ctx, fn_id, locals, op)?,
+        ir::RValue::Ref(_, _) => todo!(),
+        ir::RValue::BinOp(op, lhs, rhs) => compile_bin_op(ctx, fn_id, locals, *op, lhs, rhs)?,
+        ir::RValue::LogicOp(_, _, _) => todo!(),
+        ir::RValue::UnOp(_, _) => todo!(),
+    })
+}
+
 fn compile_load_operand<'ctx>(
     ctx: &ModuleCompileCtx<'ctx, '_>,
-    body: &ir::Body,
+    fn_id: DefId,
     locals: &HashMap<usize, PointerValue<'ctx>>,
     op: &ir::Operand,
 ) -> Result<(BasicValueEnum<'ctx>, TypeInfo), BuilderError> {
     // todo: implement projection
+    let body = ctx.ctx.program.functions.get(&fn_id).unwrap();
     Ok(match op {
         ir::Operand::Copy(place) => {
             let pointee_ty = compile_basic_type(ctx, &body.locals[place.local].ty);
@@ -715,23 +761,13 @@ fn compile_type<'a>(
     match &ty.kind {
         ir::TypeKind::Unit => context.void_type().as_any_type_enum(),
         ir::TypeKind::FnDef(def_id, _generic_args) => {
-            let (args, ret_type) = {
-                let fn_body = ctx
-                    .ctx
-                    .modules
-                    .get(&def_id.get_module_defid())
-                    .unwrap()
-                    .functions
-                    .get(def_id)
-                    .unwrap();
-                (fn_body.get_args(), fn_body.ret_type.clone())
-            };
+            let (args, ret_type) = { ctx.ctx.program.function_signatures.get(def_id).unwrap() };
 
             let args: Vec<BasicMetadataTypeEnum> = args
                 .iter()
-                .map(|x| compile_basic_type(ctx, &x.ty).into())
+                .map(|x| compile_basic_type(ctx, x).into())
                 .collect();
-            let ret_type = compile_basic_type(ctx, &ret_type);
+            let ret_type = compile_basic_type(ctx, ret_type);
 
             ret_type.fn_type(&args, false).as_any_type_enum()
         }

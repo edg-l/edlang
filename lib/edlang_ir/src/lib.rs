@@ -1,34 +1,61 @@
 // Based on a cfg
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashSet};
 
 use edlang_span::Span;
 use smallvec::SmallVec;
 
 pub mod scalar_int;
 
+#[derive(Debug, Clone, Default)]
+pub struct SymbolTable {
+    pub symbols: BTreeMap<DefId, String>,
+    pub modules: BTreeMap<String, DefId>,
+    pub functions: BTreeMap<String, DefId>,
+    pub constants: BTreeMap<String, DefId>,
+    pub structs: BTreeMap<String, DefId>,
+    pub types: BTreeMap<String, DefId>,
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct ProgramBody {
+    pub top_level_module_names: BTreeMap<String, DefId>,
+    /// The top level modules.
+    pub top_level_modules: Vec<DefId>,
+    /// All the modules in a flat map.
+    pub modules: BTreeMap<DefId, ModuleBody>,
+    /// This stores all the functions from all modules
+    pub functions: BTreeMap<DefId, Body>,
+    /// The function signatures.
+    pub function_signatures: BTreeMap<DefId, (Vec<TypeInfo>, TypeInfo)>,
+}
+
 #[derive(Debug, Clone)]
 pub struct ModuleBody {
     pub module_id: DefId,
-    pub functions: BTreeMap<DefId, Body>,
-    pub modules: BTreeMap<DefId, Self>,
+    pub parent_ids: Vec<DefId>,
+    pub name: String,
+    pub symbols: SymbolTable,
+    /// Functions defined in this module.
+    pub functions: HashSet<DefId>,
+    /// Structs defined in this module.
+    pub structs: HashSet<DefId>,
+    /// Types defined in this module.
+    pub types: HashSet<DefId>,
+    /// Constants defined in this module.
+    pub constants: HashSet<DefId>,
+    /// Submodules defined in this module.
+    pub modules: HashSet<DefId>,
+    /// Imported items. symbol -> id
+    pub imports: BTreeMap<String, DefId>,
     pub span: Span,
 }
 
 /// Definition id.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct DefId {
-    pub module_id: usize,
+    pub program_id: usize,
     pub id: usize,
-}
-
-impl DefId {
-    pub fn get_module_defid(&self) -> Self {
-        Self {
-            module_id: self.module_id,
-            id: 0,
-        }
-    }
 }
 
 #[derive(Debug, Clone)]
@@ -36,7 +63,7 @@ pub struct Body {
     pub def_id: DefId,
     pub is_pub: bool,
     pub is_extern: bool,
-    pub ret_type: TypeInfo,
+    pub name: String,
     pub locals: SmallVec<[Local; 4]>,
     pub blocks: SmallVec<[BasicBlock; 8]>,
     pub fn_span: Span,
@@ -68,7 +95,6 @@ pub struct DebugInfo {
 
 #[derive(Debug, Clone)]
 pub struct BasicBlock {
-    pub id: usize,
     pub statements: SmallVec<[Statement; 8]>,
     pub terminator: Terminator,
 }
@@ -77,8 +103,37 @@ pub struct BasicBlock {
 pub struct Local {
     pub mutable: bool,
     pub span: Option<Span>,
+    pub debug_name: Option<String>,
     pub ty: TypeInfo,
     pub kind: LocalKind,
+}
+
+impl Local {
+    pub fn new(
+        span: Option<Span>,
+        kind: LocalKind,
+        ty: TypeInfo,
+        debug_name: Option<String>,
+        mutable: bool,
+    ) -> Self {
+        Self {
+            span,
+            kind,
+            ty,
+            debug_name,
+            mutable,
+        }
+    }
+
+    pub const fn temp(ty: TypeInfo) -> Self {
+        Self {
+            span: None,
+            ty,
+            kind: LocalKind::Temp,
+            debug_name: None,
+            mutable: false,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -107,10 +162,14 @@ pub enum Terminator {
     Return,
     Switch,
     Call {
-        func: Operand,
-        args: Vec<Operand>,
-        dest: Option<Place>,
-        target: Option<usize>, // block
+        /// The function to call.
+        func: DefId,
+        /// The arguments.
+        args: Vec<RValue>,
+        /// The place in memory to store the return value of the function call.
+        destination: Place,
+        /// What basic block to jump to after the function call, if the function is non-diverging (i.e it returns control back).
+        target: Option<usize>,
     },
     Unreachable,
 }

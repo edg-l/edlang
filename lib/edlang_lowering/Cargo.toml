@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 edlang_ast = { version = "0.1.0", path = "../edlang_ast" }
 edlang_ir = { version = "0.1.0", path = "../edlang_ir" }
+tracing.workspace = true

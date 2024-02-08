@@ -6,7 +6,7 @@ use edlang_session::Session;
 use inkwell::{
     builder::{Builder, BuilderError},
     context::Context,
-    debug_info::{DICompileUnit, DebugInfoBuilder},
+    debug_info::{AsDIScope, DICompileUnit, DebugInfoBuilder},
     module::Module,
     targets::{InitializationConfig, Target, TargetData, TargetMachine},
     types::{AnyType, BasicMetadataTypeEnum, BasicType},
@@ -69,6 +69,7 @@ pub fn compile(session: &Session, program: &ProgramBody) -> Result<PathBuf, Box<
     let filename = session.file_path.file_name().unwrap().to_string_lossy();
     let dir = session.file_path.parent().unwrap().to_string_lossy();
     for module_id in program.top_level_modules.iter() {
+        dbg!("here");
         let module = ctx.program.modules.get(module_id).unwrap();
         let llvm_module = context.create_module(&module.name);
         llvm_module.set_source_file_name(&filename);
@@ -114,13 +115,16 @@ pub fn compile(session: &Session, program: &ProgramBody) -> Result<PathBuf, Box<
             inkwell::targets::FileType::Assembly,
             &session.output_file.with_extension("asm"),
         )?;
+        dbg!("here");
         machine.write_to_file(
             &module_ctx.module,
             inkwell::targets::FileType::Object,
             &session.output_file.with_extension("o"),
         )?;
+        dbg!("here");
         // todo link modules together
         llvm_modules.push(module_ctx.module);
+        dbg!("here");
     }
 
     Ok(session.output_file.with_extension("o"))
@@ -233,9 +237,46 @@ fn compile_fn(ctx: &ModuleCompileCtx, fn_id: DefId) -> Result<(), BuilderError> 
         info!("compiling block");
         ctx.builder.position_at_end(*llvm_block);
         for stmt in &block.statements {
+            if let Some(span) = stmt.span {
+                let (_, line, column) = ctx.ctx.session.source.get_offset_line(span.lo).unwrap();
+                let debug_loc = ctx.di_builder.create_debug_location(
+                    ctx.ctx.context,
+                    line as u32,
+                    column as u32,
+                    ctx.di_unit.as_debug_info_scope(),
+                    None,
+                );
+                ctx.builder.set_current_debug_location(debug_loc);
+            }
+            // todo: setup locals with this ctx.di_builder.create_auto_variable(scope, name, file, line_no, ty, always_preserve, flags, align_in_bits)
+
             info!("compiling stmt");
             match &stmt.kind {
                 ir::StatementKind::Assign(place, rvalue) => {
+                    let local = &body.locals[place.local];
+                    if let Some(debug_name) = &local.debug_name {
+                        let (_, line, column) = ctx
+                            .ctx
+                            .session
+                            .source
+                            .get_offset_line(local.span.unwrap().lo)
+                            .unwrap();
+                        let debug_loc = ctx.di_builder.create_debug_location(
+                            ctx.ctx.context,
+                            line as u32,
+                            column as u32,
+                            ctx.di_unit.as_debug_info_scope(), // todo correct scope
+                            None,
+                        );
+                        ctx.builder.set_current_debug_location(debug_loc);
+                        ctx.di_builder.insert_declare_at_end(
+                            locals[&place.local],
+                            None, // todo var info
+                            None,
+                            debug_loc,
+                            *llvm_block,
+                        );
+                    }
                     let (value, _value_ty) = compile_rvalue(ctx, fn_id, &locals, rvalue)?;
                     ctx.builder
                         .build_store(*locals.get(&place.local).unwrap(), value)?;

@@ -13,6 +13,7 @@ pub fn prepass_module(mut ctx: BuildCtx, mod_def: &ast::Module) -> BuildCtx {
     ctx.body
         .top_level_module_names
         .insert(mod_def.name.name.clone(), module_id);
+    ctx.body.top_level_modules.push(module_id);
 
     ctx.body.modules.insert(
         module_id,

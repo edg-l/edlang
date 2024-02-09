@@ -3,12 +3,13 @@ use std::{collections::HashMap, error::Error, path::PathBuf};
 use edlang_ir as ir;
 use edlang_ir::DefId;
 use edlang_session::Session;
+use edlang_span::Span;
 use inkwell::{
     builder::{Builder, BuilderError},
     context::Context,
     debug_info::{
-        AsDIScope, DICompileUnit, DIFile, DIFlagsConstants, DIScope, DISubprogram, DIType,
-        DebugInfoBuilder,
+        AsDIScope, DICompileUnit, DIFile, DIFlagsConstants, DILexicalBlock, DILocation, DIScope,
+        DISubprogram, DIType, DebugInfoBuilder,
     },
     module::Module,
     targets::{InitializationConfig, Target, TargetData, TargetMachine},
@@ -40,6 +41,19 @@ struct ModuleCompileCtx<'ctx, 'm> {
 impl<'ctx, 'm> ModuleCompileCtx<'ctx, 'm> {
     pub fn get_module_body(&self) -> &ModuleBody {
         self.ctx.program.modules.get(&self.module_id).unwrap()
+    }
+
+    pub fn set_debug_loc(&self, scope: DIScope<'ctx>, span: Span) -> DILocation<'ctx> {
+        let (_, line, column) = self.ctx.session.source.get_offset_line(span.lo).unwrap();
+        let debug_loc = self.di_builder.create_debug_location(
+            self.ctx.context,
+            line as u32 + 1,
+            column as u32 + 1,
+            scope,
+            None,
+        );
+        self.builder.set_current_debug_location(debug_loc);
+        debug_loc
     }
 }
 
@@ -194,7 +208,7 @@ fn compile_fn_signature(ctx: &ModuleCompileCtx<'_, '_>, fn_id: DefId) {
         inkwell::attributes::AttributeLoc::Function,
         ctx.ctx.context.create_enum_attribute(37, 0),
     );
-    let (_, line, col) = ctx
+    let (_, line, _col) = ctx
         .ctx
         .session
         .source
@@ -234,56 +248,71 @@ fn compile_fn(ctx: &ModuleCompileCtx, fn_id: DefId) -> Result<(), BuilderError> 
     let fn_value = ctx.module.get_function(&body.name).unwrap();
     let di_program = fn_value.get_subprogram().unwrap();
 
-    let (_, line, column) = ctx
-        .ctx
-        .session
-        .source
-        .get_offset_line(body.fn_span.lo)
-        .unwrap();
+    let mut debug_loc = ctx.set_debug_loc(di_program.as_debug_info_scope(), body.fn_span);
     let mut lexical_block = ctx.di_builder.create_lexical_block(
-        di_program.as_debug_info_scope(),
+        debug_loc.get_scope(),
         ctx.di_unit.get_file(),
-        line as u32 + 1,
-        column as u32 + 1,
+        debug_loc.get_line(),
+        debug_loc.get_column(),
     );
-    let debug_loc = ctx.di_builder.create_debug_location(
-        ctx.ctx.context,
-        line as u32 + 1,
-        column as u32 + 1,
-        lexical_block.as_debug_info_scope(),
-        None,
-    );
-    ctx.builder.set_current_debug_location(debug_loc);
+    debug_loc = ctx.set_debug_loc(lexical_block.as_debug_info_scope(), body.fn_span);
 
     let block = ctx.ctx.context.append_basic_block(fn_value, "entry");
     ctx.builder.position_at_end(block);
 
     let mut locals = HashMap::new();
+    let mut di_locals = HashMap::new();
     let mut ret_local = None;
 
     let mut arg_counter = 0;
 
     for (index, local) in body.locals.iter().enumerate() {
+        if let Some(span) = local.span {
+            debug_loc = ctx.set_debug_loc(debug_loc.get_scope(), span);
+        }
+
         match local.kind {
             ir::LocalKind::Temp => {
                 if let ir::TypeKind::Unit = &local.ty.kind {
                 } else {
-                    let ptr = ctx
-                        .builder
-                        .build_alloca(compile_basic_type(ctx, &local.ty), &index.to_string())?;
+                    let ptr = ctx.builder.build_alloca(
+                        compile_basic_type(ctx, &local.ty),
+                        local.debug_name.as_deref().unwrap_or(&index.to_string()),
+                    )?;
                     locals.insert(index, ptr);
                 }
             }
             ir::LocalKind::Arg => {
                 if let ir::TypeKind::Unit = &local.ty.kind {
                 } else {
-                    let ptr = ctx
-                        .builder
-                        .build_alloca(compile_basic_type(ctx, &local.ty), &index.to_string())?;
-                    ctx.builder
-                        .build_store(ptr, fn_value.get_nth_param(arg_counter).unwrap())?;
+                    let ty = compile_basic_type(ctx, &local.ty);
+                    let debug_ty = compile_debug_type(ctx, &local.ty);
+                    let name = local.debug_name.as_ref().unwrap();
+                    let ptr = ctx.builder.build_alloca(ty, name)?;
+                    let value = fn_value.get_nth_param(arg_counter).unwrap();
+                    ctx.builder.build_store(ptr, value)?;
+
+                    let di_local = ctx.di_builder.create_parameter_variable(
+                        debug_loc.get_scope(),
+                        local.debug_name.as_ref().unwrap(),
+                        arg_counter,
+                        ctx.di_unit.get_file(),
+                        debug_loc.get_line(),
+                        debug_ty,
+                        true,
+                        0,
+                    );
+                    ctx.di_builder.insert_dbg_value_before(
+                        value,
+                        di_local,
+                        None,
+                        debug_loc,
+                        block.get_first_instruction().unwrap(),
+                    );
+
                     arg_counter += 1;
                     locals.insert(index, ptr);
+                    di_locals.insert(index, di_local);
                 }
             }
             ir::LocalKind::ReturnPointer => {
@@ -292,7 +321,7 @@ fn compile_fn(ctx: &ModuleCompileCtx, fn_id: DefId) -> Result<(), BuilderError> 
                     ret_local = Some(index);
                     let ptr = ctx
                         .builder
-                        .build_alloca(compile_basic_type(ctx, &local.ty), &index.to_string())?;
+                        .build_alloca(compile_basic_type(ctx, &local.ty), "return_ptr")?;
                     locals.insert(index, ptr);
                 }
             }
@@ -300,7 +329,6 @@ fn compile_fn(ctx: &ModuleCompileCtx, fn_id: DefId) -> Result<(), BuilderError> 
     }
 
     let mut blocks = Vec::with_capacity(body.blocks.len());
-    let mut di_locals = HashMap::new();
 
     for (index, _block) in body.blocks.iter().enumerate() {
         let llvm_block = ctx
@@ -315,24 +343,9 @@ fn compile_fn(ctx: &ModuleCompileCtx, fn_id: DefId) -> Result<(), BuilderError> 
     for (block, llvm_block) in body.blocks.iter().zip(&blocks) {
         info!("compiling block");
         ctx.builder.position_at_end(*llvm_block);
-        let mut arg_no = 0;
         for stmt in &block.statements {
             if let Some(span) = stmt.span {
-                let (_, line, column) = ctx.ctx.session.source.get_offset_line(span.lo).unwrap();
-                lexical_block = ctx.di_builder.create_lexical_block(
-                    di_program.as_debug_info_scope(),
-                    ctx.di_unit.get_file(),
-                    line as u32 + 1,
-                    column as u32 + 1,
-                );
-                let debug_loc = ctx.di_builder.create_debug_location(
-                    ctx.ctx.context,
-                    line as u32 + 1,
-                    column as u32 + 1,
-                    lexical_block.as_debug_info_scope(),
-                    None,
-                );
-                ctx.builder.set_current_debug_location(debug_loc);
+                debug_loc = ctx.set_debug_loc(debug_loc.get_scope(), span);
             }
 
             info!("compiling stmt");
@@ -345,21 +358,7 @@ fn compile_fn(ctx: &ModuleCompileCtx, fn_id: DefId) -> Result<(), BuilderError> 
                         .builder
                         .build_store(*locals.get(&place.local).unwrap(), value)?;
 
-                    if let Some(debug_name) = &local.debug_name {
-                        let (_, line, column) = ctx
-                            .ctx
-                            .session
-                            .source
-                            .get_offset_line(local.span.unwrap().lo)
-                            .unwrap();
-                        let debug_loc = ctx.di_builder.create_debug_location(
-                            ctx.ctx.context,
-                            line as u32,
-                            column as u32,
-                            lexical_block.as_debug_info_scope(), // todo correct scope
-                            None,
-                        );
-                        ctx.builder.set_current_debug_location(debug_loc);
+                    if let Some(_debug_name) = &local.debug_name {
                         let di_local = di_locals.get(&place.local).unwrap();
                         ctx.di_builder.insert_dbg_value_before(
                             value,
@@ -374,47 +373,23 @@ fn compile_fn(ctx: &ModuleCompileCtx, fn_id: DefId) -> Result<(), BuilderError> 
                     let local = &body.locals[*local_idx];
 
                     if local.debug_name.is_some() {
-                        let (_, line, column) = ctx
-                            .ctx
-                            .session
-                            .source
-                            .get_offset_line(local.span.unwrap().lo)
-                            .unwrap();
-                        let debug_loc = ctx.di_builder.create_debug_location(
-                            ctx.ctx.context,
-                            line as u32 + 1,
-                            column as u32 + 1,
-                            lexical_block.as_debug_info_scope(),
-                            None,
-                        );
                         ctx.builder.set_current_debug_location(debug_loc);
                         let ty = compile_debug_type(ctx, &local.ty);
                         let var = match local.kind {
                             LocalKind::Temp => ctx.di_builder.create_auto_variable(
-                                lexical_block.as_debug_info_scope(),
+                                debug_loc.get_scope(),
                                 local.debug_name.as_ref().unwrap(),
                                 ctx.di_unit.get_file(),
-                                line as u32,
+                                debug_loc.get_line(),
                                 ty,
                                 true,
                                 0,
                                 ty.get_align_in_bits(),
                             ),
                             LocalKind::Arg => {
-                                let cur_arg_no = arg_no;
-                                arg_no += 1;
-                                ctx.di_builder.create_parameter_variable(
-                                    lexical_block.as_debug_info_scope(),
-                                    local.debug_name.as_ref().unwrap(),
-                                    cur_arg_no,
-                                    ctx.di_unit.get_file(),
-                                    line as u32 + 1,
-                                    ty,
-                                    true,
-                                    0,
-                                )
+                                unreachable!()
                             }
-                            LocalKind::ReturnPointer => todo!(),
+                            LocalKind::ReturnPointer => unreachable!(),
                         };
                         di_locals.insert(*local_idx, var);
                         ctx.di_builder.insert_declare_at_end(

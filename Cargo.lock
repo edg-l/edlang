@@ -303,7 +303,7 @@ dependencies = [
 
 [[package]]
 name = "edlang"
-version = "0.1.0"
+version = "0.0.1-alpha.1"
 dependencies = [
  "edlang_driver",
 ]

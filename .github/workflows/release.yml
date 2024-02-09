@@ -12,10 +12,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: free HDD space
-          run: |
-            # deleting space
-            sudo rm -rf /usr/share/dotnet/
-            sudo rm -rf /usr/local/lib/android
+        run: |
+          # deleting space
+          sudo rm -rf /usr/share/dotnet/
+          sudo rm -rf /usr/local/lib/android
       - name: Setup rust env
         uses: dtolnay/rust-toolchain@1.75.0
       - name: Retreive cached dependecies

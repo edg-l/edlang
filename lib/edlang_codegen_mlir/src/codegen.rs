@@ -6,13 +6,17 @@ use edlang_session::Session;
 use inkwell::{
     builder::{Builder, BuilderError},
     context::Context,
-    debug_info::{AsDIScope, DICompileUnit, DebugInfoBuilder},
+    debug_info::{
+        AsDIScope, DICompileUnit, DIFile, DIFlagsConstants, DIScope, DISubprogram, DIType,
+        DebugInfoBuilder,
+    },
     module::Module,
     targets::{InitializationConfig, Target, TargetData, TargetMachine},
     types::{AnyType, BasicMetadataTypeEnum, BasicType},
     values::{BasicValue, BasicValueEnum, PointerValue},
 };
-use ir::{ModuleBody, ProgramBody, TypeInfo, ValueTree};
+use ir::{LocalKind, ModuleBody, ProgramBody, TypeInfo, ValueTree};
+use llvm_sys::debuginfo::LLVMDIFlagPublic;
 use tracing::info;
 
 #[derive(Debug, Clone, Copy)]
@@ -30,6 +34,7 @@ struct ModuleCompileCtx<'ctx, 'm> {
     di_unit: DICompileUnit<'ctx>,
     target_data: TargetData,
     module_id: DefId,
+    di_namespace: DIScope<'ctx>,
 }
 
 impl<'ctx, 'm> ModuleCompileCtx<'ctx, 'm> {
@@ -60,16 +65,17 @@ pub fn compile(session: &Session, program: &ProgramBody) -> Result<PathBuf, Box<
             &triple,
             cpu_name.to_str()?,
             cpu_features.to_str()?,
-            inkwell::OptimizationLevel::Aggressive,
+            inkwell::OptimizationLevel::Default,
             inkwell::targets::RelocMode::Default,
             inkwell::targets::CodeModel::Default,
         )
         .unwrap();
+    machine.set_asm_verbosity(true);
+    info!("compiling for: {:?}", target.get_description());
 
     let filename = session.file_path.file_name().unwrap().to_string_lossy();
     let dir = session.file_path.parent().unwrap().to_string_lossy();
     for module_id in program.top_level_modules.iter() {
-        dbg!("here");
         let module = ctx.program.modules.get(module_id).unwrap();
         let llvm_module = context.create_module(&module.name);
         llvm_module.set_source_file_name(&filename);
@@ -92,7 +98,11 @@ pub fn compile(session: &Session, program: &ProgramBody) -> Result<PathBuf, Box<
             "edlang-sdk",
         );
 
-        let module_ctx = ModuleCompileCtx {
+        let di_namespace = di_builder
+            .create_namespace(di_unit.as_debug_info_scope(), &module.name, true)
+            .as_debug_info_scope();
+
+        let mut module_ctx = ModuleCompileCtx {
             ctx,
             module: llvm_module,
             di_builder,
@@ -100,10 +110,12 @@ pub fn compile(session: &Session, program: &ProgramBody) -> Result<PathBuf, Box<
             builder: &builder,
             target_data: machine.get_target_data(),
             module_id: *module_id,
+            di_namespace,
         };
 
-        compile_module(&module_ctx, *module_id);
+        compile_module(&mut module_ctx, *module_id);
 
+        module_ctx.di_builder.finalize();
         module_ctx.module.verify()?;
 
         module_ctx
@@ -115,22 +127,19 @@ pub fn compile(session: &Session, program: &ProgramBody) -> Result<PathBuf, Box<
             inkwell::targets::FileType::Assembly,
             &session.output_file.with_extension("asm"),
         )?;
-        dbg!("here");
         machine.write_to_file(
             &module_ctx.module,
             inkwell::targets::FileType::Object,
             &session.output_file.with_extension("o"),
         )?;
-        dbg!("here");
         // todo link modules together
         llvm_modules.push(module_ctx.module);
-        dbg!("here");
     }
 
     Ok(session.output_file.with_extension("o"))
 }
 
-fn compile_module(ctx: &ModuleCompileCtx, module_id: DefId) {
+fn compile_module(ctx: &mut ModuleCompileCtx, module_id: DefId) {
     let module = ctx.ctx.program.modules.get(&module_id).unwrap();
     info!("compiling module");
     for id in module.functions.iter() {
@@ -142,7 +151,7 @@ fn compile_module(ctx: &ModuleCompileCtx, module_id: DefId) {
     }
 }
 
-fn compile_fn_signature(ctx: &ModuleCompileCtx, fn_id: DefId) {
+fn compile_fn_signature(ctx: &ModuleCompileCtx<'_, '_>, fn_id: DefId) {
     let (arg_types, ret_type) = ctx.ctx.program.function_signatures.get(&fn_id).unwrap();
     let body = ctx.ctx.program.functions.get(&fn_id).unwrap();
     info!("compiling fn sig: {}", body.name);
@@ -151,6 +160,16 @@ fn compile_fn_signature(ctx: &ModuleCompileCtx, fn_id: DefId) {
         .iter()
         .map(|x| compile_basic_type(ctx, x).into())
         .collect();
+
+    let di_args: Vec<DIType> = arg_types
+        .iter()
+        .map(|x| compile_debug_type(ctx, x))
+        .collect();
+    let di_ret_type = if let ir::TypeKind::Unit = ret_type.kind {
+        None
+    } else {
+        Some(compile_debug_type(ctx, ret_type))
+    };
 
     let fn_type = if let ir::TypeKind::Unit = ret_type.kind {
         ctx.ctx.context.void_type().fn_type(&args, false)
@@ -175,6 +194,37 @@ fn compile_fn_signature(ctx: &ModuleCompileCtx, fn_id: DefId) {
         inkwell::attributes::AttributeLoc::Function,
         ctx.ctx.context.create_enum_attribute(37, 0),
     );
+    let (_, line, col) = ctx
+        .ctx
+        .session
+        .source
+        .get_offset_line(body.fn_span.lo)
+        .unwrap();
+
+    let di_type = ctx.di_builder.create_subroutine_type(
+        ctx.di_unit.get_file(),
+        di_ret_type,
+        &di_args,
+        if body.is_pub {
+            DIFlagsConstants::PUBLIC
+        } else {
+            DIFlagsConstants::PRIVATE
+        },
+    );
+    let subprogram = ctx.di_builder.create_function(
+        ctx.di_namespace,
+        &body.name,
+        Some(&body.name),
+        ctx.di_unit.get_file(),
+        line as u32 + 1,
+        di_type,
+        body.is_pub,
+        true,
+        line as u32 + 1,
+        0,
+        false,
+    );
+    fn_value.set_subprogram(subprogram);
 }
 
 fn compile_fn(ctx: &ModuleCompileCtx, fn_id: DefId) -> Result<(), BuilderError> {
@@ -182,6 +232,28 @@ fn compile_fn(ctx: &ModuleCompileCtx, fn_id: DefId) -> Result<(), BuilderError> 
     info!("compiling fn body: {}", body.name);
 
     let fn_value = ctx.module.get_function(&body.name).unwrap();
+    let di_program = fn_value.get_subprogram().unwrap();
+
+    let (_, line, column) = ctx
+        .ctx
+        .session
+        .source
+        .get_offset_line(body.fn_span.lo)
+        .unwrap();
+    let mut lexical_block = ctx.di_builder.create_lexical_block(
+        di_program.as_debug_info_scope(),
+        ctx.di_unit.get_file(),
+        line as u32 + 1,
+        column as u32 + 1,
+    );
+    let debug_loc = ctx.di_builder.create_debug_location(
+        ctx.ctx.context,
+        line as u32 + 1,
+        column as u32 + 1,
+        lexical_block.as_debug_info_scope(),
+        None,
+    );
+    ctx.builder.set_current_debug_location(debug_loc);
 
     let block = ctx.ctx.context.append_basic_block(fn_value, "entry");
     ctx.builder.position_at_end(block);
@@ -194,19 +266,25 @@ fn compile_fn(ctx: &ModuleCompileCtx, fn_id: DefId) -> Result<(), BuilderError> 
     for (index, local) in body.locals.iter().enumerate() {
         match local.kind {
             ir::LocalKind::Temp => {
-                let ptr = ctx
-                    .builder
-                    .build_alloca(compile_basic_type(ctx, &local.ty), &index.to_string())?;
-                locals.insert(index, ptr);
+                if let ir::TypeKind::Unit = &local.ty.kind {
+                } else {
+                    let ptr = ctx
+                        .builder
+                        .build_alloca(compile_basic_type(ctx, &local.ty), &index.to_string())?;
+                    locals.insert(index, ptr);
+                }
             }
             ir::LocalKind::Arg => {
-                let ptr = ctx
-                    .builder
-                    .build_alloca(compile_basic_type(ctx, &local.ty), &index.to_string())?;
-                ctx.builder
-                    .build_store(ptr, fn_value.get_nth_param(arg_counter).unwrap())?;
-                arg_counter += 1;
-                locals.insert(index, ptr);
+                if let ir::TypeKind::Unit = &local.ty.kind {
+                } else {
+                    let ptr = ctx
+                        .builder
+                        .build_alloca(compile_basic_type(ctx, &local.ty), &index.to_string())?;
+                    ctx.builder
+                        .build_store(ptr, fn_value.get_nth_param(arg_counter).unwrap())?;
+                    arg_counter += 1;
+                    locals.insert(index, ptr);
+                }
             }
             ir::LocalKind::ReturnPointer => {
                 if let ir::TypeKind::Unit = &local.ty.kind {
@@ -222,6 +300,7 @@ fn compile_fn(ctx: &ModuleCompileCtx, fn_id: DefId) -> Result<(), BuilderError> 
     }
 
     let mut blocks = Vec::with_capacity(body.blocks.len());
+    let mut di_locals = HashMap::new();
 
     for (index, _block) in body.blocks.iter().enumerate() {
         let llvm_block = ctx
@@ -236,24 +315,36 @@ fn compile_fn(ctx: &ModuleCompileCtx, fn_id: DefId) -> Result<(), BuilderError> 
     for (block, llvm_block) in body.blocks.iter().zip(&blocks) {
         info!("compiling block");
         ctx.builder.position_at_end(*llvm_block);
+        let mut arg_no = 0;
         for stmt in &block.statements {
             if let Some(span) = stmt.span {
                 let (_, line, column) = ctx.ctx.session.source.get_offset_line(span.lo).unwrap();
+                lexical_block = ctx.di_builder.create_lexical_block(
+                    di_program.as_debug_info_scope(),
+                    ctx.di_unit.get_file(),
+                    line as u32 + 1,
+                    column as u32 + 1,
+                );
                 let debug_loc = ctx.di_builder.create_debug_location(
                     ctx.ctx.context,
-                    line as u32,
-                    column as u32,
-                    ctx.di_unit.as_debug_info_scope(),
+                    line as u32 + 1,
+                    column as u32 + 1,
+                    lexical_block.as_debug_info_scope(),
                     None,
                 );
                 ctx.builder.set_current_debug_location(debug_loc);
             }
-            // todo: setup locals with this ctx.di_builder.create_auto_variable(scope, name, file, line_no, ty, always_preserve, flags, align_in_bits)
 
             info!("compiling stmt");
             match &stmt.kind {
                 ir::StatementKind::Assign(place, rvalue) => {
                     let local = &body.locals[place.local];
+
+                    let (value, _value_ty) = compile_rvalue(ctx, fn_id, &locals, rvalue)?;
+                    let instruction = ctx
+                        .builder
+                        .build_store(*locals.get(&place.local).unwrap(), value)?;
+
                     if let Some(debug_name) = &local.debug_name {
                         let (_, line, column) = ctx
                             .ctx
@@ -265,23 +356,76 @@ fn compile_fn(ctx: &ModuleCompileCtx, fn_id: DefId) -> Result<(), BuilderError> 
                             ctx.ctx.context,
                             line as u32,
                             column as u32,
-                            ctx.di_unit.as_debug_info_scope(), // todo correct scope
+                            lexical_block.as_debug_info_scope(), // todo correct scope
                             None,
                         );
                         ctx.builder.set_current_debug_location(debug_loc);
+                        let di_local = di_locals.get(&place.local).unwrap();
+                        ctx.di_builder.insert_dbg_value_before(
+                            value,
+                            *di_local,
+                            None,
+                            debug_loc,
+                            instruction,
+                        );
+                    }
+                }
+                ir::StatementKind::StorageLive(local_idx) => {
+                    let local = &body.locals[*local_idx];
+
+                    if local.debug_name.is_some() {
+                        let (_, line, column) = ctx
+                            .ctx
+                            .session
+                            .source
+                            .get_offset_line(local.span.unwrap().lo)
+                            .unwrap();
+                        let debug_loc = ctx.di_builder.create_debug_location(
+                            ctx.ctx.context,
+                            line as u32 + 1,
+                            column as u32 + 1,
+                            lexical_block.as_debug_info_scope(),
+                            None,
+                        );
+                        ctx.builder.set_current_debug_location(debug_loc);
+                        let ty = compile_debug_type(ctx, &local.ty);
+                        let var = match local.kind {
+                            LocalKind::Temp => ctx.di_builder.create_auto_variable(
+                                lexical_block.as_debug_info_scope(),
+                                local.debug_name.as_ref().unwrap(),
+                                ctx.di_unit.get_file(),
+                                line as u32,
+                                ty,
+                                true,
+                                0,
+                                ty.get_align_in_bits(),
+                            ),
+                            LocalKind::Arg => {
+                                let cur_arg_no = arg_no;
+                                arg_no += 1;
+                                ctx.di_builder.create_parameter_variable(
+                                    lexical_block.as_debug_info_scope(),
+                                    local.debug_name.as_ref().unwrap(),
+                                    cur_arg_no,
+                                    ctx.di_unit.get_file(),
+                                    line as u32 + 1,
+                                    ty,
+                                    true,
+                                    0,
+                                )
+                            }
+                            LocalKind::ReturnPointer => todo!(),
+                        };
+                        di_locals.insert(*local_idx, var);
                         ctx.di_builder.insert_declare_at_end(
-                            locals[&place.local],
-                            None, // todo var info
+                            locals[&local_idx],
+                            Some(var),
                             None,
                             debug_loc,
                             *llvm_block,
                         );
                     }
-                    let (value, _value_ty) = compile_rvalue(ctx, fn_id, &locals, rvalue)?;
-                    ctx.builder
-                        .build_store(*locals.get(&place.local).unwrap(), value)?;
-                }
-                ir::StatementKind::StorageLive(_) => {
+
                     // https://llvm.org/docs/LangRef.html#int-lifestart
                 }
                 ir::StatementKind::StorageDead(_) => {}
@@ -852,6 +996,106 @@ fn compile_basic_type<'ctx>(
         ir::TypeKind::Float(ty) => match ty {
             ir::FloatTy::F32 => ctx.ctx.context.f32_type().as_basic_type_enum(),
             ir::FloatTy::F64 => ctx.ctx.context.f64_type().as_basic_type_enum(),
+        },
+        ir::TypeKind::FnDef(_def_id, _generic_args) => {
+            panic!()
+        }
+    }
+}
+
+fn compile_debug_type<'ctx>(ctx: &ModuleCompileCtx<'ctx, '_>, ty: &ir::TypeInfo) -> DIType<'ctx> {
+    // 1 == address
+    // 2 = boolean
+    // 4 = float
+    // 5 = signed
+    // 11 = numeric string
+    match &ty.kind {
+        ir::TypeKind::Unit => todo!(),
+        ir::TypeKind::Bool => ctx
+            .di_builder
+            .create_basic_type("bool", 1, 2, LLVMDIFlagPublic)
+            .unwrap()
+            .as_type(),
+        ir::TypeKind::Char => ctx
+            .di_builder
+            .create_basic_type("char", 1, 6, LLVMDIFlagPublic)
+            .unwrap()
+            .as_type(),
+        ir::TypeKind::Int(ty) => match ty {
+            ir::IntTy::I128 => ctx
+                .di_builder
+                .create_basic_type("i128", 128, 5, LLVMDIFlagPublic)
+                .unwrap()
+                .as_type(),
+            ir::IntTy::I64 => ctx
+                .di_builder
+                .create_basic_type("i64", 64, 5, LLVMDIFlagPublic)
+                .unwrap()
+                .as_type(),
+            ir::IntTy::I32 => ctx
+                .di_builder
+                .create_basic_type("i32", 32, 5, LLVMDIFlagPublic)
+                .unwrap()
+                .as_type(),
+            ir::IntTy::I16 => ctx
+                .di_builder
+                .create_basic_type("i16", 16, 5, LLVMDIFlagPublic)
+                .unwrap()
+                .as_type(),
+            ir::IntTy::I8 => ctx
+                .di_builder
+                .create_basic_type("i8", 8, 5, LLVMDIFlagPublic)
+                .unwrap()
+                .as_type(),
+            ir::IntTy::Isize => ctx
+                .di_builder
+                .create_basic_type("isize", 64, 5, LLVMDIFlagPublic)
+                .unwrap()
+                .as_type(),
+        },
+        ir::TypeKind::Uint(ty) => match ty {
+            ir::UintTy::U128 => ctx
+                .di_builder
+                .create_basic_type("u128", 128, 7, LLVMDIFlagPublic)
+                .unwrap()
+                .as_type(),
+            ir::UintTy::U64 => ctx
+                .di_builder
+                .create_basic_type("u64", 64, 7, LLVMDIFlagPublic)
+                .unwrap()
+                .as_type(),
+            ir::UintTy::U32 => ctx
+                .di_builder
+                .create_basic_type("u32", 32, 7, LLVMDIFlagPublic)
+                .unwrap()
+                .as_type(),
+            ir::UintTy::U16 => ctx
+                .di_builder
+                .create_basic_type("u16", 16, 7, LLVMDIFlagPublic)
+                .unwrap()
+                .as_type(),
+            ir::UintTy::U8 => ctx
+                .di_builder
+                .create_basic_type("u8", 8, 7, LLVMDIFlagPublic)
+                .unwrap()
+                .as_type(),
+            ir::UintTy::Usize => ctx
+                .di_builder
+                .create_basic_type("usize", 64, 7, LLVMDIFlagPublic)
+                .unwrap()
+                .as_type(),
+        },
+        ir::TypeKind::Float(ty) => match ty {
+            ir::FloatTy::F32 => ctx
+                .di_builder
+                .create_basic_type("f32", 32, 4, LLVMDIFlagPublic)
+                .unwrap()
+                .as_type(),
+            ir::FloatTy::F64 => ctx
+                .di_builder
+                .create_basic_type("f64", 64, 4, LLVMDIFlagPublic)
+                .unwrap()
+                .as_type(),
         },
         ir::TypeKind::FnDef(_def_id, _generic_args) => {
             panic!()

@@ -1,0 +1,42 @@
+name: Main
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: free HDD space
+          run: |
+            # deleting space
+            sudo rm -rf /usr/share/dotnet/
+            sudo rm -rf /usr/local/lib/android
+      - name: Setup rust env
+        uses: dtolnay/rust-toolchain@1.75.0
+      - name: Retreive cached dependecies
+        uses: Swatinem/rust-cache@v2
+      - name: add llvm deb repository
+        uses: myci-actions/add-deb-repo@10
+        with:
+          repo: deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-17 main
+          repo-name: llvm-repo
+          keys-asc: https://apt.llvm.org/llvm-snapshot.gpg.key
+      - name: Install LLVM
+        run: sudo apt-get install llvm-17 llvm-17-dev llvm-17-runtime clang-17 clang-tools-17 lld-17 libpolly-17-dev
+      - name: Install Link deps
+        run: sudo apt-get install libc-dev build-essential
+      - name: build release
+        run: cargo build --release
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          generate_release_notes: true
+          files: |
+            README.md
+            LICENSE
+            target/release/edlang

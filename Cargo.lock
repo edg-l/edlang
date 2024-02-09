@@ -325,7 +325,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "edlang_codegen_mlir"
+name = "edlang_codegen_llvm"
 version = "0.1.0"
 dependencies = [
  "bumpalo",
@@ -348,7 +348,7 @@ dependencies = [
  "color-eyre",
  "edlang_ast",
  "edlang_check",
- "edlang_codegen_mlir",
+ "edlang_codegen_llvm",
  "edlang_ir",
  "edlang_lowering",
  "edlang_parser",

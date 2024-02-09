@@ -1,8 +1,8 @@
 [package]
-name = "edlang_codegen_mlir"
+name = "edlang_codegen_llvm"
 version = "0.1.0"
 authors = ["Edgar Luque <edgar@edgarluque.com>"]
-description = "edlang MLIR codegen"
+description = "edlang LLVM codegen"
 edition = "2021"
 keywords = ["llvm", "compiler"]
 license = "AGPL-3.0-only"

@@ -2,7 +2,7 @@ use std::{error::Error, path::PathBuf, time::Instant};
 
 use ariadne::Source;
 use clap::Parser;
-use edlang_codegen_mlir::linker::{link_binary, link_shared_lib};
+use edlang_codegen_llvm::linker::{link_binary, link_shared_lib};
 use edlang_lowering::lower_modules;
 use edlang_session::{DebugInfo, OptLevel, Session};
 
@@ -95,7 +95,7 @@ pub fn main() -> Result<(), Box<dyn Error>> {
         return Ok(());
     }
 
-    let object_path = edlang_codegen_mlir::compile(&session, &program_ir)?;
+    let object_path = edlang_codegen_llvm::compile(&session, &program_ir)?;
 
     if session.library {
         link_shared_lib(&object_path, &session.output_file.with_extension("so"))?;

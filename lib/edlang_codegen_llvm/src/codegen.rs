@@ -8,8 +8,7 @@ use inkwell::{
     builder::{Builder, BuilderError},
     context::Context,
     debug_info::{
-        AsDIScope, DICompileUnit, DIFile, DIFlagsConstants, DILexicalBlock, DILocation, DIScope,
-        DISubprogram, DIType, DebugInfoBuilder,
+        AsDIScope, DICompileUnit, DIFlagsConstants, DILocation, DIScope, DIType, DebugInfoBuilder,
     },
     module::Module,
     targets::{InitializationConfig, Target, TargetData, TargetMachine},

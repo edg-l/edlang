@@ -1,10 +1,10 @@
 # edlang
 
-A toy language I'm making to learn LLVM and compilers.
+An experimental statically-typed compiled programming language made with LLVM and Rust.
 
 Syntax is subject to change any time right now. It has a rusty style for now.
 
-```
+```rust
 struct Hello {
     x: i32,
     y: i32,
@@ -31,3 +31,8 @@ fn main() -> i64 {
 }
 
 ```
+
+## Dependencies
+
+- Rust
+- LLVM 17

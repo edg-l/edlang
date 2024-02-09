@@ -29,7 +29,7 @@ jobs:
         - name: Install LLVM
           run: sudo apt-get install llvm-17 llvm-17-dev llvm-17-runtime clang-17 clang-tools-17 lld-17 libpolly-17-dev
         - name: Clippy
-          run: make check
+          run: cargo clippy
 
     fmt:
         name: rustfmt

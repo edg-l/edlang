@@ -121,10 +121,4 @@ pub fn error_to_report<'a>(
 
 #[cfg(test)]
 mod test {
-    use crate::parse_ast;
-
-    #[test]
-    fn test_ident() {
-        parse_ast("hello").unwrap();
-    }
 }

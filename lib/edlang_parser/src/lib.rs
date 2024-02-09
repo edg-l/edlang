@@ -120,5 +120,4 @@ pub fn error_to_report<'a>(
 }
 
 #[cfg(test)]
-mod test {
-}
+mod test {}

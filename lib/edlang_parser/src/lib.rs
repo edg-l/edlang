@@ -125,6 +125,6 @@ mod test {
 
     #[test]
     fn test_ident() {
-        parse_ast("hello");
+        parse_ast("hello").unwrap();
     }
 }

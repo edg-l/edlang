@@ -33,13 +33,13 @@ struct ModuleCompileCtx<'ctx, 'm> {
     di_builder: DebugInfoBuilder<'ctx>,
     di_unit: DICompileUnit<'ctx>,
     target_data: TargetData,
-    module_id: DefId,
+    _module_id: DefId,
     di_namespace: DIScope<'ctx>,
 }
 
 impl<'ctx, 'm> ModuleCompileCtx<'ctx, 'm> {
-    pub fn get_module_body(&self) -> &ModuleBody {
-        self.ctx.program.modules.get(&self.module_id).unwrap()
+    pub fn _get_module_body(&self) -> &ModuleBody {
+        self.ctx.program.modules.get(&self._module_id).unwrap()
     }
 
     pub fn set_debug_loc(&self, scope: DIScope<'ctx>, span: Span) -> DILocation<'ctx> {
@@ -122,7 +122,7 @@ pub fn compile(session: &Session, program: &ProgramBody) -> Result<PathBuf, Box<
             di_unit,
             builder: &builder,
             target_data: machine.get_target_data(),
-            module_id: *module_id,
+            _module_id: *module_id,
             di_namespace,
         };
 
@@ -248,7 +248,7 @@ fn compile_fn(ctx: &ModuleCompileCtx, fn_id: DefId) -> Result<(), BuilderError> 
     let di_program = fn_value.get_subprogram().unwrap();
 
     let mut debug_loc = ctx.set_debug_loc(di_program.as_debug_info_scope(), body.fn_span);
-    let mut lexical_block = ctx.di_builder.create_lexical_block(
+    let lexical_block = ctx.di_builder.create_lexical_block(
         debug_loc.get_scope(),
         ctx.di_unit.get_file(),
         debug_loc.get_line(),
@@ -911,7 +911,7 @@ fn compile_value<'ctx>(
     })
 }
 
-fn compile_type<'a>(
+fn _compile_type<'a>(
     ctx: &'a ModuleCompileCtx,
     ty: &ir::TypeInfo,
 ) -> inkwell::types::AnyTypeEnum<'a> {

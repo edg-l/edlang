@@ -1,12 +1,12 @@
 use std::collections::HashMap;
 
 use ast::ModuleStatement;
-use common::{BodyBuilder, BuildCtx, IdGenerator};
+use common::{BodyBuilder, BuildCtx};
 use edlang_ast as ast;
 use edlang_ir as ir;
 use ir::{
-    BasicBlock, Body, ConstData, ConstKind, DefId, Local, LocalKind, Operand, Place, ProgramBody,
-    RValue, Statement, StatementKind, Terminator, TypeInfo, TypeKind,
+    BasicBlock, Body, DefId, Local, LocalKind, Operand, Place, ProgramBody, Statement,
+    StatementKind, Terminator, TypeInfo, TypeKind,
 };
 
 mod common;

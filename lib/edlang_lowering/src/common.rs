@@ -70,7 +70,7 @@ impl BodyBuilder {
         id
     }
 
-    pub fn add_temp_local(&mut self, ty_kind: TypeKind) -> usize {
+    pub fn _add_temp_local(&mut self, ty_kind: TypeKind) -> usize {
         let id = self.body.locals.len();
         self.body.locals.push(Local::temp(TypeInfo {
             span: None,
@@ -79,7 +79,7 @@ impl BodyBuilder {
         id
     }
 
-    pub fn get_local(&self, name: &str) -> Option<&Local> {
+    pub fn _get_local(&self, name: &str) -> Option<&Local> {
         self.body.locals.get(*(self.name_to_local.get(name)?))
     }
 

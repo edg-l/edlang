@@ -7,7 +7,7 @@ use edlang_lowering::lower_modules;
 use edlang_session::{DebugInfo, OptLevel, Session};
 
 #[derive(Parser, Debug)]
-#[command(author, version, about, long_about = None)]
+#[command(author, version, about, long_about = None, bin_name = "edlang")]
 pub struct CompilerArgs {
     /// The input file.
     input: PathBuf,

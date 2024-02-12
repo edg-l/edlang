@@ -422,7 +422,39 @@ fn compile_fn(ctx: &ModuleCompileCtx, fn_id: DefId) -> Result<(), BuilderError> 
                     ctx.builder.build_return(None)?;
                 }
             },
-            ir::Terminator::Switch => todo!(),
+            ir::Terminator::SwitchInt {
+                discriminator,
+                targets,
+            } => {
+                let (condition, condition_ty) =
+                    compile_load_operand(ctx, fn_id, &locals, discriminator)?;
+                let cond = condition.into_int_value();
+                dbg!(&cond);
+                dbg!(&condition_ty);
+
+                let mut cases = Vec::new();
+
+                for (value, target) in targets.values.iter().zip(targets.targets.iter()) {
+                    let target = *target;
+                    let ty_kind = value.get_type();
+                    dbg!(&ty_kind);
+                    let block = blocks[target];
+                    let value = compile_value(
+                        ctx,
+                        value,
+                        &TypeInfo {
+                            span: None,
+                            kind: ty_kind,
+                        },
+                    )?
+                    .into_int_value();
+                    dbg!(&value);
+                    cases.push((value, block));
+                }
+
+                ctx.builder
+                    .build_switch(cond, blocks[*targets.targets.last().unwrap()], &cases)?;
+            }
             ir::Terminator::Call {
                 func,
                 args,

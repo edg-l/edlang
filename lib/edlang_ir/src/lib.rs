@@ -160,7 +160,10 @@ pub enum StatementKind {
 pub enum Terminator {
     Target(usize),
     Return,
-    Switch,
+    SwitchInt {
+        discriminator: Operand,
+        targets: SwitchTarget,
+    },
     Call {
         /// The function to call.
         func: DefId,
@@ -172,6 +175,13 @@ pub enum Terminator {
         target: Option<usize>,
     },
     Unreachable,
+}
+
+/// Used for ifs, match
+#[derive(Debug, Clone)]
+pub struct SwitchTarget {
+    pub values: Vec<ValueTree>,
+    pub targets: Vec<usize>,
 }
 
 #[derive(Debug, Clone)]
@@ -266,6 +276,29 @@ pub enum ConstKind {
 pub enum ValueTree {
     Leaf(ConstValue),
     Branch(Vec<Self>),
+}
+
+impl ValueTree {
+    pub fn get_type(&self) -> TypeKind {
+        match self {
+            ValueTree::Leaf(value) => match value {
+                ConstValue::Bool(_) => TypeKind::Bool,
+                ConstValue::I8(_) => TypeKind::Int(IntTy::I8),
+                ConstValue::I16(_) => TypeKind::Int(IntTy::I16),
+                ConstValue::I32(_) => TypeKind::Int(IntTy::I32),
+                ConstValue::I64(_) => TypeKind::Int(IntTy::I64),
+                ConstValue::I128(_) => TypeKind::Int(IntTy::I128),
+                ConstValue::U8(_) => TypeKind::Uint(UintTy::U8),
+                ConstValue::U16(_) => TypeKind::Uint(UintTy::U16),
+                ConstValue::U32(_) => TypeKind::Uint(UintTy::U32),
+                ConstValue::U64(_) => TypeKind::Uint(UintTy::U64),
+                ConstValue::U128(_) => TypeKind::Uint(UintTy::U8),
+                ConstValue::F32(_) => TypeKind::Float(FloatTy::F32),
+                ConstValue::F64(_) => TypeKind::Float(FloatTy::F64),
+            },
+            ValueTree::Branch(_) => todo!(),
+        }
+    }
 }
 
 #[derive(Debug, Clone)]

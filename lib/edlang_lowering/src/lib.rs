@@ -1,12 +1,12 @@
 use std::collections::HashMap;
 
-use ast::ModuleStatement;
+use ast::{BinaryOp, ModuleStatement};
 use common::{BodyBuilder, BuildCtx};
 use edlang_ast as ast;
 use edlang_ir as ir;
 use ir::{
-    BasicBlock, Body, DefId, Local, LocalKind, Operand, Place, ProgramBody, Statement,
-    StatementKind, Terminator, TypeInfo, TypeKind,
+    BasicBlock, Body, ConstValue, DefId, Local, LocalKind, Operand, Place, ProgramBody, Statement,
+    StatementKind, SwitchTarget, Terminator, TypeInfo, TypeKind, ValueTree,
 };
 
 mod common;
@@ -170,12 +170,82 @@ fn lower_statement(builder: &mut BodyBuilder, info: &ast::Statement, ret_type: &
         ast::Statement::Assign(info) => lower_assign(builder, info),
         ast::Statement::For(_) => todo!(),
         ast::Statement::While(_) => todo!(),
-        ast::Statement::If(_) => todo!(),
+        ast::Statement::If(info) => lower_if_stmt(builder, info, ret_type),
         ast::Statement::Return(info) => lower_return(builder, info, ret_type),
         ast::Statement::FnCall(info) => {
             lower_fn_call(builder, info);
         }
     }
+}
+
+fn lower_if_stmt(builder: &mut BodyBuilder, info: &ast::IfStmt, ret_type: &TypeInfo) {
+    let cond_ty = find_expr_type(builder, &info.condition).expect("coouldnt find cond type");
+    let condition = lower_expr(builder, &info.condition, Some(&cond_ty));
+
+    let local = builder.add_temp_local(TypeKind::Bool);
+    let place = Place {
+        local,
+        projection: vec![].into(),
+    };
+
+    builder.statements.push(Statement {
+        span: None,
+        kind: StatementKind::Assign(place.clone(), condition),
+    });
+
+    // keep idx to change terminator
+    let current_block_idx = builder.body.blocks.len();
+
+    let statements = std::mem::take(&mut builder.statements);
+    builder.body.blocks.push(BasicBlock {
+        statements: statements.into(),
+        terminator: Terminator::Unreachable,
+    });
+
+    // keep idx for switch targets
+    let first_then_block_idx = builder.body.blocks.len();
+
+    for stmt in &info.then_block.body {
+        lower_statement(builder, stmt, ret_type);
+    }
+
+    // keet idx to change terminator
+    let last_then_block_idx = builder.body.blocks.len();
+    let statements = std::mem::take(&mut builder.statements);
+    builder.body.blocks.push(BasicBlock {
+        statements: statements.into(),
+        terminator: Terminator::Unreachable,
+    });
+
+    let first_else_block_idx = builder.body.blocks.len();
+
+    if let Some(contents) = &info.else_block {
+        for stmt in &contents.body {
+            lower_statement(builder, stmt, ret_type);
+        }
+    }
+
+    let last_else_block_idx = builder.body.blocks.len();
+    let statements = std::mem::take(&mut builder.statements);
+    builder.body.blocks.push(BasicBlock {
+        statements: statements.into(),
+        terminator: Terminator::Unreachable,
+    });
+
+    let targets = SwitchTarget {
+        values: vec![TypeKind::Bool.get_falsy_value()],
+        targets: vec![first_else_block_idx, first_then_block_idx],
+    };
+
+    let kind = Terminator::SwitchInt {
+        discriminator: Operand::Move(place),
+        targets,
+    };
+    builder.body.blocks[current_block_idx].terminator = kind;
+
+    let next_block_idx = builder.body.blocks.len();
+    builder.body.blocks[last_then_block_idx].terminator = Terminator::Target(next_block_idx);
+    builder.body.blocks[last_else_block_idx].terminator = Terminator::Target(next_block_idx);
 }
 
 fn lower_let(builder: &mut BodyBuilder, info: &ast::LetStmt) {
@@ -210,6 +280,58 @@ fn lower_assign(builder: &mut BodyBuilder, info: &ast::AssignStmt) {
     })
 }
 
+fn find_expr_type(builder: &mut BodyBuilder, info: &ast::Expression) -> Option<TypeInfo> {
+    Some(TypeInfo {
+        span: None,
+        kind: match info {
+            ast::Expression::Value(x) => match x {
+                ast::ValueExpr::Bool { .. } => TypeKind::Bool,
+                ast::ValueExpr::Char { .. } => TypeKind::Char,
+                ast::ValueExpr::Int { .. } => return None,
+                ast::ValueExpr::Float { .. } => return None,
+                ast::ValueExpr::Str { .. } => todo!(),
+                ast::ValueExpr::Path(path) => {
+                    // todo: handle full path
+                    builder.get_local(&path.first.name)?.ty.kind.clone()
+                }
+            },
+            ast::Expression::FnCall(info) => {
+                let fn_id = {
+                    let mod_body = builder.get_module_body();
+
+                    if let Some(id) = mod_body.symbols.functions.get(&info.name.name) {
+                        *id
+                    } else {
+                        *mod_body
+                            .imports
+                            .get(&info.name.name)
+                            .expect("function call not found")
+                    }
+                };
+
+                builder
+                    .ctx
+                    .body
+                    .function_signatures
+                    .get(&fn_id)?
+                    .1
+                    .kind
+                    .clone()
+            }
+            ast::Expression::Unary(_, info) => find_expr_type(builder, info)?.kind,
+            ast::Expression::Binary(lhs, op, rhs) => {
+                if matches!(op, BinaryOp::Logic(_, _)) {
+                    TypeKind::Bool
+                } else {
+                    find_expr_type(builder, lhs)
+                        .or(find_expr_type(builder, rhs))?
+                        .kind
+                }
+            }
+        },
+    })
+}
+
 fn lower_expr(
     builder: &mut BodyBuilder,
     info: &ast::Expression,
@@ -232,19 +354,27 @@ fn lower_binary_expr(
     rhs: &ast::Expression,
     type_hint: Option<&TypeInfo>,
 ) -> ir::RValue {
-    let expr_type = type_hint.expect("type hint needed");
-    let lhs = lower_expr(builder, lhs, type_hint);
-    let rhs = lower_expr(builder, rhs, type_hint);
+    let (lhs, lhs_ty) = if type_hint.is_none() {
+        let ty = find_expr_type(builder, lhs);
+        (lower_expr(builder, lhs, ty.as_ref()), ty)
+    } else {
+        (lower_expr(builder, lhs, type_hint), type_hint.cloned())
+    };
+    let (rhs, rhs_ty) = if type_hint.is_none() {
+        let ty = find_expr_type(builder, rhs);
+        (lower_expr(builder, rhs, ty.as_ref()), ty)
+    } else {
+        (lower_expr(builder, rhs, type_hint), type_hint.cloned())
+    };
 
-    let local_ty = expr_type;
-    let lhs_local = builder.add_local(Local::temp(local_ty.clone()));
-    let rhs_local = builder.add_local(Local::temp(local_ty.clone()));
+    let lhs_local = builder.add_local(Local::temp(lhs_ty.unwrap().clone()));
+    let rhs_local = builder.add_local(Local::temp(rhs_ty.unwrap().clone()));
     let lhs_place = Place {
         local: lhs_local,
         projection: Default::default(),
     };
     let rhs_place = Place {
-        local: lhs_local,
+        local: rhs_local,
         projection: Default::default(),
     };
 

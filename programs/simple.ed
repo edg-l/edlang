@@ -1,15 +1,12 @@
 mod Main {
 
-    pub fn main(argc: i32) -> i32 {
-        let mut x: i32 = 2;
-        x = 4;
-        a();
-        return x + 2;
-    }
+    pub fn main(argc: i64) -> i64 {
+        let mut a: i64 = 0;
 
-     pub fn a() {
-        let mut x: i32 = 2;
-        x = 4;
-        return;
+        if argc > 2 {
+            a = 1;
+        }
+
+        return a;
     }
 }

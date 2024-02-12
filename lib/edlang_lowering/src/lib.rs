@@ -5,8 +5,8 @@ use common::{BodyBuilder, BuildCtx};
 use edlang_ast as ast;
 use edlang_ir as ir;
 use ir::{
-    BasicBlock, Body, ConstValue, DefId, Local, LocalKind, Operand, Place, ProgramBody, Statement,
-    StatementKind, SwitchTarget, Terminator, TypeInfo, TypeKind, ValueTree,
+    BasicBlock, Body, DefId, Local, LocalKind, Operand, Place, ProgramBody, Statement,
+    StatementKind, SwitchTarget, Terminator, TypeInfo, TypeKind,
 };
 
 mod common;

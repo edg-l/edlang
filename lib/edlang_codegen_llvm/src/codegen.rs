@@ -78,7 +78,7 @@ pub fn compile(session: &Session, program: &ProgramBody) -> Result<PathBuf, Box<
             &triple,
             cpu_name.to_str()?,
             cpu_features.to_str()?,
-            inkwell::OptimizationLevel::Default,
+            inkwell::OptimizationLevel::Aggressive,
             inkwell::targets::RelocMode::Default,
             inkwell::targets::CodeModel::Default,
         )
@@ -276,7 +276,10 @@ fn compile_fn(ctx: &ModuleCompileCtx, fn_id: DefId) -> Result<(), BuilderError> 
                 } else {
                     let ptr = ctx.builder.build_alloca(
                         compile_basic_type(ctx, &local.ty),
-                        local.debug_name.as_deref().unwrap_or(&index.to_string()),
+                        local
+                            .debug_name
+                            .as_deref()
+                            .unwrap_or(&format!("temp_var_{index}")),
                     )?;
                     locals.insert(index, ptr);
                 }

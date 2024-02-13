@@ -1,6 +1,6 @@
 [package]
 name = "edlang_codegen_llvm"
-version = "0.1.0"
+version = "0.0.1-alpha.3"
 authors = ["Edgar Luque <edgar@edgarluque.com>"]
 description = "edlang LLVM codegen"
 edition = "2021"
@@ -12,13 +12,13 @@ categories = ["compilers"]
 
 [dependencies]
 bumpalo = { version = "3.14.0", features = ["std"] }
-edlang_ir = { version = "0.1.0", path = "../edlang_ir" }
-edlang_parser = { version = "0.1.0", path = "../edlang_parser" }
-edlang_session = { version = "0.1.0", path = "../edlang_session" }
+edlang_ir = { version = "0.0.1-alpha.3", path = "../edlang_ir" }
+edlang_parser = { version = "0.0.1-alpha.3", path = "../edlang_parser" }
+edlang_session = { version = "0.0.1-alpha.3", path = "../edlang_session" }
 llvm-sys = "170.0.1"
-inkwell = { git = "https://github.com/TheDan64/inkwell", rev = "e0cc92dc28eb684684e450ca28daedc52e613962", features = ["llvm17-0"] }
+inkwell = { git = "https://github.com/TheDan64/inkwell", rev = "c044e3cd8d92972ca75b374fb6c5a2794f5b53ca", features = ["llvm17-0"] }
 tracing = { workspace = true }
-edlang_span = { version = "0.1.0", path = "../edlang_span" }
+edlang_span = { version = "0.0.1-alpha.3", path = "../edlang_span" }
 
 [build-dependencies]
 cc = "1.0.83"

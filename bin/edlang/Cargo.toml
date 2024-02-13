@@ -1,6 +1,6 @@
 [package]
 name = "edlang"
-version = "0.0.1-alpha.2"
+version = "0.0.1-alpha.3"
 authors = ["Edgar Luque <edgar@edgarluque.com>"]
 description = "A experimental language using LLVM."
 edition = "2021"
@@ -12,4 +12,4 @@ categories = ["compilers"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-edlang_driver = { version = "0.1.0", path = "../../lib/edlang_driver" }
+edlang_driver = { version = "0.0.1-alpha.3", path = "../../lib/edlang_driver" }

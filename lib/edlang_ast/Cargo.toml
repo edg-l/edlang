@@ -1,6 +1,6 @@
 [package]
 name = "edlang_ast"
-version = "0.1.0"
+version = "0.0.1-alpha.3"
 authors = ["Edgar Luque <edgar@edgarluque.com>"]
 description = "edlang AST"
 edition = "2021"
@@ -11,4 +11,4 @@ categories = ["compilers"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-edlang_span = { version = "0.1.0", path = "../edlang_span" }
+edlang_span = { version = "0.0.1-alpha.3", path = "../edlang_span" }

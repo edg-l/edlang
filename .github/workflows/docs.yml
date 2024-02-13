@@ -25,7 +25,7 @@ jobs:
       - name: Install LLVM
         run: sudo apt-get install llvm-17 llvm-17-dev llvm-17-runtime clang-17 clang-tools-17 lld-17 libpolly-17-dev libmlir-17-dev mlir-17-tools
       - name: Build docs
-        run: make doc
+        run: cargo doc
       - name: Deploy Documentation
         uses: peaceiris/actions-gh-pages@v3
         with:

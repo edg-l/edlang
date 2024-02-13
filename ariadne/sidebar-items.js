@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["CharSet","Color","LabelAttach","ReportKind"],"fn":["sources"],"struct":["ColorGenerator","Config","FileCache","FnCache","Label","Line","Report","ReportBuilder","Source"],"trait":["Cache","Fmt","Span","StdoutFmt"]};

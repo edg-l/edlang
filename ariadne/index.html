@@ -1,0 +1,122 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Ariadne"><title>ariadne - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../" data-static-root-path="../static.files/" data-current-crate="ariadne" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../crates.js"></script><script defer src="../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc mod crate"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button></nav><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../ariadne/index.html">ariadne</a><span class="version">0.4.0</span></h2></div><div class="sidebar-elems"><ul class="block">
+            <li><a id="all-types" href="all.html">All Items</a></li></ul><section><ul class="block"><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li><li><a href="#traits">Traits</a></li><li><a href="#functions">Functions</a></li></ul></section></div></nav><div class="sidebar-resizer"></div>
+    <main><div class="width-limiter"><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../ariadne/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="main-heading"><h1>Crate <a class="mod" href="#">ariadne</a><button id="copy-path" title="Copy item path to clipboard"><img src="../static.files/clipboard-7571035ce49a181d.svg" width="19" height="18" alt="Copy item path"></button></h1><span class="out-of-band"><a class="src" href="../src/ariadne/lib.rs.html#1-444">source</a> · <button id="toggle-all-docs" title="collapse all docs">[<span>&#x2212;</span>]</button></span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><h2 id="ariadne"><a href="#ariadne">Ariadne</a></h2>
+<p><a href="https://crates.io/crates/ariadne"><img src="https://img.shields.io/crates/v/ariadne.svg" alt="crates.io" /></a>
+<a href="https://docs.rs/ariadne"><img src="https://docs.rs/ariadne/badge.svg" alt="crates.io" /></a>
+<a href="https://github.com/zesterer/ariadne"><img src="https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg" alt="License" /></a>
+<img src="https://github.com/zesterer/ariadne/workflows/Rust/badge.svg?branch=main" alt="actions-badge" /></p>
+<p>A fancy compiler diagnostics crate.</p>
+<h3 id="example"><a href="#example">Example</a></h3><a href = "https://github.com/zesterer/ariadne/blob/main/examples/multiline.rs">
+<img src="https://raw.githubusercontent.com/zesterer/ariadne/main/misc/example.png" alt="Ariadne supports arbitrary multi-line spans"/>
+</a>
+
+<div class="example-wrap ignore"><a href="#" class="tooltip" title="This example is not tested">ⓘ</a><pre class="rust rust-example-rendered"><code><span class="kw">fn </span>main() {
+    <span class="kw">use </span>ariadne::{Color, ColorGenerator, Fmt, Label, Report, ReportKind, Source};
+
+    <span class="kw">let </span><span class="kw-2">mut </span>colors = ColorGenerator::new();
+
+    <span class="comment">// Generate &amp; choose some colours for each of our elements
+    </span><span class="kw">let </span>a = colors.next();
+    <span class="kw">let </span>b = colors.next();
+    <span class="kw">let </span>out = Color::Fixed(<span class="number">81</span>);
+
+    Report::build(ReportKind::Error, <span class="string">"sample.tao"</span>, <span class="number">12</span>)
+        .with_code(<span class="number">3</span>)
+        .with_message(<span class="macro">format!</span>(<span class="string">"Incompatible types"</span>))
+        .with_label(
+            Label::new((<span class="string">"sample.tao"</span>, <span class="number">32</span>..<span class="number">33</span>))
+                .with_message(<span class="macro">format!</span>(<span class="string">"This is of type {}"</span>, <span class="string">"Nat"</span>.fg(a)))
+                .with_color(a),
+        )
+        .with_label(
+            Label::new((<span class="string">"sample.tao"</span>, <span class="number">42</span>..<span class="number">45</span>))
+                .with_message(<span class="macro">format!</span>(<span class="string">"This is of type {}"</span>, <span class="string">"Str"</span>.fg(b)))
+                .with_color(b),
+        )
+        .with_label(
+            Label::new((<span class="string">"sample.tao"</span>, <span class="number">11</span>..<span class="number">48</span>))
+                .with_message(<span class="macro">format!</span>(
+                    <span class="string">"The values are outputs of this {} expression"</span>,
+                    <span class="string">"match"</span>.fg(out),
+                ))
+                .with_color(out),
+        )
+        .with_note(<span class="macro">format!</span>(
+            <span class="string">"Outputs of {} expressions must coerce to the same type"</span>,
+            <span class="string">"match"</span>.fg(out)
+        ))
+        .finish()
+        .print((<span class="string">"sample.tao"</span>, Source::from(<span class="macro">include_str!</span>(<span class="string">"sample.tao"</span>))))
+        .unwrap();
+}</code></pre></div>
+<p>See <a href="https://github.com/zesterer/ariadne/tree/main/examples"><code>examples/</code></a> for more examples.</p>
+<h3 id="usage"><a href="#usage">Usage</a></h3>
+<p>For each error you wish to report:</p>
+<ul>
+<li>Call <code>Report::build()</code> to create a <code>ReportBuilder</code>.</li>
+<li>Assign whatever details are appropriate to the error using the various
+methods, and then call the <code>finish</code> method to get a <code>Report</code>.</li>
+<li>For each <code>Report</code>, call <code>print</code> or <code>eprint</code> to write the report
+directly to <code>stdout</code> or <code>stderr</code>. Alternately, you can use
+<code>write</code> to send the report to any other <code>Write</code> destination (such as a file).</li>
+</ul>
+<h3 id="about"><a href="#about">About</a></h3>
+<p><code>ariadne</code> is a sister project of <a href="https://github.com/zesterer/chumsky/"><code>chumsky</code></a>. Neither are dependent on
+one-another, but I’m working on both simultaneously and like to think that their features complement each other. If
+you’re thinking of using <code>ariadne</code> to process your compiler’s output, why not try using <code>chumsky</code> to process its input?</p>
+<h3 id="features"><a href="#features">Features</a></h3>
+<ul>
+<li>Inline and multi-line labels capable of handling arbitrary configurations of spans</li>
+<li>Multi-file errors</li>
+<li>Generic across custom spans and file caches</li>
+<li>A choice of character sets to ensure compatibility</li>
+<li>Coloured labels &amp; highlighting with 8-bit and 24-bit color support (thanks to
+<a href="https://github.com/SergioBenitez/yansi"><code>yansi</code></a>)</li>
+<li>Label priority and ordering</li>
+<li>Compact mode for smaller diagnostics</li>
+<li>Correct handling of variable-width characters such as tabs</li>
+<li>A <code>ColorGenerator</code> type that generates distinct colours for visual elements.</li>
+<li>A plethora of other options (tab width, label attach points, underlines, etc.)</li>
+<li>Built-in ordering/overlap heuristics that come up with the best way to avoid overlapping &amp; label crossover</li>
+</ul>
+<h3 id="cargo-features"><a href="#cargo-features">Cargo Features</a></h3>
+<ul>
+<li><code>&quot;concolor&quot;</code> enables integration with the <a href="https://crates.io/crates/concolor"><code>concolor</code></a> crate for global color output
+control across your application</li>
+<li><code>&quot;auto-color&quot;</code> enables <code>concolor</code>’s <code>&quot;auto&quot;</code> feature for automatic color control</li>
+</ul>
+<p><code>concolor</code>’s features should be defined by the top-level binary crate, but without any features enabled <code>concolor</code> does
+nothing. If <code>ariadne</code> is your only dependency using <code>concolor</code> then <code>&quot;auto-color&quot;</code> provides a convenience to enable
+<code>concolor</code>’s automatic color support detection, i.e. this:</p>
+<div class="example-wrap"><pre class="language-TOML"><code>[dependencies]
+ariadne = { version = &quot;...&quot;, features = [&quot;auto-color&quot;] }
+</code></pre></div>
+<p>is equivalent to this:</p>
+<div class="example-wrap"><pre class="language-TOML"><code>[dependencies]
+ariadne = { version = &quot;...&quot;, features = [&quot;concolor&quot;] }
+concolor = { version = &quot;...&quot;, features = [&quot;auto&quot;] }
+</code></pre></div><h3 id="planned-features"><a href="#planned-features">Planned Features</a></h3>
+<ul>
+<li>Improved layout planning &amp; space usage</li>
+<li>Non-ANSI terminal support</li>
+<li>More accessibility options (screenreader-friendly mode, textured highlighting as an alternative to color, etc.)</li>
+<li>More color options</li>
+<li>Better support for layout restrictions (maximum terminal width, for example)</li>
+</ul>
+<h3 id="stability"><a href="#stability">Stability</a></h3>
+<p>The API (should) follow <a href="https://www.semver.org/">semver</a>. However, this does not apply to the layout of final error
+messages. Minor tweaks to the internal layout heuristics can often result in the exact format of error messages changing
+with labels moving slightly. If you experience a change in layout that you believe to be a regression (either the change
+is incorrect, or makes your diagnostics harder to read) then please open an issue.</p>
+<h3 id="credit"><a href="#credit">Credit</a></h3>
+<p>Thanks to:</p>
+<ul>
+<li>
+<p><code>@brendanzab</code> for their beautiful <a href="https://github.com/brendanzab/codespan"><code>codespan</code></a> crate that inspired me to try
+pushing the envelope of error diagnostics.</p>
+</li>
+<li>
+<p><code>@estebank</code> for showing innumerable people just how good compiler diagnostics can be through their work on Rust.</p>
+</li>
+</ul>
+</div></details><h2 id="structs" class="section-header"><a href="#structs">Structs</a></h2><ul class="item-table"><li><div class="item-name"><a class="struct" href="struct.ColorGenerator.html" title="struct ariadne::ColorGenerator">ColorGenerator</a></div><div class="desc docblock-short">A type that can generate distinct 8-bit colors.</div></li><li><div class="item-name"><a class="struct" href="struct.Config.html" title="struct ariadne::Config">Config</a></div><div class="desc docblock-short">A type used to configure a report</div></li><li><div class="item-name"><a class="struct" href="struct.FileCache.html" title="struct ariadne::FileCache">FileCache</a></div><div class="desc docblock-short">A <a href="trait.Cache.html" title="trait ariadne::Cache"><code>Cache</code></a> that fetches <a href="struct.Source.html" title="struct ariadne::Source"><code>Source</code></a>s from the filesystem.</div></li><li><div class="item-name"><a class="struct" href="struct.FnCache.html" title="struct ariadne::FnCache">FnCache</a></div><div class="desc docblock-short">A <a href="trait.Cache.html" title="trait ariadne::Cache"><code>Cache</code></a> that fetches <a href="struct.Source.html" title="struct ariadne::Source"><code>Source</code></a>s using the provided function.</div></li><li><div class="item-name"><a class="struct" href="struct.Label.html" title="struct ariadne::Label">Label</a></div><div class="desc docblock-short">A type that represents a labelled section of source code.</div></li><li><div class="item-name"><a class="struct" href="struct.Line.html" title="struct ariadne::Line">Line</a></div><div class="desc docblock-short">A type representing a single line of a <a href="struct.Source.html" title="struct ariadne::Source"><code>Source</code></a>.</div></li><li><div class="item-name"><a class="struct" href="struct.Report.html" title="struct ariadne::Report">Report</a></div><div class="desc docblock-short">A type representing a diagnostic that is ready to be written to output.</div></li><li><div class="item-name"><a class="struct" href="struct.ReportBuilder.html" title="struct ariadne::ReportBuilder">ReportBuilder</a></div><div class="desc docblock-short">A type used to build a <a href="struct.Report.html" title="struct ariadne::Report"><code>Report</code></a>.</div></li><li><div class="item-name"><a class="struct" href="struct.Source.html" title="struct ariadne::Source">Source</a></div><div class="desc docblock-short">A type representing a single source that may be referred to by <a href="trait.Span.html" title="trait ariadne::Span"><code>Span</code></a>s.</div></li></ul><h2 id="enums" class="section-header"><a href="#enums">Enums</a></h2><ul class="item-table"><li><div class="item-name"><a class="enum" href="enum.CharSet.html" title="enum ariadne::CharSet">CharSet</a></div><div class="desc docblock-short">Possible character sets to use when rendering diagnostics.</div></li><li><div class="item-name"><a class="enum" href="enum.Color.html" title="enum ariadne::Color">Color</a></div><div class="desc docblock-short">An enum representing an ANSI color code.</div></li><li><div class="item-name"><a class="enum" href="enum.LabelAttach.html" title="enum ariadne::LabelAttach">LabelAttach</a></div><div class="desc docblock-short">The attachment point of inline label arrows</div></li><li><div class="item-name"><a class="enum" href="enum.ReportKind.html" title="enum ariadne::ReportKind">ReportKind</a></div><div class="desc docblock-short">A type that defines the kind of report being produced.</div></li></ul><h2 id="traits" class="section-header"><a href="#traits">Traits</a></h2><ul class="item-table"><li><div class="item-name"><a class="trait" href="trait.Cache.html" title="trait ariadne::Cache">Cache</a></div><div class="desc docblock-short">A trait implemented by <a href="struct.Source.html" title="struct ariadne::Source"><code>Source</code></a> caches.</div></li><li><div class="item-name"><a class="trait" href="trait.Fmt.html" title="trait ariadne::Fmt">Fmt</a></div><div class="desc docblock-short">A trait used to add formatting attributes to displayable items.</div></li><li><div class="item-name"><a class="trait" href="trait.Span.html" title="trait ariadne::Span">Span</a></div><div class="desc docblock-short">A trait implemented by spans within a character-based source.</div></li><li><div class="item-name"><a class="trait" href="trait.StdoutFmt.html" title="trait ariadne::StdoutFmt">StdoutFmt</a></div><div class="desc docblock-short">A trait used to add formatting attributes to displayable items intended to be written to <code>stdout</code>.</div></li></ul><h2 id="functions" class="section-header"><a href="#functions">Functions</a></h2><ul class="item-table"><li><div class="item-name"><a class="fn" href="fn.sources.html" title="fn ariadne::sources">sources</a></div><div class="desc docblock-short">Create a <a href="trait.Cache.html" title="trait ariadne::Cache"><code>Cache</code></a> from a collection of ID/strings, where each corresponds to a <a href="struct.Source.html" title="struct ariadne::Source"><code>Source</code></a>.</div></li></ul></section></div></main></body></html>

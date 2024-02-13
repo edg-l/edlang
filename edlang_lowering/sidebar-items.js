@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["lower_modules","lower_type"]};

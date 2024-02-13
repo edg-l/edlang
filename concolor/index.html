@@ -1,0 +1,78 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Control console coloring across all dependencies"><title>concolor - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../" data-static-root-path="../static.files/" data-current-crate="concolor" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../crates.js"></script><script defer src="../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc mod crate"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button></nav><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../concolor/index.html">concolor</a><span class="version">0.1.1</span></h2></div><div class="sidebar-elems"><ul class="block">
+            <li><a id="all-types" href="all.html">All Items</a></li></ul><section><ul class="block"><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li><li><a href="#functions">Functions</a></li></ul></section></div></nav><div class="sidebar-resizer"></div>
+    <main><div class="width-limiter"><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../concolor/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="main-heading"><h1>Crate <a class="mod" href="#">concolor</a><button id="copy-path" title="Copy item path to clipboard"><img src="../static.files/clipboard-7571035ce49a181d.svg" width="19" height="18" alt="Copy item path"></button></h1><span class="out-of-band"><a class="src" href="../src/concolor/lib.rs.html#1-105">source</a> · <button id="toggle-all-docs" title="collapse all docs">[<span>&#x2212;</span>]</button></span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Control console coloring across all dependencies</p>
+<h2 id="motivation"><a href="#motivation">Motivation</a></h2>
+<p>Detecting a terminal’s color capabilities and passing it down to each writer
+can be obnoxious.  Some crates try to make this easier by detecting the environment for you and
+making their own choice to print colors.  As an application author, you own the experience for
+your application and want the behavior to be consistent.  To get this, you have to dig into
+each crate’s implementation to see how they auto-detect color capabilities and, if they don’t
+do it how you want, hope they provide a way to override it so you can implement it yourself.</p>
+<p>Like with logging, your terminal’s capabilities and how to treat it is a behavior that cuts
+across your application.  So to make things more consistent and easier to control,
+<code>concolor</code> introduces shared detection logic that all crates can call into to get
+consistent behavior.  The application author can then choose what feature flags are enabled to
+decide on what the end-user experience should be.</p>
+<h2 id="bins"><a href="#bins"><code>[[bin]]</code>s</a></h2><div class="example-wrap"><pre class="language-toml"><code>[dependencies]
+concolor = { version = &quot;0.1.1&quot;, features = &quot;color&quot; }
+</code></pre></div>
+<p>Notes:</p>
+<ul>
+<li>With the
+<a href="https://doc.rust-lang.org/nightly/edition-guide/rust-2021/default-cargo-resolver.html">2021 edition / <code>resolver = &quot;2&quot;</code></a>,
+you will also need to specify this in your <code>build-dependencies</code> if you want <code>build.rs</code> to have color
+as well.</li>
+</ul>
+<p>If you are providing a command line option for controlling color, just call</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let </span>when = concolor::ColorChoice::Always;
+concolor::set(when);</code></pre></div>
+<p>See also <a href="https://docs.rs/concolor-clap"><code>concolor-clap</code></a></p>
+<h2 id="libs"><a href="#libs"><code>[lib]</code>s</a></h2>
+<p>The <code>[[bin]]</code> is responsible for defining the policy of how colors are determined, so to depend
+on <code>concolor</code>:</p>
+<div class="example-wrap"><pre class="language-toml"><code>[dependencies]
+concolor = { version = &quot;0.1.1&quot;, default-features = false }
+</code></pre></div>
+<p>At times, you might want to provide a convenience feature for color support, so you could also:</p>
+<div class="example-wrap"><pre class="language-toml"><code>[features]
+default = [&quot;color&quot;]
+color = &quot;concolor/auto&quot;
+
+[dependencies]
+concolor = { version = &quot;0.1.1&quot;, optional = True}
+</code></pre></div>
+<p>Notes:</p>
+<ul>
+<li>Your choice on whether to make this default or not</li>
+<li>Depending on your context, name it either <code>color</code> (for a crate like <code>clap</code>) or <code>auto</code> (for a
+crate like <code>termcolor</code>)</li>
+</ul>
+<p>Then just ask as needed:</p>
+
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let </span>stdout_support = concolor::get(concolor::Stream::Stdout);
+<span class="kw">if </span>stdout_support.ansi_color() {
+    <span class="comment">// Output ANSI escape sequences
+    </span><span class="kw">if </span>stdout_support.truecolor() {
+        <span class="comment">// Get even fancier with the colors
+    </span>}
+} <span class="kw">else if </span>stdout_support.color() {
+    <span class="comment">// Legacy Windows version, control the console as needed
+</span>} <span class="kw">else </span>{
+    <span class="comment">// No coloring
+</span>}</code></pre></div>
+<h2 id="features"><a href="#features">Features</a></h2>
+<ul>
+<li><code>auto</code>: Guess color status based on all possible sources, including:
+<ul>
+<li><code>api_unstable</code>: Allow controlling color via the API (until 1.0, this is not guaranteed to
+work across crates which is why this is <code>_unstable</code>)</li>
+<li><code>interactive</code>: Check if stdout/stderr is a TTY</li>
+<li><code>clicolor</code>: Respect <a href="https://bixense.com/clicolors/">CLICOLOR</a> spec</li>
+<li><code>no_color</code>: Respect <a href="https://no-color.org/">NO_COLOR</a> spec</li>
+<li><code>term</code>: Check <code>TERM</code></li>
+<li><code>windows</code>: Check if we can enable ANSI support</li>
+</ul>
+</li>
+</ul>
+</div></details><h2 id="structs" class="section-header"><a href="#structs">Structs</a></h2><ul class="item-table"><li><div class="item-name"><a class="struct" href="struct.Color.html" title="struct concolor::Color">Color</a></div><div class="desc docblock-short">Current color state for a <a href="enum.Stream.html" title="enum concolor::Stream"><code>Stream</code></a></div></li></ul><h2 id="enums" class="section-header"><a href="#enums">Enums</a></h2><ul class="item-table"><li><div class="item-name"><a class="enum" href="enum.ColorChoice.html" title="enum concolor::ColorChoice">ColorChoice</a></div><div class="desc docblock-short">Selection for overriding color output with [<code>set</code>][crate::set]</div></li><li><div class="item-name"><a class="enum" href="enum.Stream.html" title="enum concolor::Stream">Stream</a></div><div class="desc docblock-short">Output stream to <a href="fn.get.html" title="fn concolor::get"><code>get()</code></a> the <a href="struct.Color.html" title="struct concolor::Color"><code>Color</code></a> state for</div></li></ul><h2 id="functions" class="section-header"><a href="#functions">Functions</a></h2><ul class="item-table"><li><div class="item-name"><a class="fn" href="fn.get.html" title="fn concolor::get">get</a></div><div class="desc docblock-short">Get the current <a href="struct.Color.html" title="struct concolor::Color"><code>Color</code></a> state for a given <a href="enum.Stream.html" title="enum concolor::Stream"><code>Stream</code></a></div></li></ul></section></div></main></body></html>

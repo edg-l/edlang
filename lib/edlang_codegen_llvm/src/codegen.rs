@@ -168,7 +168,7 @@ pub fn compile(session: &Session, program: &ProgramBody) -> Result<PathBuf, Box<
 
 fn compile_module(ctx: &mut ModuleCompileCtx, module_id: DefId) {
     let module = ctx.ctx.program.modules.get(&module_id).unwrap();
-    trace!("compiling module");
+    trace!("compiling module: {:?}", module_id);
     for id in module.functions.iter() {
         compile_fn_signature(ctx, *id);
     }
@@ -270,6 +270,8 @@ fn compile_fn(ctx: &ModuleCompileCtx, fn_id: DefId) -> Result<(), BuilderError> 
     );
     debug_loc = ctx.set_debug_loc(lexical_block.as_debug_info_scope(), body.fn_span);
 
+    trace!("compiling entry block");
+
     let block = ctx.ctx.context.append_basic_block(fn_value, "entry");
     ctx.builder.position_at_end(block);
 
@@ -280,6 +282,7 @@ fn compile_fn(ctx: &ModuleCompileCtx, fn_id: DefId) -> Result<(), BuilderError> 
     let mut arg_counter = 0;
 
     for (index, local) in body.locals.iter().enumerate() {
+        trace!("compiling local {}: {:?}", index, local);
         if let Some(span) = local.span {
             debug_loc = ctx.set_debug_loc(debug_loc.get_scope(), span);
         }
@@ -344,6 +347,7 @@ fn compile_fn(ctx: &ModuleCompileCtx, fn_id: DefId) -> Result<(), BuilderError> 
         }
     }
 
+    trace!("creating blocks");
     let mut blocks = Vec::with_capacity(body.blocks.len());
 
     for (index, _block) in body.blocks.iter().enumerate() {
@@ -356,15 +360,15 @@ fn compile_fn(ctx: &ModuleCompileCtx, fn_id: DefId) -> Result<(), BuilderError> 
 
     ctx.builder.build_unconditional_branch(blocks[0])?;
 
-    for (block, llvm_block) in body.blocks.iter().zip(&blocks) {
-        trace!("compiling block");
+    for (block_idx, (block, llvm_block)) in body.blocks.iter().zip(&blocks).enumerate() {
+        trace!("compiling block {}", block_idx);
         ctx.builder.position_at_end(*llvm_block);
-        for stmt in &block.statements {
+        for (idx, stmt) in block.statements.iter().enumerate() {
             if let Some(span) = stmt.span {
                 debug_loc = ctx.set_debug_loc(debug_loc.get_scope(), span);
             }
 
-            trace!("compiling stmt");
+            trace!("compiling stmt {}: {:?}", idx, stmt.kind);
             match &stmt.kind {
                 ir::StatementKind::Assign(place, rvalue) => {
                     let local = &body.locals[place.local];
@@ -423,7 +427,7 @@ fn compile_fn(ctx: &ModuleCompileCtx, fn_id: DefId) -> Result<(), BuilderError> 
             }
         }
 
-        trace!("compiling terminator");
+        trace!("compiling terminator: {:?}", block.terminator);
         match &block.terminator {
             ir::Terminator::Target(id) => {
                 ctx.builder.build_unconditional_branch(blocks[*id])?;

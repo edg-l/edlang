@@ -6,6 +6,7 @@ mod common;
 #[test_case(include_str!("programs/simple.ed"), "simple", false, 0, &["1"] ; "simple.ed 1")]
 #[test_case(include_str!("programs/simple.ed"), "simple", false, 1, &["a", "b"] ; "simple.ed 3")]
 #[test_case(include_str!("programs/basic_ifs.ed"), "basic_ifs", false, 9, &[] ; "basic_ifs")]
+#[test_case(include_str!("programs/while.ed"), "while", false, 10, &[] ; "r#while")]
 fn example_tests(source: &str, name: &str, is_library: bool, status_code: i32, args: &[&str]) {
     let program = compile_program(source, name, is_library).unwrap();
 

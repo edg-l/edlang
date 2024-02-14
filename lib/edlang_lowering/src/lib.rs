@@ -8,6 +8,7 @@ use ir::{
     BasicBlock, Body, DefId, Local, LocalKind, Operand, Place, ProgramBody, Statement,
     StatementKind, SwitchTarget, Terminator, TypeInfo, TypeKind,
 };
+use tracing::trace;
 
 mod common;
 mod prepass;
@@ -382,6 +383,7 @@ fn find_expr_type(builder: &mut BodyBuilder, info: &ast::Expression) -> Option<T
             ast::ValueExpr::Str { .. } => todo!(),
             ast::ValueExpr::Path(path) => {
                 // todo: handle full path
+                dbg!("found local");
                 builder.get_local(&path.first.name)?.ty.kind.clone()
             }
         },
@@ -447,9 +449,11 @@ fn lower_binary_expr(
     rhs: &ast::Expression,
     type_hint: Option<&TypeKind>,
 ) -> (ir::RValue, TypeKind) {
+    trace!("lowering binary op: {:?}", op);
+
     let (lhs, lhs_ty) = if type_hint.is_none() {
         let ty = find_expr_type(builder, lhs)
-            .unwrap_or(find_expr_type(builder, rhs).expect("cant find type"));
+            .unwrap_or_else(|| find_expr_type(builder, rhs).expect("cant find type"));
         lower_expr(builder, lhs, Some(&ty))
     } else {
         lower_expr(builder, lhs, type_hint)

@@ -1112,6 +1112,15 @@
 <a href="#1111" id="1111">1111</a>
 <a href="#1112" id="1112">1112</a>
 <a href="#1113" id="1113">1113</a>
+<a href="#1114" id="1114">1114</a>
+<a href="#1115" id="1115">1115</a>
+<a href="#1116" id="1116">1116</a>
+<a href="#1117" id="1117">1117</a>
+<a href="#1118" id="1118">1118</a>
+<a href="#1119" id="1119">1119</a>
+<a href="#1120" id="1120">1120</a>
+<a href="#1121" id="1121">1121</a>
+<a href="#1122" id="1122">1122</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{collections::HashMap, error::Error, path::PathBuf};
 
 <span class="kw">use </span>edlang_ir <span class="kw">as </span>ir;
@@ -1131,7 +1140,7 @@
 };
 <span class="kw">use </span>ir::{LocalKind, ModuleBody, ProgramBody, TypeInfo, ValueTree};
 <span class="kw">use </span>llvm_sys::debuginfo::LLVMDIFlagPublic;
-<span class="kw">use </span>tracing::info;
+<span class="kw">use </span>tracing::{info, trace};
 
 <span class="attr">#[derive(Debug, Clone, Copy)]
 </span><span class="kw">struct </span>CompileCtx&lt;<span class="lifetime">'a</span>&gt; {
@@ -1192,8 +1201,17 @@
             <span class="kw-2">&amp;</span>triple,
             cpu_name.to_str()<span class="question-mark">?</span>,
             cpu_features.to_str()<span class="question-mark">?</span>,
-            inkwell::OptimizationLevel::Aggressive,
-            inkwell::targets::RelocMode::Default,
+            <span class="kw">match </span>session.optlevel {
+                edlang_session::OptLevel::None =&gt; inkwell::OptimizationLevel::None,
+                edlang_session::OptLevel::Less =&gt; inkwell::OptimizationLevel::Less,
+                edlang_session::OptLevel::Default =&gt; inkwell::OptimizationLevel::Default,
+                edlang_session::OptLevel::Aggressive =&gt; inkwell::OptimizationLevel::Aggressive,
+            },
+            <span class="kw">if </span>session.library {
+                inkwell::targets::RelocMode::DynamicNoPic
+            } <span class="kw">else </span>{
+                inkwell::targets::RelocMode::Default
+            },
             inkwell::targets::CodeModel::Default,
         )
         .unwrap();
@@ -1245,15 +1263,20 @@
         module_ctx.di_builder.finalize();
         module_ctx.module.verify()<span class="question-mark">?</span>;
 
-        module_ctx
-            .module
-            .print_to_file(session.output_file.with_extension(<span class="string">"ll"</span>))<span class="question-mark">?</span>;
+        <span class="kw">if </span>session.output_llvm {
+            module_ctx
+                .module
+                .print_to_file(session.output_file.with_extension(<span class="string">"ll"</span>))<span class="question-mark">?</span>;
+        }
 
-        machine.write_to_file(
-            <span class="kw-2">&amp;</span>module_ctx.module,
-            inkwell::targets::FileType::Assembly,
-            <span class="kw-2">&amp;</span>session.output_file.with_extension(<span class="string">"asm"</span>),
-        )<span class="question-mark">?</span>;
+        <span class="kw">if </span>session.output_asm {
+            machine.write_to_file(
+                <span class="kw-2">&amp;</span>module_ctx.module,
+                inkwell::targets::FileType::Assembly,
+                <span class="kw-2">&amp;</span>session.output_file.with_extension(<span class="string">"asm"</span>),
+            )<span class="question-mark">?</span>;
+        }
+
         machine.write_to_file(
             <span class="kw-2">&amp;</span>module_ctx.module,
             inkwell::targets::FileType::Object,
@@ -1268,7 +1291,7 @@
 
 <span class="kw">fn </span>compile_module(ctx: <span class="kw-2">&amp;mut </span>ModuleCompileCtx, module_id: DefId) {
     <span class="kw">let </span>module = ctx.ctx.program.modules.get(<span class="kw-2">&amp;</span>module_id).unwrap();
-    <span class="macro">info!</span>(<span class="string">"compiling module"</span>);
+    <span class="macro">trace!</span>(<span class="string">"compiling module"</span>);
     <span class="kw">for </span>id <span class="kw">in </span>module.functions.iter() {
         compile_fn_signature(ctx, <span class="kw-2">*</span>id);
     }
@@ -1281,7 +1304,7 @@
 <span class="kw">fn </span>compile_fn_signature(ctx: <span class="kw-2">&amp;</span>ModuleCompileCtx&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, fn_id: DefId) {
     <span class="kw">let </span>(arg_types, ret_type) = ctx.ctx.program.function_signatures.get(<span class="kw-2">&amp;</span>fn_id).unwrap();
     <span class="kw">let </span>body = ctx.ctx.program.functions.get(<span class="kw-2">&amp;</span>fn_id).unwrap();
-    <span class="macro">info!</span>(<span class="string">"compiling fn sig: {}"</span>, body.name);
+    <span class="macro">trace!</span>(<span class="string">"compiling fn sig: {}"</span>, body.name);
 
     <span class="kw">let </span>args: Vec&lt;BasicMetadataTypeEnum&gt; = arg_types
         .iter()
@@ -1356,7 +1379,7 @@
 
 <span class="kw">fn </span>compile_fn(ctx: <span class="kw-2">&amp;</span>ModuleCompileCtx, fn_id: DefId) -&gt; <span class="prelude-ty">Result</span>&lt;(), BuilderError&gt; {
     <span class="kw">let </span>body = ctx.ctx.program.functions.get(<span class="kw-2">&amp;</span>fn_id).unwrap();
-    <span class="macro">info!</span>(<span class="string">"compiling fn body: {}"</span>, body.name);
+    <span class="macro">trace!</span>(<span class="string">"compiling fn body: {}"</span>, body.name);
 
     <span class="kw">let </span>fn_value = ctx.module.get_function(<span class="kw-2">&amp;</span>body.name).unwrap();
     <span class="kw">let </span>di_program = fn_value.get_subprogram().unwrap();
@@ -1457,14 +1480,14 @@
     ctx.builder.build_unconditional_branch(blocks[<span class="number">0</span>])<span class="question-mark">?</span>;
 
     <span class="kw">for </span>(block, llvm_block) <span class="kw">in </span>body.blocks.iter().zip(<span class="kw-2">&amp;</span>blocks) {
-        <span class="macro">info!</span>(<span class="string">"compiling block"</span>);
+        <span class="macro">trace!</span>(<span class="string">"compiling block"</span>);
         ctx.builder.position_at_end(<span class="kw-2">*</span>llvm_block);
         <span class="kw">for </span>stmt <span class="kw">in </span><span class="kw-2">&amp;</span>block.statements {
             <span class="kw">if let </span><span class="prelude-val">Some</span>(span) = stmt.span {
                 debug_loc = ctx.set_debug_loc(debug_loc.get_scope(), span);
             }
 
-            <span class="macro">info!</span>(<span class="string">"compiling stmt"</span>);
+            <span class="macro">trace!</span>(<span class="string">"compiling stmt"</span>);
             <span class="kw">match </span><span class="kw-2">&amp;</span>stmt.kind {
                 ir::StatementKind::Assign(place, rvalue) =&gt; {
                     <span class="kw">let </span>local = <span class="kw-2">&amp;</span>body.locals[place.local];
@@ -1523,7 +1546,7 @@
             }
         }
 
-        <span class="macro">info!</span>(<span class="string">"compiling terminator"</span>);
+        <span class="macro">trace!</span>(<span class="string">"compiling terminator"</span>);
         <span class="kw">match </span><span class="kw-2">&amp;</span>block.terminator {
             ir::Terminator::Target(id) =&gt; {
                 ctx.builder.build_unconditional_branch(blocks[<span class="kw-2">*</span>id])<span class="question-mark">?</span>;
@@ -1543,18 +1566,14 @@
                 discriminator,
                 targets,
             } =&gt; {
-                <span class="kw">let </span>(condition, condition_ty) =
+                <span class="kw">let </span>(condition, _condition_ty) =
                     compile_load_operand(ctx, fn_id, <span class="kw-2">&amp;</span>locals, discriminator)<span class="question-mark">?</span>;
                 <span class="kw">let </span>cond = condition.into_int_value();
-                <span class="macro">dbg!</span>(<span class="kw-2">&amp;</span>cond);
-                <span class="macro">dbg!</span>(<span class="kw-2">&amp;</span>condition_ty);
-
                 <span class="kw">let </span><span class="kw-2">mut </span>cases = Vec::new();
 
                 <span class="kw">for </span>(value, target) <span class="kw">in </span>targets.values.iter().zip(targets.targets.iter()) {
                     <span class="kw">let </span>target = <span class="kw-2">*</span>target;
                     <span class="kw">let </span>ty_kind = value.get_type();
-                    <span class="macro">dbg!</span>(<span class="kw-2">&amp;</span>ty_kind);
                     <span class="kw">let </span>block = blocks[target];
                     <span class="kw">let </span>value = compile_value(
                         ctx,
@@ -1565,7 +1584,6 @@
                         },
                     )<span class="question-mark">?
                     </span>.into_int_value();
-                    <span class="macro">dbg!</span>(<span class="kw-2">&amp;</span>value);
                     cases.push((value, block));
                 }
 

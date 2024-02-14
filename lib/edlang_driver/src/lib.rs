@@ -7,7 +7,7 @@ use edlang_lowering::lower_modules;
 use edlang_session::{DebugInfo, OptLevel, Session};
 
 #[derive(Parser, Debug)]
-#[command(author, version, about, long_about = None, bin_name = "edlang")]
+#[command(author, version, about = "edlang compiler driver", long_about = None, bin_name = "edlang")]
 pub struct CompilerArgs {
     /// The input file.
     input: PathBuf,
@@ -16,18 +16,33 @@ pub struct CompilerArgs {
     #[arg(short, long, default_value_t = false)]
     release: bool,
 
+    /// Set the optimization level, 0,1,2,3
+    #[arg(short = 'O', long)]
+    optlevel: Option<u8>,
+
+    /// Always add debug info
+    #[arg(long)]
+    debug_info: Option<bool>,
+
     /// Build as a library.
     #[arg(short, long, default_value_t = false)]
     library: bool,
 
-    #[arg(long, default_value_t = false)]
-    mlir: bool,
-
+    /// Print the edlang AST
     #[arg(long, default_value_t = false)]
     ast: bool,
 
+    /// Print the edlang IR
     #[arg(long, default_value_t = false)]
     ir: bool,
+
+    /// Output llvm ir
+    #[arg(long, default_value_t = false)]
+    llvm: bool,
+
+    /// Output asm
+    #[arg(long, default_value_t = false)]
+    asm: bool,
 }
 
 pub fn main() -> Result<(), Box<dyn Error>> {
@@ -59,19 +74,34 @@ pub fn main() -> Result<(), Box<dyn Error>> {
     }
     let output_file = target_dir.join(PathBuf::from(args.input.file_name().unwrap()));
     let output_file = if args.library {
-        output_file.with_extension("so")
+        output_file.with_extension(Session::get_platform_library_ext())
+    } else if cfg!(target_os = "windows") {
+        output_file.with_extension("exe")
     } else {
         output_file.with_extension("")
     };
 
     let session = Session {
         file_path: args.input,
-        debug_info: if args.release {
+        debug_info: if let Some(debug_info) = args.debug_info {
+            if debug_info {
+                DebugInfo::Full
+            } else {
+                DebugInfo::None
+            }
+        } else if args.release {
             DebugInfo::None
         } else {
             DebugInfo::Full
         },
-        optlevel: if args.release {
+        optlevel: if let Some(optlevel) = args.optlevel {
+            match optlevel {
+                0 => OptLevel::None,
+                1 => OptLevel::Less,
+                2 => OptLevel::Default,
+                _ => OptLevel::Aggressive,
+            }
+        } else if args.release {
             OptLevel::Aggressive
         } else {
             OptLevel::None
@@ -80,8 +110,15 @@ pub fn main() -> Result<(), Box<dyn Error>> {
         library: args.library,
         target_dir,
         output_file,
+        output_asm: args.asm,
+        output_llvm: args.llvm,
     };
-    tracing::debug!("Compiling with session: {:#?}", session);
+    tracing::debug!("Input file: {:#?}", session.file_path);
+    tracing::debug!("Target dir: {:#?}", session.target_dir);
+    tracing::debug!("Output file: {:#?}", session.output_file);
+    tracing::debug!("Is library: {:#?}", session.library);
+    tracing::debug!("Optlevel: {:#?}", session.optlevel);
+    tracing::debug!("Debug Info: {:#?}", session.debug_info);
 
     if args.ast {
         println!("{:#?}", module);
@@ -98,9 +135,9 @@ pub fn main() -> Result<(), Box<dyn Error>> {
     let object_path = edlang_codegen_llvm::compile(&session, &program_ir)?;
 
     if session.library {
-        link_shared_lib(&object_path, &session.output_file.with_extension("so"))?;
+        link_shared_lib(&object_path, &session.output_file)?;
     } else {
-        link_binary(&object_path, &session.output_file.with_extension(""))?;
+        link_binary(&object_path, &session.output_file)?;
     }
 
     let elapsed = start_time.elapsed();

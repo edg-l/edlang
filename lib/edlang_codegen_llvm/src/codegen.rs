@@ -17,7 +17,7 @@ use inkwell::{
 };
 use ir::{LocalKind, ModuleBody, ProgramBody, TypeInfo, ValueTree};
 use llvm_sys::debuginfo::LLVMDIFlagPublic;
-use tracing::info;
+use tracing::{info, trace};
 
 #[derive(Debug, Clone, Copy)]
 struct CompileCtx<'a> {
@@ -78,8 +78,17 @@ pub fn compile(session: &Session, program: &ProgramBody) -> Result<PathBuf, Box<
             &triple,
             cpu_name.to_str()?,
             cpu_features.to_str()?,
-            inkwell::OptimizationLevel::Aggressive,
-            inkwell::targets::RelocMode::Default,
+            match session.optlevel {
+                edlang_session::OptLevel::None => inkwell::OptimizationLevel::None,
+                edlang_session::OptLevel::Less => inkwell::OptimizationLevel::Less,
+                edlang_session::OptLevel::Default => inkwell::OptimizationLevel::Default,
+                edlang_session::OptLevel::Aggressive => inkwell::OptimizationLevel::Aggressive,
+            },
+            if session.library {
+                inkwell::targets::RelocMode::DynamicNoPic
+            } else {
+                inkwell::targets::RelocMode::Default
+            },
             inkwell::targets::CodeModel::Default,
         )
         .unwrap();
@@ -131,15 +140,20 @@ pub fn compile(session: &Session, program: &ProgramBody) -> Result<PathBuf, Box<
         module_ctx.di_builder.finalize();
         module_ctx.module.verify()?;
 
-        module_ctx
-            .module
-            .print_to_file(session.output_file.with_extension("ll"))?;
+        if session.output_llvm {
+            module_ctx
+                .module
+                .print_to_file(session.output_file.with_extension("ll"))?;
+        }
 
-        machine.write_to_file(
-            &module_ctx.module,
-            inkwell::targets::FileType::Assembly,
-            &session.output_file.with_extension("asm"),
-        )?;
+        if session.output_asm {
+            machine.write_to_file(
+                &module_ctx.module,
+                inkwell::targets::FileType::Assembly,
+                &session.output_file.with_extension("asm"),
+            )?;
+        }
+
         machine.write_to_file(
             &module_ctx.module,
             inkwell::targets::FileType::Object,
@@ -154,7 +168,7 @@ pub fn compile(session: &Session, program: &ProgramBody) -> Result<PathBuf, Box<
 
 fn compile_module(ctx: &mut ModuleCompileCtx, module_id: DefId) {
     let module = ctx.ctx.program.modules.get(&module_id).unwrap();
-    info!("compiling module");
+    trace!("compiling module");
     for id in module.functions.iter() {
         compile_fn_signature(ctx, *id);
     }
@@ -167,7 +181,7 @@ fn compile_module(ctx: &mut ModuleCompileCtx, module_id: DefId) {
 fn compile_fn_signature(ctx: &ModuleCompileCtx<'_, '_>, fn_id: DefId) {
     let (arg_types, ret_type) = ctx.ctx.program.function_signatures.get(&fn_id).unwrap();
     let body = ctx.ctx.program.functions.get(&fn_id).unwrap();
-    info!("compiling fn sig: {}", body.name);
+    trace!("compiling fn sig: {}", body.name);
 
     let args: Vec<BasicMetadataTypeEnum> = arg_types
         .iter()
@@ -242,7 +256,7 @@ fn compile_fn_signature(ctx: &ModuleCompileCtx<'_, '_>, fn_id: DefId) {
 
 fn compile_fn(ctx: &ModuleCompileCtx, fn_id: DefId) -> Result<(), BuilderError> {
     let body = ctx.ctx.program.functions.get(&fn_id).unwrap();
-    info!("compiling fn body: {}", body.name);
+    trace!("compiling fn body: {}", body.name);
 
     let fn_value = ctx.module.get_function(&body.name).unwrap();
     let di_program = fn_value.get_subprogram().unwrap();
@@ -343,14 +357,14 @@ fn compile_fn(ctx: &ModuleCompileCtx, fn_id: DefId) -> Result<(), BuilderError> 
     ctx.builder.build_unconditional_branch(blocks[0])?;
 
     for (block, llvm_block) in body.blocks.iter().zip(&blocks) {
-        info!("compiling block");
+        trace!("compiling block");
         ctx.builder.position_at_end(*llvm_block);
         for stmt in &block.statements {
             if let Some(span) = stmt.span {
                 debug_loc = ctx.set_debug_loc(debug_loc.get_scope(), span);
             }
 
-            info!("compiling stmt");
+            trace!("compiling stmt");
             match &stmt.kind {
                 ir::StatementKind::Assign(place, rvalue) => {
                     let local = &body.locals[place.local];
@@ -409,7 +423,7 @@ fn compile_fn(ctx: &ModuleCompileCtx, fn_id: DefId) -> Result<(), BuilderError> 
             }
         }
 
-        info!("compiling terminator");
+        trace!("compiling terminator");
         match &block.terminator {
             ir::Terminator::Target(id) => {
                 ctx.builder.build_unconditional_branch(blocks[*id])?;
@@ -429,18 +443,14 @@ fn compile_fn(ctx: &ModuleCompileCtx, fn_id: DefId) -> Result<(), BuilderError> 
                 discriminator,
                 targets,
             } => {
-                let (condition, condition_ty) =
+                let (condition, _condition_ty) =
                     compile_load_operand(ctx, fn_id, &locals, discriminator)?;
                 let cond = condition.into_int_value();
-                dbg!(&cond);
-                dbg!(&condition_ty);
-
                 let mut cases = Vec::new();
 
                 for (value, target) in targets.values.iter().zip(targets.targets.iter()) {
                     let target = *target;
                     let ty_kind = value.get_type();
-                    dbg!(&ty_kind);
                     let block = blocks[target];
                     let value = compile_value(
                         ctx,
@@ -451,7 +461,6 @@ fn compile_fn(ctx: &ModuleCompileCtx, fn_id: DefId) -> Result<(), BuilderError> 
                         },
                     )?
                     .into_int_value();
-                    dbg!(&value);
                     cases.push((value, block));
                 }
 

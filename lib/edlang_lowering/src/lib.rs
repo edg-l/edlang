@@ -210,12 +210,20 @@ fn lower_if_stmt(builder: &mut BodyBuilder, info: &ast::IfStmt, ret_type: &TypeI
     }
 
     // keet idx to change terminator
-    let last_then_block_idx = builder.body.blocks.len();
-    let statements = std::mem::take(&mut builder.statements);
-    builder.body.blocks.push(BasicBlock {
-        statements: statements.into(),
-        terminator: Terminator::Unreachable,
-    });
+    let last_then_block_idx = if !matches!(
+        builder.body.blocks.last().unwrap().terminator,
+        Terminator::Return
+    ) {
+        let idx = builder.body.blocks.len();
+        let statements = std::mem::take(&mut builder.statements);
+        builder.body.blocks.push(BasicBlock {
+            statements: statements.into(),
+            terminator: Terminator::Unreachable,
+        });
+        Some(idx)
+    } else {
+        None
+    };
 
     let first_else_block_idx = builder.body.blocks.len();
 
@@ -225,12 +233,20 @@ fn lower_if_stmt(builder: &mut BodyBuilder, info: &ast::IfStmt, ret_type: &TypeI
         }
     }
 
-    let last_else_block_idx = builder.body.blocks.len();
-    let statements = std::mem::take(&mut builder.statements);
-    builder.body.blocks.push(BasicBlock {
-        statements: statements.into(),
-        terminator: Terminator::Unreachable,
-    });
+    let last_else_block_idx = if !matches!(
+        builder.body.blocks.last().unwrap().terminator,
+        Terminator::Return
+    ) {
+        let idx = builder.body.blocks.len();
+        let statements = std::mem::take(&mut builder.statements);
+        builder.body.blocks.push(BasicBlock {
+            statements: statements.into(),
+            terminator: Terminator::Unreachable,
+        });
+        Some(idx)
+    } else {
+        None
+    };
 
     let targets = SwitchTarget {
         values: vec![TypeKind::Bool.get_falsy_value()],
@@ -244,8 +260,13 @@ fn lower_if_stmt(builder: &mut BodyBuilder, info: &ast::IfStmt, ret_type: &TypeI
     builder.body.blocks[current_block_idx].terminator = kind;
 
     let next_block_idx = builder.body.blocks.len();
-    builder.body.blocks[last_then_block_idx].terminator = Terminator::Target(next_block_idx);
-    builder.body.blocks[last_else_block_idx].terminator = Terminator::Target(next_block_idx);
+    if let Some(idx) = last_then_block_idx {
+        builder.body.blocks[idx].terminator = Terminator::Target(next_block_idx);
+    }
+
+    if let Some(idx) = last_else_block_idx {
+        builder.body.blocks[idx].terminator = Terminator::Target(next_block_idx);
+    }
 }
 
 fn lower_let(builder: &mut BodyBuilder, info: &ast::LetStmt) {

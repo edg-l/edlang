@@ -13,7 +13,6 @@ repository = "https://github.com/edg-l/edlang"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bumpalo = { version = "3.14.0", features = ["std"] }
 edlang_ir = { version = "0.0.1-alpha.3", path = "../edlang_ir" }
 edlang_parser = { version = "0.0.1-alpha.3", path = "../edlang_parser" }
 edlang_session = { version = "0.0.1-alpha.3", path = "../edlang_session" }
@@ -21,6 +20,3 @@ llvm-sys = "170.0.1"
 inkwell = { git = "https://github.com/TheDan64/inkwell", rev = "c044e3cd8d92972ca75b374fb6c5a2794f5b53ca", features = ["llvm17-0"] }
 tracing = { workspace = true }
 edlang_span = { version = "0.0.1-alpha.3", path = "../edlang_span" }
-
-[build-dependencies]
-cc = "1.0.83"

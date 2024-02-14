@@ -97,6 +97,7 @@ pub struct DebugInfo {
 pub struct BasicBlock {
     pub statements: SmallVec<[Statement; 8]>,
     pub terminator: Terminator,
+    pub terminator_span: Option<Span>,
 }
 
 #[derive(Debug, Clone)]
@@ -202,6 +203,7 @@ pub enum TypeKind {
     Uint(UintTy),
     Float(FloatTy),
     FnDef(DefId, Vec<TypeInfo>), // The vec are generic types, not arg types
+    Ptr(Box<TypeInfo>),
 }
 
 impl TypeKind {
@@ -232,6 +234,7 @@ impl TypeKind {
             Self::Float(_) => todo!(),
             TypeKind::Unit => unreachable!(),
             TypeKind::FnDef(_, _) => unreachable!(),
+            TypeKind::Ptr(_pointee) => todo!(),
         }
     }
 }
@@ -298,6 +301,7 @@ impl ValueTree {
                 ConstValue::U128(_) => TypeKind::Uint(UintTy::U8),
                 ConstValue::F32(_) => TypeKind::Float(FloatTy::F32),
                 ConstValue::F64(_) => TypeKind::Float(FloatTy::F64),
+                ConstValue::Char(_) => TypeKind::Char,
             },
             ValueTree::Branch(_) => todo!(),
         }
@@ -428,6 +432,7 @@ pub enum UnOp {
 #[derive(Debug, Clone, Copy)]
 pub enum ConstValue {
     Bool(bool),
+    Char(char),
     I8(i8),
     I16(i16),
     I32(i32),

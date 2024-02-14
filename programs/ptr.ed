@@ -1,0 +1,12 @@
+mod Main {
+
+    pub fn main(argc: i64, argv: ptr<char>) -> i64 {
+        let mut a: i64 = 0;
+
+        if argc > 2 {
+            a = 1;
+        }
+
+        return a;
+    }
+}

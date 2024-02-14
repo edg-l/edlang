@@ -14,6 +14,7 @@ use inkwell::{
     targets::{InitializationConfig, Target, TargetData, TargetMachine},
     types::{AnyType, BasicMetadataTypeEnum, BasicType},
     values::{BasicValue, BasicValueEnum, PointerValue},
+    AddressSpace,
 };
 use ir::{LocalKind, ModuleBody, ProgramBody, TypeInfo, ValueTree};
 use llvm_sys::debuginfo::LLVMDIFlagPublic;
@@ -102,6 +103,7 @@ pub fn compile(session: &Session, program: &ProgramBody) -> Result<PathBuf, Box<
         let llvm_module = context.create_module(&module.name);
         llvm_module.set_source_file_name(&filename);
         llvm_module.set_triple(&triple);
+        llvm_module.set_data_layout(&machine.get_target_data().get_data_layout());
         let (di_builder, di_unit) = llvm_module.create_debug_info_builder(
             true,
             inkwell::debug_info::DWARFSourceLanguage::Rust,
@@ -368,7 +370,7 @@ fn compile_fn(ctx: &ModuleCompileCtx, fn_id: DefId) -> Result<(), BuilderError> 
                 debug_loc = ctx.set_debug_loc(debug_loc.get_scope(), span);
             }
 
-            trace!("compiling stmt {}: {:?}", idx, stmt.kind);
+            trace!("compiling stmt {}: {:?}", idx, stmt);
             match &stmt.kind {
                 ir::StatementKind::Assign(place, rvalue) => {
                     let local = &body.locals[place.local];
@@ -428,6 +430,9 @@ fn compile_fn(ctx: &ModuleCompileCtx, fn_id: DefId) -> Result<(), BuilderError> 
         }
 
         trace!("compiling terminator: {:?}", block.terminator);
+        if let Some(span) = block.terminator_span {
+            debug_loc = ctx.set_debug_loc(debug_loc.get_scope(), span);
+        }
         match &block.terminator {
             ir::Terminator::Target(id) => {
                 ctx.builder.build_unconditional_branch(blocks[*id])?;
@@ -954,6 +959,10 @@ fn compile_value<'ctx>(
                 .const_float((*x) as f64)
                 .as_basic_value_enum(),
             ir::ConstValue::F64(x) => ty.into_float_type().const_float(*x).as_basic_value_enum(),
+            ir::ConstValue::Char(x) => ty
+                .into_int_type()
+                .const_int((*x) as u64, false)
+                .as_basic_value_enum(),
         },
         ValueTree::Branch(_) => todo!(),
     })
@@ -1022,6 +1031,12 @@ fn compile_basic_type<'ctx>(
         ir::TypeKind::FnDef(_def_id, _generic_args) => {
             panic!()
         }
+        ir::TypeKind::Ptr(_pointee) => ctx
+            .ctx
+            .context
+            .ptr_sized_int_type(&ctx.target_data, None)
+            .ptr_type(AddressSpace::default())
+            .as_basic_type_enum(),
     }
 }
 
@@ -1031,79 +1046,80 @@ fn compile_debug_type<'ctx>(ctx: &ModuleCompileCtx<'ctx, '_>, ty: &ir::TypeInfo)
     // 4 = float
     // 5 = signed
     // 11 = numeric string
+    // https://dwarfstd.org/doc/DWARF5.pdf#section.7.8
     match &ty.kind {
         ir::TypeKind::Unit => todo!(),
         ir::TypeKind::Bool => ctx
             .di_builder
-            .create_basic_type("bool", 1, 2, LLVMDIFlagPublic)
+            .create_basic_type("bool", 1, 0x2, LLVMDIFlagPublic)
             .unwrap()
             .as_type(),
         ir::TypeKind::Char => ctx
             .di_builder
-            .create_basic_type("char", 1, 6, LLVMDIFlagPublic)
+            .create_basic_type("char", 8, 0x6, LLVMDIFlagPublic)
             .unwrap()
             .as_type(),
         ir::TypeKind::Int(ty) => match ty {
             ir::IntTy::I128 => ctx
                 .di_builder
-                .create_basic_type("i128", 128, 5, LLVMDIFlagPublic)
+                .create_basic_type("i128", 128, 0x5, LLVMDIFlagPublic)
                 .unwrap()
                 .as_type(),
             ir::IntTy::I64 => ctx
                 .di_builder
-                .create_basic_type("i64", 64, 5, LLVMDIFlagPublic)
+                .create_basic_type("i64", 64, 0x5, LLVMDIFlagPublic)
                 .unwrap()
                 .as_type(),
             ir::IntTy::I32 => ctx
                 .di_builder
-                .create_basic_type("i32", 32, 5, LLVMDIFlagPublic)
+                .create_basic_type("i32", 32, 0x5, LLVMDIFlagPublic)
                 .unwrap()
                 .as_type(),
             ir::IntTy::I16 => ctx
                 .di_builder
-                .create_basic_type("i16", 16, 5, LLVMDIFlagPublic)
+                .create_basic_type("i16", 16, 0x5, LLVMDIFlagPublic)
                 .unwrap()
                 .as_type(),
             ir::IntTy::I8 => ctx
                 .di_builder
-                .create_basic_type("i8", 8, 5, LLVMDIFlagPublic)
+                .create_basic_type("i8", 8, 0x5, LLVMDIFlagPublic)
                 .unwrap()
                 .as_type(),
             ir::IntTy::Isize => ctx
                 .di_builder
-                .create_basic_type("isize", 64, 5, LLVMDIFlagPublic)
+                .create_basic_type("isize", 64, 0x5, LLVMDIFlagPublic)
                 .unwrap()
                 .as_type(),
         },
         ir::TypeKind::Uint(ty) => match ty {
             ir::UintTy::U128 => ctx
                 .di_builder
-                .create_basic_type("u128", 128, 7, LLVMDIFlagPublic)
+                .create_basic_type("u128", 128, 0x7, LLVMDIFlagPublic)
                 .unwrap()
                 .as_type(),
             ir::UintTy::U64 => ctx
                 .di_builder
-                .create_basic_type("u64", 64, 7, LLVMDIFlagPublic)
+                .create_basic_type("u64", 64, 0x7, LLVMDIFlagPublic)
                 .unwrap()
                 .as_type(),
             ir::UintTy::U32 => ctx
                 .di_builder
-                .create_basic_type("u32", 32, 7, LLVMDIFlagPublic)
+                .create_basic_type("u32", 32, 0x7, LLVMDIFlagPublic)
                 .unwrap()
                 .as_type(),
             ir::UintTy::U16 => ctx
                 .di_builder
-                .create_basic_type("u16", 16, 7, LLVMDIFlagPublic)
+                .create_basic_type("u16", 16, 0x7, LLVMDIFlagPublic)
                 .unwrap()
                 .as_type(),
             ir::UintTy::U8 => ctx
                 .di_builder
-                .create_basic_type("u8", 8, 7, LLVMDIFlagPublic)
+                .create_basic_type("u8", 8, 0x7, LLVMDIFlagPublic)
                 .unwrap()
                 .as_type(),
             ir::UintTy::Usize => ctx
                 .di_builder
-                .create_basic_type("usize", 64, 7, LLVMDIFlagPublic)
+                .create_basic_type("usize", 64, 0x7, LLVMDIFlagPublic)
                 .unwrap()
                 .as_type(),
         },
@@ -1122,5 +1138,15 @@ fn compile_debug_type<'ctx>(ctx: &ModuleCompileCtx<'ctx, '_>, ty: &ir::TypeInfo)
         ir::TypeKind::FnDef(_def_id, _generic_args) => {
             panic!()
         }
+        ir::TypeKind::Ptr(pointee) => ctx
+            .di_builder
+            .create_pointer_type(
+                &format!("ptr<{:?}>", pointee.kind),
+                compile_debug_type(ctx, pointee),
+                (ctx.target_data.get_pointer_byte_size(None) * 8).into(),
+                ctx.target_data.get_pointer_byte_size(None),
+                AddressSpace::default(),
+            )
+            .as_type(),
     }
 }

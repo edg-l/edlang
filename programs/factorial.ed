@@ -1,0 +1,14 @@
+mod Main {
+    pub fn main() -> i32 {
+        let b: i32 = factorial(2);
+        return b;
+    }
+
+    fn factorial(n: i32) -> i32 {
+        if n == 1 {
+            return n;
+        } else {
+            return n * factorial(n - 1);
+        }
+    }
+}

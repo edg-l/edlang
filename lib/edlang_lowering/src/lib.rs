@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use ast::{BinaryOp, ModuleStatement, WhileStmt};
+use ast::{BinaryOp, ModuleStatement, Span, WhileStmt};
 use common::{BodyBuilder, BuildCtx};
 use edlang_ast as ast;
 use edlang_ir as ir;
@@ -184,6 +184,7 @@ fn lower_while(builder: &mut BodyBuilder, info: &WhileStmt, ret_type: &TypeKind)
     builder.body.blocks.push(BasicBlock {
         statements: statements.into(),
         terminator: Terminator::Target(builder.body.blocks.len() + 1),
+        terminator_span: Some(info.block.span),
     });
 
     let (discriminator, discriminator_type) = lower_expr(builder, &info.condition, None);
@@ -195,7 +196,7 @@ fn lower_while(builder: &mut BodyBuilder, info: &WhileStmt, ret_type: &TypeKind)
     };
 
     builder.statements.push(Statement {
-        span: None,
+        span: Some(info.span),
         kind: StatementKind::Assign(place.clone(), discriminator),
     });
 
@@ -206,6 +207,7 @@ fn lower_while(builder: &mut BodyBuilder, info: &WhileStmt, ret_type: &TypeKind)
     builder.body.blocks.push(BasicBlock {
         statements: statements.into(),
         terminator: Terminator::Unreachable,
+        terminator_span: Some(info.block.span),
     });
 
     // keep idx for switch targets
@@ -226,6 +228,7 @@ fn lower_while(builder: &mut BodyBuilder, info: &WhileStmt, ret_type: &TypeKind)
         builder.body.blocks.push(BasicBlock {
             statements: statements.into(),
             terminator: Terminator::Unreachable,
+            terminator_span: Some(Span::new(info.block.span.hi, info.block.span.hi)),
         });
         Some(idx)
     } else {
@@ -261,7 +264,7 @@ fn lower_if_stmt(builder: &mut BodyBuilder, info: &ast::IfStmt, ret_type: &TypeK
     };
 
     builder.statements.push(Statement {
-        span: None,
+        span: Some(info.span),
         kind: StatementKind::Assign(place.clone(), condition),
     });
 
@@ -272,6 +275,7 @@ fn lower_if_stmt(builder: &mut BodyBuilder, info: &ast::IfStmt, ret_type: &TypeK
     builder.body.blocks.push(BasicBlock {
         statements: statements.into(),
         terminator: Terminator::Unreachable,
+        terminator_span: Some(info.span),
     });
 
     // keep idx for switch targets
@@ -291,6 +295,7 @@ fn lower_if_stmt(builder: &mut BodyBuilder, info: &ast::IfStmt, ret_type: &TypeK
         builder.body.blocks.push(BasicBlock {
             statements: statements.into(),
             terminator: Terminator::Unreachable,
+            terminator_span: Some(Span::new(info.then_block.span.hi, info.then_block.span.hi)),
         });
         Some(idx)
     } else {
@@ -314,6 +319,10 @@ fn lower_if_stmt(builder: &mut BodyBuilder, info: &ast::IfStmt, ret_type: &TypeK
         builder.body.blocks.push(BasicBlock {
             statements: statements.into(),
             terminator: Terminator::Unreachable,
+            terminator_span: info
+                .else_block
+                .as_ref()
+                .map(|x| Span::new(x.span.hi, x.span.hi)),
         });
         Some(idx)
     } else {
@@ -383,7 +392,6 @@ fn find_expr_type(builder: &mut BodyBuilder, info: &ast::Expression) -> Option<T
             ast::ValueExpr::Str { .. } => todo!(),
             ast::ValueExpr::Path(path) => {
                 // todo: handle full path
-                dbg!("found local");
                 builder.get_local(&path.first.name)?.ty.kind.clone()
             }
         },
@@ -607,6 +615,7 @@ fn lower_fn_call(builder: &mut BodyBuilder, info: &ast::FnCallExpr) -> (Operand,
     builder.body.blocks.push(BasicBlock {
         statements: statements.into(),
         terminator: kind,
+        terminator_span: Some(info.span),
     });
 
     (Operand::Move(dest_place), ret_ty.kind.clone())
@@ -755,7 +764,7 @@ fn lower_return(builder: &mut BodyBuilder, info: &ast::ReturnStmt, return_type: 
     if let Some(value_expr) = &info.value {
         let (value, _ty) = lower_expr(builder, value_expr, Some(return_type));
         builder.statements.push(Statement {
-            span: None,
+            span: Some(info.span),
             kind: StatementKind::Assign(
                 Place {
                     local: builder.ret_local,
@@ -770,6 +779,7 @@ fn lower_return(builder: &mut BodyBuilder, info: &ast::ReturnStmt, return_type: 
     builder.body.blocks.push(BasicBlock {
         statements: statements.into(),
         terminator: Terminator::Return,
+        terminator_span: Some(info.span),
     });
 }
 
@@ -789,7 +799,8 @@ fn lower_path(builder: &mut BodyBuilder, info: &ast::PathExpr) -> (ir::Place, Ty
     )
 }
 
-pub fn lower_type(_ctx: &BuildCtx, t: &ast::Type) -> ir::TypeInfo {
+#[allow(clippy::only_used_in_recursion)]
+pub fn lower_type(ctx: &BuildCtx, t: &ast::Type) -> ir::TypeInfo {
     match t.name.name.as_str() {
         "()" => ir::TypeInfo {
             span: Some(t.span),
@@ -835,6 +846,18 @@ pub fn lower_type(_ctx: &BuildCtx, t: &ast::Type) -> ir::TypeInfo {
             span: Some(t.span),
             kind: ir::TypeKind::Int(ir::IntTy::I128),
         },
-        _ => todo!(),
+        "char" => ir::TypeInfo {
+            span: Some(t.span),
+            kind: ir::TypeKind::Char,
+        },
+        "bool" => ir::TypeInfo {
+            span: Some(t.span),
+            kind: ir::TypeKind::Bool,
+        },
+        "ptr" => ir::TypeInfo {
+            span: Some(t.span),
+            kind: ir::TypeKind::Ptr(Box::new(lower_type(ctx, t.generics.first().unwrap()))),
+        },
+        x => todo!("{:?}", x),
     }
 }

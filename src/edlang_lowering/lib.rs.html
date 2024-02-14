@@ -835,6 +835,10 @@
 <a href="#834" id="834">834</a>
 <a href="#835" id="835">835</a>
 <a href="#836" id="836">836</a>
+<a href="#837" id="837">837</a>
+<a href="#838" id="838">838</a>
+<a href="#839" id="839">839</a>
+<a href="#840" id="840">840</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::HashMap;
 
 <span class="kw">use </span>ast::{BinaryOp, ModuleStatement, WhileStmt};
@@ -845,6 +849,7 @@
     BasicBlock, Body, DefId, Local, LocalKind, Operand, Place, ProgramBody, Statement,
     StatementKind, SwitchTarget, Terminator, TypeInfo, TypeKind,
 };
+<span class="kw">use </span>tracing::trace;
 
 <span class="kw">mod </span>common;
 <span class="kw">mod </span>prepass;
@@ -1219,7 +1224,8 @@
             ast::ValueExpr::Str { .. } =&gt; <span class="macro">todo!</span>(),
             ast::ValueExpr::Path(path) =&gt; {
                 <span class="comment">// todo: handle full path
-                </span>builder.get_local(<span class="kw-2">&amp;</span>path.first.name)<span class="question-mark">?</span>.ty.kind.clone()
+                </span><span class="macro">dbg!</span>(<span class="string">"found local"</span>);
+                builder.get_local(<span class="kw-2">&amp;</span>path.first.name)<span class="question-mark">?</span>.ty.kind.clone()
             }
         },
         ast::Expression::FnCall(info) =&gt; {
@@ -1284,9 +1290,11 @@
     rhs: <span class="kw-2">&amp;</span>ast::Expression,
     type_hint: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>TypeKind&gt;,
 ) -&gt; (ir::RValue, TypeKind) {
+    <span class="macro">trace!</span>(<span class="string">"lowering binary op: {:?}"</span>, op);
+
     <span class="kw">let </span>(lhs, lhs_ty) = <span class="kw">if </span>type_hint.is_none() {
         <span class="kw">let </span>ty = find_expr_type(builder, lhs)
-            .unwrap_or(find_expr_type(builder, rhs).expect(<span class="string">"cant find type"</span>));
+            .unwrap_or_else(|| find_expr_type(builder, rhs).expect(<span class="string">"cant find type"</span>));
         lower_expr(builder, lhs, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>ty))
     } <span class="kw">else </span>{
         lower_expr(builder, lhs, type_hint)

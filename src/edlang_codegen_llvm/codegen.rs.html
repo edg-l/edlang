@@ -1121,6 +1121,10 @@
 <a href="#1120" id="1120">1120</a>
 <a href="#1121" id="1121">1121</a>
 <a href="#1122" id="1122">1122</a>
+<a href="#1123" id="1123">1123</a>
+<a href="#1124" id="1124">1124</a>
+<a href="#1125" id="1125">1125</a>
+<a href="#1126" id="1126">1126</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{collections::HashMap, error::Error, path::PathBuf};
 
 <span class="kw">use </span>edlang_ir <span class="kw">as </span>ir;
@@ -1291,7 +1295,7 @@
 
 <span class="kw">fn </span>compile_module(ctx: <span class="kw-2">&amp;mut </span>ModuleCompileCtx, module_id: DefId) {
     <span class="kw">let </span>module = ctx.ctx.program.modules.get(<span class="kw-2">&amp;</span>module_id).unwrap();
-    <span class="macro">trace!</span>(<span class="string">"compiling module"</span>);
+    <span class="macro">trace!</span>(<span class="string">"compiling module: {:?}"</span>, module_id);
     <span class="kw">for </span>id <span class="kw">in </span>module.functions.iter() {
         compile_fn_signature(ctx, <span class="kw-2">*</span>id);
     }
@@ -1393,6 +1397,8 @@
     );
     debug_loc = ctx.set_debug_loc(lexical_block.as_debug_info_scope(), body.fn_span);
 
+    <span class="macro">trace!</span>(<span class="string">"compiling entry block"</span>);
+
     <span class="kw">let </span>block = ctx.ctx.context.append_basic_block(fn_value, <span class="string">"entry"</span>);
     ctx.builder.position_at_end(block);
 
@@ -1403,6 +1409,7 @@
     <span class="kw">let </span><span class="kw-2">mut </span>arg_counter = <span class="number">0</span>;
 
     <span class="kw">for </span>(index, local) <span class="kw">in </span>body.locals.iter().enumerate() {
+        <span class="macro">trace!</span>(<span class="string">"compiling local {}: {:?}"</span>, index, local);
         <span class="kw">if let </span><span class="prelude-val">Some</span>(span) = local.span {
             debug_loc = ctx.set_debug_loc(debug_loc.get_scope(), span);
         }
@@ -1467,6 +1474,7 @@
         }
     }
 
+    <span class="macro">trace!</span>(<span class="string">"creating blocks"</span>);
     <span class="kw">let </span><span class="kw-2">mut </span>blocks = Vec::with_capacity(body.blocks.len());
 
     <span class="kw">for </span>(index, _block) <span class="kw">in </span>body.blocks.iter().enumerate() {
@@ -1479,15 +1487,15 @@
 
     ctx.builder.build_unconditional_branch(blocks[<span class="number">0</span>])<span class="question-mark">?</span>;
 
-    <span class="kw">for </span>(block, llvm_block) <span class="kw">in </span>body.blocks.iter().zip(<span class="kw-2">&amp;</span>blocks) {
-        <span class="macro">trace!</span>(<span class="string">"compiling block"</span>);
+    <span class="kw">for </span>(block_idx, (block, llvm_block)) <span class="kw">in </span>body.blocks.iter().zip(<span class="kw-2">&amp;</span>blocks).enumerate() {
+        <span class="macro">trace!</span>(<span class="string">"compiling block {}"</span>, block_idx);
         ctx.builder.position_at_end(<span class="kw-2">*</span>llvm_block);
-        <span class="kw">for </span>stmt <span class="kw">in </span><span class="kw-2">&amp;</span>block.statements {
+        <span class="kw">for </span>(idx, stmt) <span class="kw">in </span>block.statements.iter().enumerate() {
             <span class="kw">if let </span><span class="prelude-val">Some</span>(span) = stmt.span {
                 debug_loc = ctx.set_debug_loc(debug_loc.get_scope(), span);
             }
 
-            <span class="macro">trace!</span>(<span class="string">"compiling stmt"</span>);
+            <span class="macro">trace!</span>(<span class="string">"compiling stmt {}: {:?}"</span>, idx, stmt.kind);
             <span class="kw">match </span><span class="kw-2">&amp;</span>stmt.kind {
                 ir::StatementKind::Assign(place, rvalue) =&gt; {
                     <span class="kw">let </span>local = <span class="kw-2">&amp;</span>body.locals[place.local];
@@ -1546,7 +1554,7 @@
             }
         }
 
-        <span class="macro">trace!</span>(<span class="string">"compiling terminator"</span>);
+        <span class="macro">trace!</span>(<span class="string">"compiling terminator: {:?}"</span>, block.terminator);
         <span class="kw">match </span><span class="kw-2">&amp;</span>block.terminator {
             ir::Terminator::Target(id) =&gt; {
                 ctx.builder.build_unconditional_branch(blocks[<span class="kw-2">*</span>id])<span class="question-mark">?</span>;

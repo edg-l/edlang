@@ -1,6 +1,6 @@
 [package]
 name = "edlang_driver"
-version = "0.0.1-alpha.4"
+version = "0.0.1-alpha.5"
 authors = ["Edgar Luque <edgar@edgarluque.com>"]
 description = "edlang compiler driver library"
 edition = "2021"
@@ -16,13 +16,13 @@ repository = "https://github.com/edg-l/edlang"
 ariadne = { version = "0.4.0", features = ["auto-color"] }
 clap = { version = "4.4.16", features = ["derive"] }
 color-eyre = "0.6.2"
-edlang_ast = { version = "0.0.1-alpha.4", path = "../edlang_ast" }
-edlang_check = { version = "0.0.1-alpha.4", path = "../edlang_check" }
-edlang_codegen_llvm = { version = "0.0.1-alpha.4", path = "../edlang_codegen_llvm" }
-edlang_ir = { version = "0.0.1-alpha.4", path = "../edlang_ir" }
-edlang_lowering = { version = "0.0.1-alpha.4", path = "../edlang_lowering" }
-edlang_parser = { version = "0.0.1-alpha.4", path = "../edlang_parser" }
-edlang_session = { version = "0.0.1-alpha.4", path = "../edlang_session" }
+edlang_ast = { version = "0.0.1-alpha.5", path = "../edlang_ast" }
+edlang_check = { version = "0.0.1-alpha.5", path = "../edlang_check" }
+edlang_codegen_llvm = { version = "0.0.1-alpha.5", path = "../edlang_codegen_llvm" }
+edlang_ir = { version = "0.0.1-alpha.5", path = "../edlang_ir" }
+edlang_lowering = { version = "0.0.1-alpha.5", path = "../edlang_lowering" }
+edlang_parser = { version = "0.0.1-alpha.5", path = "../edlang_parser" }
+edlang_session = { version = "0.0.1-alpha.5", path = "../edlang_session" }
 tracing = { workspace = true }
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 

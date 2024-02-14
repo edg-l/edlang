@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use edlang_ir::{Body, DefId, Local, ModuleBody, ProgramBody, Statement, TypeInfo, TypeKind};
+use edlang_ir::{Body, DefId, Local, ModuleBody, ProgramBody, Statement, TypeKind};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Default)]
 pub struct IdGenerator {
@@ -72,10 +72,7 @@ impl BodyBuilder {
 
     pub fn add_temp_local(&mut self, ty_kind: TypeKind) -> usize {
         let id = self.body.locals.len();
-        self.body.locals.push(Local::temp(TypeInfo {
-            span: None,
-            kind: ty_kind,
-        }));
+        self.body.locals.push(Local::temp(ty_kind));
         id
     }
 

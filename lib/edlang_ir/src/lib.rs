@@ -125,10 +125,13 @@ impl Local {
         }
     }
 
-    pub const fn temp(ty: TypeInfo) -> Self {
+    pub const fn temp(ty: TypeKind) -> Self {
         Self {
             span: None,
-            ty,
+            ty: TypeInfo {
+                span: None,
+                kind: ty,
+            },
             kind: LocalKind::Temp,
             debug_name: None,
             mutable: false,

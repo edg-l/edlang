@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.0.1-alpha.5] - 2024-02-14
+
+### Bug Fixes
+
+- Fix linker on distros like ubuntu
+- Ci improvements
+
 ## [0.0.1-alpha.4] - 2024-02-14
 
 ### Features
@@ -11,6 +18,7 @@ All notable changes to this project will be documented in this file.
 ### Miscellaneous Tasks
 
 - Update version
+- Changelog
 
 ## [0.0.1-alpha.3] - 2024-02-13
 

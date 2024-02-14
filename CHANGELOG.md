@@ -2,6 +2,33 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.0.1-alpha.4] - 2024-02-14
+
+### Features
+
+- Better cli and add tests
+
+### Miscellaneous Tasks
+
+- Update version
+
+## [0.0.1-alpha.3] - 2024-02-13
+
+### Bug Fixes
+
+- Add all fields to cargo.toml
+- Add doc field to cargo toml
+
+### Features
+
+- Properly version all crates
+- Add docs generation
+
+### Miscellaneous Tasks
+
+- Fix branch name
+- Fix doc ci
+
 ## [0.0.1-alpha.2] - 2024-02-13
 
 ### Features

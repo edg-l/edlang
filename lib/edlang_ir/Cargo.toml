@@ -1,6 +1,6 @@
 [package]
 name = "edlang_ir"
-version = "0.0.1-alpha.3"
+version = "0.0.1-alpha.4"
 authors = ["Edgar Luque <edgar@edgarluque.com>"]
 description = "edlang IR"
 edition = "2021"
@@ -13,5 +13,5 @@ repository = "https://github.com/edg-l/edlang"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-edlang_span = { version = "0.0.1-alpha.3", path = "../edlang_span" }
+edlang_span = { version = "0.0.1-alpha.4", path = "../edlang_span" }
 smallvec = "1.13.1"

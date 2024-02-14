@@ -839,9 +839,32 @@
 <a href="#838" id="838">838</a>
 <a href="#839" id="839">839</a>
 <a href="#840" id="840">840</a>
+<a href="#841" id="841">841</a>
+<a href="#842" id="842">842</a>
+<a href="#843" id="843">843</a>
+<a href="#844" id="844">844</a>
+<a href="#845" id="845">845</a>
+<a href="#846" id="846">846</a>
+<a href="#847" id="847">847</a>
+<a href="#848" id="848">848</a>
+<a href="#849" id="849">849</a>
+<a href="#850" id="850">850</a>
+<a href="#851" id="851">851</a>
+<a href="#852" id="852">852</a>
+<a href="#853" id="853">853</a>
+<a href="#854" id="854">854</a>
+<a href="#855" id="855">855</a>
+<a href="#856" id="856">856</a>
+<a href="#857" id="857">857</a>
+<a href="#858" id="858">858</a>
+<a href="#859" id="859">859</a>
+<a href="#860" id="860">860</a>
+<a href="#861" id="861">861</a>
+<a href="#862" id="862">862</a>
+<a href="#863" id="863">863</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::HashMap;
 
-<span class="kw">use </span>ast::{BinaryOp, ModuleStatement, WhileStmt};
+<span class="kw">use </span>ast::{BinaryOp, ModuleStatement, Span, WhileStmt};
 <span class="kw">use </span>common::{BodyBuilder, BuildCtx};
 <span class="kw">use </span>edlang_ast <span class="kw">as </span>ast;
 <span class="kw">use </span>edlang_ir <span class="kw">as </span>ir;
@@ -1025,6 +1048,7 @@
     builder.body.blocks.push(BasicBlock {
         statements: statements.into(),
         terminator: Terminator::Target(builder.body.blocks.len() + <span class="number">1</span>),
+        terminator_span: <span class="prelude-val">Some</span>(info.block.span),
     });
 
     <span class="kw">let </span>(discriminator, discriminator_type) = lower_expr(builder, <span class="kw-2">&amp;</span>info.condition, <span class="prelude-val">None</span>);
@@ -1036,7 +1060,7 @@
     };
 
     builder.statements.push(Statement {
-        span: <span class="prelude-val">None</span>,
+        span: <span class="prelude-val">Some</span>(info.span),
         kind: StatementKind::Assign(place.clone(), discriminator),
     });
 
@@ -1047,6 +1071,7 @@
     builder.body.blocks.push(BasicBlock {
         statements: statements.into(),
         terminator: Terminator::Unreachable,
+        terminator_span: <span class="prelude-val">Some</span>(info.block.span),
     });
 
     <span class="comment">// keep idx for switch targets
@@ -1067,6 +1092,7 @@
         builder.body.blocks.push(BasicBlock {
             statements: statements.into(),
             terminator: Terminator::Unreachable,
+            terminator_span: <span class="prelude-val">Some</span>(Span::new(info.block.span.hi, info.block.span.hi)),
         });
         <span class="prelude-val">Some</span>(idx)
     } <span class="kw">else </span>{
@@ -1102,7 +1128,7 @@
     };
 
     builder.statements.push(Statement {
-        span: <span class="prelude-val">None</span>,
+        span: <span class="prelude-val">Some</span>(info.span),
         kind: StatementKind::Assign(place.clone(), condition),
     });
 
@@ -1113,6 +1139,7 @@
     builder.body.blocks.push(BasicBlock {
         statements: statements.into(),
         terminator: Terminator::Unreachable,
+        terminator_span: <span class="prelude-val">Some</span>(info.span),
     });
 
     <span class="comment">// keep idx for switch targets
@@ -1132,6 +1159,7 @@
         builder.body.blocks.push(BasicBlock {
             statements: statements.into(),
             terminator: Terminator::Unreachable,
+            terminator_span: <span class="prelude-val">Some</span>(Span::new(info.then_block.span.hi, info.then_block.span.hi)),
         });
         <span class="prelude-val">Some</span>(idx)
     } <span class="kw">else </span>{
@@ -1155,6 +1183,10 @@
         builder.body.blocks.push(BasicBlock {
             statements: statements.into(),
             terminator: Terminator::Unreachable,
+            terminator_span: info
+                .else_block
+                .as_ref()
+                .map(|x| Span::new(x.span.hi, x.span.hi)),
         });
         <span class="prelude-val">Some</span>(idx)
     } <span class="kw">else </span>{
@@ -1224,8 +1256,7 @@
             ast::ValueExpr::Str { .. } =&gt; <span class="macro">todo!</span>(),
             ast::ValueExpr::Path(path) =&gt; {
                 <span class="comment">// todo: handle full path
-                </span><span class="macro">dbg!</span>(<span class="string">"found local"</span>);
-                builder.get_local(<span class="kw-2">&amp;</span>path.first.name)<span class="question-mark">?</span>.ty.kind.clone()
+                </span>builder.get_local(<span class="kw-2">&amp;</span>path.first.name)<span class="question-mark">?</span>.ty.kind.clone()
             }
         },
         ast::Expression::FnCall(info) =&gt; {
@@ -1448,6 +1479,7 @@
     builder.body.blocks.push(BasicBlock {
         statements: statements.into(),
         terminator: kind,
+        terminator_span: <span class="prelude-val">Some</span>(info.span),
     });
 
     (Operand::Move(dest_place), ret_ty.kind.clone())
@@ -1596,7 +1628,7 @@
     <span class="kw">if let </span><span class="prelude-val">Some</span>(value_expr) = <span class="kw-2">&amp;</span>info.value {
         <span class="kw">let </span>(value, _ty) = lower_expr(builder, value_expr, <span class="prelude-val">Some</span>(return_type));
         builder.statements.push(Statement {
-            span: <span class="prelude-val">None</span>,
+            span: <span class="prelude-val">Some</span>(info.span),
             kind: StatementKind::Assign(
                 Place {
                     local: builder.ret_local,
@@ -1611,6 +1643,7 @@
     builder.body.blocks.push(BasicBlock {
         statements: statements.into(),
         terminator: Terminator::Return,
+        terminator_span: <span class="prelude-val">Some</span>(info.span),
     });
 }
 
@@ -1630,7 +1663,8 @@
     )
 }
 
-<span class="kw">pub fn </span>lower_type(_ctx: <span class="kw-2">&amp;</span>BuildCtx, t: <span class="kw-2">&amp;</span>ast::Type) -&gt; ir::TypeInfo {
+<span class="attr">#[allow(clippy::only_used_in_recursion)]
+</span><span class="kw">pub fn </span>lower_type(ctx: <span class="kw-2">&amp;</span>BuildCtx, t: <span class="kw-2">&amp;</span>ast::Type) -&gt; ir::TypeInfo {
     <span class="kw">match </span>t.name.name.as_str() {
         <span class="string">"()" </span>=&gt; ir::TypeInfo {
             span: <span class="prelude-val">Some</span>(t.span),
@@ -1676,7 +1710,19 @@
             span: <span class="prelude-val">Some</span>(t.span),
             kind: ir::TypeKind::Int(ir::IntTy::I128),
         },
-        <span class="kw">_ </span>=&gt; <span class="macro">todo!</span>(),
+        <span class="string">"char" </span>=&gt; ir::TypeInfo {
+            span: <span class="prelude-val">Some</span>(t.span),
+            kind: ir::TypeKind::Char,
+        },
+        <span class="string">"bool" </span>=&gt; ir::TypeInfo {
+            span: <span class="prelude-val">Some</span>(t.span),
+            kind: ir::TypeKind::Bool,
+        },
+        <span class="string">"ptr" </span>=&gt; ir::TypeInfo {
+            span: <span class="prelude-val">Some</span>(t.span),
+            kind: ir::TypeKind::Ptr(Box::new(lower_type(ctx, t.generics.first().unwrap()))),
+        },
+        x =&gt; <span class="macro">todo!</span>(<span class="string">"{:?}"</span>, x),
     }
 }
 </code></pre></div></section></main></body></html>

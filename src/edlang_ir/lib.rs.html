@@ -442,6 +442,11 @@
 <a href="#441" id="441">441</a>
 <a href="#442" id="442">442</a>
 <a href="#443" id="443">443</a>
+<a href="#444" id="444">444</a>
+<a href="#445" id="445">445</a>
+<a href="#446" id="446">446</a>
+<a href="#447" id="447">447</a>
+<a href="#448" id="448">448</a>
 </pre></div><pre class="rust"><code><span class="comment">// Based on a cfg
 
 </span><span class="kw">use </span>std::collections::{BTreeMap, HashSet};
@@ -541,6 +546,7 @@
 </span><span class="kw">pub struct </span>BasicBlock {
     <span class="kw">pub </span>statements: SmallVec&lt;[Statement; <span class="number">8</span>]&gt;,
     <span class="kw">pub </span>terminator: Terminator,
+    <span class="kw">pub </span>terminator_span: <span class="prelude-ty">Option</span>&lt;Span&gt;,
 }
 
 <span class="attr">#[derive(Debug, Clone)]
@@ -646,7 +652,8 @@
     Uint(UintTy),
     Float(FloatTy),
     FnDef(DefId, Vec&lt;TypeInfo&gt;), <span class="comment">// The vec are generic types, not arg types
-</span>}
+    </span>Ptr(Box&lt;TypeInfo&gt;),
+}
 
 <span class="kw">impl </span>TypeKind {
     <span class="kw">pub fn </span>is_unit(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
@@ -676,6 +683,7 @@
             <span class="self">Self</span>::Float(<span class="kw">_</span>) =&gt; <span class="macro">todo!</span>(),
             TypeKind::Unit =&gt; <span class="macro">unreachable!</span>(),
             TypeKind::FnDef(<span class="kw">_</span>, <span class="kw">_</span>) =&gt; <span class="macro">unreachable!</span>(),
+            TypeKind::Ptr(_pointee) =&gt; <span class="macro">todo!</span>(),
         }
     }
 }
@@ -742,6 +750,7 @@
                 ConstValue::U128(<span class="kw">_</span>) =&gt; TypeKind::Uint(UintTy::U8),
                 ConstValue::F32(<span class="kw">_</span>) =&gt; TypeKind::Float(FloatTy::F32),
                 ConstValue::F64(<span class="kw">_</span>) =&gt; TypeKind::Float(FloatTy::F64),
+                ConstValue::Char(<span class="kw">_</span>) =&gt; TypeKind::Char,
             },
             ValueTree::Branch(<span class="kw">_</span>) =&gt; <span class="macro">todo!</span>(),
         }
@@ -872,6 +881,7 @@
 <span class="attr">#[derive(Debug, Clone, Copy)]
 </span><span class="kw">pub enum </span>ConstValue {
     Bool(bool),
+    Char(char),
     I8(i8),
     I16(i16),
     I32(i32),

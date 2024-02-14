@@ -1125,6 +1125,32 @@
 <a href="#1124" id="1124">1124</a>
 <a href="#1125" id="1125">1125</a>
 <a href="#1126" id="1126">1126</a>
+<a href="#1127" id="1127">1127</a>
+<a href="#1128" id="1128">1128</a>
+<a href="#1129" id="1129">1129</a>
+<a href="#1130" id="1130">1130</a>
+<a href="#1131" id="1131">1131</a>
+<a href="#1132" id="1132">1132</a>
+<a href="#1133" id="1133">1133</a>
+<a href="#1134" id="1134">1134</a>
+<a href="#1135" id="1135">1135</a>
+<a href="#1136" id="1136">1136</a>
+<a href="#1137" id="1137">1137</a>
+<a href="#1138" id="1138">1138</a>
+<a href="#1139" id="1139">1139</a>
+<a href="#1140" id="1140">1140</a>
+<a href="#1141" id="1141">1141</a>
+<a href="#1142" id="1142">1142</a>
+<a href="#1143" id="1143">1143</a>
+<a href="#1144" id="1144">1144</a>
+<a href="#1145" id="1145">1145</a>
+<a href="#1146" id="1146">1146</a>
+<a href="#1147" id="1147">1147</a>
+<a href="#1148" id="1148">1148</a>
+<a href="#1149" id="1149">1149</a>
+<a href="#1150" id="1150">1150</a>
+<a href="#1151" id="1151">1151</a>
+<a href="#1152" id="1152">1152</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{collections::HashMap, error::Error, path::PathBuf};
 
 <span class="kw">use </span>edlang_ir <span class="kw">as </span>ir;
@@ -1141,6 +1167,7 @@
     targets::{InitializationConfig, Target, TargetData, TargetMachine},
     types::{AnyType, BasicMetadataTypeEnum, BasicType},
     values::{BasicValue, BasicValueEnum, PointerValue},
+    AddressSpace,
 };
 <span class="kw">use </span>ir::{LocalKind, ModuleBody, ProgramBody, TypeInfo, ValueTree};
 <span class="kw">use </span>llvm_sys::debuginfo::LLVMDIFlagPublic;
@@ -1229,6 +1256,7 @@
         <span class="kw">let </span>llvm_module = context.create_module(<span class="kw-2">&amp;</span>module.name);
         llvm_module.set_source_file_name(<span class="kw-2">&amp;</span>filename);
         llvm_module.set_triple(<span class="kw-2">&amp;</span>triple);
+        llvm_module.set_data_layout(<span class="kw-2">&amp;</span>machine.get_target_data().get_data_layout());
         <span class="kw">let </span>(di_builder, di_unit) = llvm_module.create_debug_info_builder(
             <span class="bool-val">true</span>,
             inkwell::debug_info::DWARFSourceLanguage::Rust,
@@ -1495,7 +1523,7 @@
                 debug_loc = ctx.set_debug_loc(debug_loc.get_scope(), span);
             }
 
-            <span class="macro">trace!</span>(<span class="string">"compiling stmt {}: {:?}"</span>, idx, stmt.kind);
+            <span class="macro">trace!</span>(<span class="string">"compiling stmt {}: {:?}"</span>, idx, stmt);
             <span class="kw">match </span><span class="kw-2">&amp;</span>stmt.kind {
                 ir::StatementKind::Assign(place, rvalue) =&gt; {
                     <span class="kw">let </span>local = <span class="kw-2">&amp;</span>body.locals[place.local];
@@ -1555,6 +1583,9 @@
         }
 
         <span class="macro">trace!</span>(<span class="string">"compiling terminator: {:?}"</span>, block.terminator);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(span) = block.terminator_span {
+            debug_loc = ctx.set_debug_loc(debug_loc.get_scope(), span);
+        }
         <span class="kw">match </span><span class="kw-2">&amp;</span>block.terminator {
             ir::Terminator::Target(id) =&gt; {
                 ctx.builder.build_unconditional_branch(blocks[<span class="kw-2">*</span>id])<span class="question-mark">?</span>;
@@ -2081,6 +2112,10 @@
                 .const_float((<span class="kw-2">*</span>x) <span class="kw">as </span>f64)
                 .as_basic_value_enum(),
             ir::ConstValue::F64(x) =&gt; ty.into_float_type().const_float(<span class="kw-2">*</span>x).as_basic_value_enum(),
+            ir::ConstValue::Char(x) =&gt; ty
+                .into_int_type()
+                .const_int((<span class="kw-2">*</span>x) <span class="kw">as </span>u64, <span class="bool-val">false</span>)
+                .as_basic_value_enum(),
         },
         ValueTree::Branch(<span class="kw">_</span>) =&gt; <span class="macro">todo!</span>(),
     })
@@ -2149,6 +2184,12 @@
         ir::TypeKind::FnDef(_def_id, _generic_args) =&gt; {
             <span class="macro">panic!</span>()
         }
+        ir::TypeKind::Ptr(_pointee) =&gt; ctx
+            .ctx
+            .context
+            .ptr_sized_int_type(<span class="kw-2">&amp;</span>ctx.target_data, <span class="prelude-val">None</span>)
+            .ptr_type(AddressSpace::default())
+            .as_basic_type_enum(),
     }
 }
 
@@ -2158,79 +2199,80 @@
     // 4 = float
     // 5 = signed
     // 11 = numeric string
+    // https://dwarfstd.org/doc/DWARF5.pdf#section.7.8
     </span><span class="kw">match </span><span class="kw-2">&amp;</span>ty.kind {
         ir::TypeKind::Unit =&gt; <span class="macro">todo!</span>(),
         ir::TypeKind::Bool =&gt; ctx
             .di_builder
-            .create_basic_type(<span class="string">"bool"</span>, <span class="number">1</span>, <span class="number">2</span>, LLVMDIFlagPublic)
+            .create_basic_type(<span class="string">"bool"</span>, <span class="number">1</span>, <span class="number">0x2</span>, LLVMDIFlagPublic)
             .unwrap()
             .as_type(),
         ir::TypeKind::Char =&gt; ctx
             .di_builder
-            .create_basic_type(<span class="string">"char"</span>, <span class="number">1</span>, <span class="number">6</span>, LLVMDIFlagPublic)
+            .create_basic_type(<span class="string">"char"</span>, <span class="number">8</span>, <span class="number">0x6</span>, LLVMDIFlagPublic)
             .unwrap()
             .as_type(),
         ir::TypeKind::Int(ty) =&gt; <span class="kw">match </span>ty {
             ir::IntTy::I128 =&gt; ctx
                 .di_builder
-                .create_basic_type(<span class="string">"i128"</span>, <span class="number">128</span>, <span class="number">5</span>, LLVMDIFlagPublic)
+                .create_basic_type(<span class="string">"i128"</span>, <span class="number">128</span>, <span class="number">0x5</span>, LLVMDIFlagPublic)
                 .unwrap()
                 .as_type(),
             ir::IntTy::I64 =&gt; ctx
                 .di_builder
-                .create_basic_type(<span class="string">"i64"</span>, <span class="number">64</span>, <span class="number">5</span>, LLVMDIFlagPublic)
+                .create_basic_type(<span class="string">"i64"</span>, <span class="number">64</span>, <span class="number">0x5</span>, LLVMDIFlagPublic)
                 .unwrap()
                 .as_type(),
             ir::IntTy::I32 =&gt; ctx
                 .di_builder
-                .create_basic_type(<span class="string">"i32"</span>, <span class="number">32</span>, <span class="number">5</span>, LLVMDIFlagPublic)
+                .create_basic_type(<span class="string">"i32"</span>, <span class="number">32</span>, <span class="number">0x5</span>, LLVMDIFlagPublic)
                 .unwrap()
                 .as_type(),
             ir::IntTy::I16 =&gt; ctx
                 .di_builder
-                .create_basic_type(<span class="string">"i16"</span>, <span class="number">16</span>, <span class="number">5</span>, LLVMDIFlagPublic)
+                .create_basic_type(<span class="string">"i16"</span>, <span class="number">16</span>, <span class="number">0x5</span>, LLVMDIFlagPublic)
                 .unwrap()
                 .as_type(),
             ir::IntTy::I8 =&gt; ctx
                 .di_builder
-                .create_basic_type(<span class="string">"i8"</span>, <span class="number">8</span>, <span class="number">5</span>, LLVMDIFlagPublic)
+                .create_basic_type(<span class="string">"i8"</span>, <span class="number">8</span>, <span class="number">0x5</span>, LLVMDIFlagPublic)
                 .unwrap()
                 .as_type(),
             ir::IntTy::Isize =&gt; ctx
                 .di_builder
-                .create_basic_type(<span class="string">"isize"</span>, <span class="number">64</span>, <span class="number">5</span>, LLVMDIFlagPublic)
+                .create_basic_type(<span class="string">"isize"</span>, <span class="number">64</span>, <span class="number">0x5</span>, LLVMDIFlagPublic)
                 .unwrap()
                 .as_type(),
         },
         ir::TypeKind::Uint(ty) =&gt; <span class="kw">match </span>ty {
             ir::UintTy::U128 =&gt; ctx
                 .di_builder
-                .create_basic_type(<span class="string">"u128"</span>, <span class="number">128</span>, <span class="number">7</span>, LLVMDIFlagPublic)
+                .create_basic_type(<span class="string">"u128"</span>, <span class="number">128</span>, <span class="number">0x7</span>, LLVMDIFlagPublic)
                 .unwrap()
                 .as_type(),
             ir::UintTy::U64 =&gt; ctx
                 .di_builder
-                .create_basic_type(<span class="string">"u64"</span>, <span class="number">64</span>, <span class="number">7</span>, LLVMDIFlagPublic)
+                .create_basic_type(<span class="string">"u64"</span>, <span class="number">64</span>, <span class="number">0x7</span>, LLVMDIFlagPublic)
                 .unwrap()
                 .as_type(),
             ir::UintTy::U32 =&gt; ctx
                 .di_builder
-                .create_basic_type(<span class="string">"u32"</span>, <span class="number">32</span>, <span class="number">7</span>, LLVMDIFlagPublic)
+                .create_basic_type(<span class="string">"u32"</span>, <span class="number">32</span>, <span class="number">0x7</span>, LLVMDIFlagPublic)
                 .unwrap()
                 .as_type(),
             ir::UintTy::U16 =&gt; ctx
                 .di_builder
-                .create_basic_type(<span class="string">"u16"</span>, <span class="number">16</span>, <span class="number">7</span>, LLVMDIFlagPublic)
+                .create_basic_type(<span class="string">"u16"</span>, <span class="number">16</span>, <span class="number">0x7</span>, LLVMDIFlagPublic)
                 .unwrap()
                 .as_type(),
             ir::UintTy::U8 =&gt; ctx
                 .di_builder
-                .create_basic_type(<span class="string">"u8"</span>, <span class="number">8</span>, <span class="number">7</span>, LLVMDIFlagPublic)
+                .create_basic_type(<span class="string">"u8"</span>, <span class="number">8</span>, <span class="number">0x7</span>, LLVMDIFlagPublic)
                 .unwrap()
                 .as_type(),
             ir::UintTy::Usize =&gt; ctx
                 .di_builder
-                .create_basic_type(<span class="string">"usize"</span>, <span class="number">64</span>, <span class="number">7</span>, LLVMDIFlagPublic)
+                .create_basic_type(<span class="string">"usize"</span>, <span class="number">64</span>, <span class="number">0x7</span>, LLVMDIFlagPublic)
                 .unwrap()
                 .as_type(),
         },
@@ -2249,6 +2291,16 @@
         ir::TypeKind::FnDef(_def_id, _generic_args) =&gt; {
             <span class="macro">panic!</span>()
         }
+        ir::TypeKind::Ptr(pointee) =&gt; ctx
+            .di_builder
+            .create_pointer_type(
+                <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"ptr&lt;{:?}&gt;"</span>, pointee.kind),
+                compile_debug_type(ctx, pointee),
+                (ctx.target_data.get_pointer_byte_size(<span class="prelude-val">None</span>) * <span class="number">8</span>).into(),
+                ctx.target_data.get_pointer_byte_size(<span class="prelude-val">None</span>),
+                AddressSpace::default(),
+            )
+            .as_type(),
     }
 }
 </code></pre></div></section></main></body></html>

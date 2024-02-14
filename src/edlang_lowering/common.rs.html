@@ -85,12 +85,9 @@
 <a href="#84" id="84">84</a>
 <a href="#85" id="85">85</a>
 <a href="#86" id="86">86</a>
-<a href="#87" id="87">87</a>
-<a href="#88" id="88">88</a>
-<a href="#89" id="89">89</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::HashMap;
 
-<span class="kw">use </span>edlang_ir::{Body, DefId, Local, ModuleBody, ProgramBody, Statement, TypeInfo, TypeKind};
+<span class="kw">use </span>edlang_ir::{Body, DefId, Local, ModuleBody, ProgramBody, Statement, TypeKind};
 
 <span class="attr">#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Default)]
 </span><span class="kw">pub struct </span>IdGenerator {
@@ -162,10 +159,7 @@
 
     <span class="kw">pub fn </span>add_temp_local(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ty_kind: TypeKind) -&gt; usize {
         <span class="kw">let </span>id = <span class="self">self</span>.body.locals.len();
-        <span class="self">self</span>.body.locals.push(Local::temp(TypeInfo {
-            span: <span class="prelude-val">None</span>,
-            kind: ty_kind,
-        }));
+        <span class="self">self</span>.body.locals.push(Local::temp(ty_kind));
         id
     }
 

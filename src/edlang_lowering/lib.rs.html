@@ -862,6 +862,7 @@
 <a href="#861" id="861">861</a>
 <a href="#862" id="862">862</a>
 <a href="#863" id="863">863</a>
+<a href="#864" id="864">864</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::HashMap;
 
 <span class="kw">use </span>ast::{BinaryOp, ModuleStatement, Span, WhileStmt};
@@ -1323,7 +1324,8 @@
 ) -&gt; (ir::RValue, TypeKind) {
     <span class="macro">trace!</span>(<span class="string">"lowering binary op: {:?}"</span>, op);
 
-    <span class="kw">let </span>(lhs, lhs_ty) = <span class="kw">if </span>type_hint.is_none() {
+    <span class="comment">// todo: if lhs or rhs is a simple place, dont make another temporary?
+    </span><span class="kw">let </span>(lhs, lhs_ty) = <span class="kw">if </span>type_hint.is_none() {
         <span class="kw">let </span>ty = find_expr_type(builder, lhs)
             .unwrap_or_else(|| find_expr_type(builder, rhs).expect(<span class="string">"cant find type"</span>));
         lower_expr(builder, lhs, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>ty))

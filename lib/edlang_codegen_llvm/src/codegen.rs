@@ -11,6 +11,7 @@ use inkwell::{
         AsDIScope, DICompileUnit, DIFlagsConstants, DILocation, DIScope, DIType, DebugInfoBuilder,
     },
     module::Module,
+    passes::PassBuilderOptions,
     targets::{InitializationConfig, Target, TargetData, TargetMachine},
     types::{AnyType, BasicMetadataTypeEnum, BasicType},
     values::{BasicValue, BasicValueEnum, PointerValue},
@@ -94,6 +95,7 @@ pub fn compile(session: &Session, program: &ProgramBody) -> Result<PathBuf, Box<
         )
         .unwrap();
     machine.set_asm_verbosity(true);
+
     info!("compiling for: {:?}", target.get_description());
 
     let filename = session.file_path.file_name().unwrap().to_string_lossy();
@@ -141,6 +143,18 @@ pub fn compile(session: &Session, program: &ProgramBody) -> Result<PathBuf, Box<
 
         module_ctx.di_builder.finalize();
         module_ctx.module.verify()?;
+
+        let opt = match session.optlevel {
+            edlang_session::OptLevel::None => "0",
+            edlang_session::OptLevel::Less => "1",
+            edlang_session::OptLevel::Default => "2",
+            edlang_session::OptLevel::Aggressive => "3",
+        };
+
+        let passopt = PassBuilderOptions::create();
+        module_ctx
+            .module
+            .run_passes(&format!("default<O{}>", opt), &machine, passopt)?;
 
         if session.output_llvm {
             module_ctx
@@ -233,6 +247,7 @@ fn compile_fn_signature(ctx: &ModuleCompileCtx<'_, '_>, fn_id: DefId) {
     preallocated sret align 0 allockind(\"\") allocsize(0,0) dereferenceable(0) dereferenceable_or_null(0
         */
 
+    /*
     // nounwind
     fn_value.add_attribute(
         inkwell::attributes::AttributeLoc::Function,
@@ -250,12 +265,9 @@ fn compile_fn_signature(ctx: &ModuleCompileCtx<'_, '_>, fn_id: DefId) {
         inkwell::attributes::AttributeLoc::Function,
         ctx.ctx.context.create_enum_attribute(66, 0),
     );
+    */
 
-    if body.name == "main" {
-        fn_value.set_call_conventions(0);
-    } else {
-        fn_value.set_call_conventions(1);
-    }
+    fn_value.set_call_conventions(0);
 
     let (_, line, _col) = ctx
         .ctx

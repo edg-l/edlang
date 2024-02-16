@@ -1151,6 +1151,40 @@
 <a href="#1150" id="1150">1150</a>
 <a href="#1151" id="1151">1151</a>
 <a href="#1152" id="1152">1152</a>
+<a href="#1153" id="1153">1153</a>
+<a href="#1154" id="1154">1154</a>
+<a href="#1155" id="1155">1155</a>
+<a href="#1156" id="1156">1156</a>
+<a href="#1157" id="1157">1157</a>
+<a href="#1158" id="1158">1158</a>
+<a href="#1159" id="1159">1159</a>
+<a href="#1160" id="1160">1160</a>
+<a href="#1161" id="1161">1161</a>
+<a href="#1162" id="1162">1162</a>
+<a href="#1163" id="1163">1163</a>
+<a href="#1164" id="1164">1164</a>
+<a href="#1165" id="1165">1165</a>
+<a href="#1166" id="1166">1166</a>
+<a href="#1167" id="1167">1167</a>
+<a href="#1168" id="1168">1168</a>
+<a href="#1169" id="1169">1169</a>
+<a href="#1170" id="1170">1170</a>
+<a href="#1171" id="1171">1171</a>
+<a href="#1172" id="1172">1172</a>
+<a href="#1173" id="1173">1173</a>
+<a href="#1174" id="1174">1174</a>
+<a href="#1175" id="1175">1175</a>
+<a href="#1176" id="1176">1176</a>
+<a href="#1177" id="1177">1177</a>
+<a href="#1178" id="1178">1178</a>
+<a href="#1179" id="1179">1179</a>
+<a href="#1180" id="1180">1180</a>
+<a href="#1181" id="1181">1181</a>
+<a href="#1182" id="1182">1182</a>
+<a href="#1183" id="1183">1183</a>
+<a href="#1184" id="1184">1184</a>
+<a href="#1185" id="1185">1185</a>
+<a href="#1186" id="1186">1186</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{collections::HashMap, error::Error, path::PathBuf};
 
 <span class="kw">use </span>edlang_ir <span class="kw">as </span>ir;
@@ -1371,11 +1405,45 @@
         }),
     );
 
+    <span class="comment">// https://llvm.org/doxygen/group__LLVMCCoreTypes.html
+
+    /* starting from 1 to 80
+    allocalign allocptr alwaysinline builtin cold convergent disable_sanitizer_instrumentation fn_ret_thunk_extern hot
+    immarg inreg inlinehint jumptable minsize mustprogress naked nest noalias
+    nobuiltin nocallback nocapture nocf_check noduplicate nofree noimplicitfloat
+    noinline nomerge noprofile norecurse noredzone noreturn nosanitize_bounds
+    nosanitize_coverage nosync noundef nounwind nonlazybind nonnull null_pointer_is_valid
+    optforfuzzing optsize optnone presplitcoroutine readnone readonly returned returns_twice
+    signext safestack sanitize_address sanitize_hwaddress sanitize_memtag sanitize_memory
+    sanitize_thread shadowcallstack skipprofile speculatable speculative_load_hardening ssp
+    sspreq sspstrong strictfp swiftasync swifterror swiftself willreturn writeonly (67) zeroext byref byval elementtype inalloca
+    preallocated sret align 0 allockind(\"\") allocsize(0,0) dereferenceable(0) dereferenceable_or_null(0
+        */
+
+    // nounwind
+    </span>fn_value.add_attribute(
+        inkwell::attributes::AttributeLoc::Function,
+        ctx.ctx.context.create_enum_attribute(<span class="number">36</span>, <span class="number">0</span>),
+    );
+
     <span class="comment">// nonlazybind
     </span>fn_value.add_attribute(
         inkwell::attributes::AttributeLoc::Function,
         ctx.ctx.context.create_enum_attribute(<span class="number">37</span>, <span class="number">0</span>),
     );
+
+    <span class="comment">// willreturn
+    </span>fn_value.add_attribute(
+        inkwell::attributes::AttributeLoc::Function,
+        ctx.ctx.context.create_enum_attribute(<span class="number">66</span>, <span class="number">0</span>),
+    );
+
+    <span class="kw">if </span>body.name == <span class="string">"main" </span>{
+        fn_value.set_call_conventions(<span class="number">0</span>);
+    } <span class="kw">else </span>{
+        fn_value.set_call_conventions(<span class="number">1</span>);
+    }
+
     <span class="kw">let </span>(<span class="kw">_</span>, line, _col) = ctx
         .ctx
         .session

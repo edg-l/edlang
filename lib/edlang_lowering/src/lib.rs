@@ -459,6 +459,7 @@ fn lower_binary_expr(
 ) -> (ir::RValue, TypeKind) {
     trace!("lowering binary op: {:?}", op);
 
+    // todo: if lhs or rhs is a simple place, dont make another temporary?
     let (lhs, lhs_ty) = if type_hint.is_none() {
         let ty = find_expr_type(builder, lhs)
             .unwrap_or_else(|| find_expr_type(builder, rhs).expect("cant find type"));

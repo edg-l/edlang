@@ -1,6 +1,6 @@
 mod Main {
     pub fn main() -> i32 {
-        let b: i32 = factorial(2);
+        let b: i32 = factorial(4);
         return b;
     }
 

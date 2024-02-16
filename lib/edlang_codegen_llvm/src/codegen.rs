@@ -570,7 +570,7 @@ fn compile_bin_op<'ctx>(
                     .as_basic_value_enum()
             } else {
                 ctx.builder
-                    .build_int_add(lhs_value.into_int_value(), rhs_value.into_int_value(), "")?
+                    .build_int_mul(lhs_value.into_int_value(), rhs_value.into_int_value(), "")?
                     .as_basic_value_enum()
             };
             (value, lhs_ty)

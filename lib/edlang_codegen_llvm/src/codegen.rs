@@ -218,11 +218,45 @@ fn compile_fn_signature(ctx: &ModuleCompileCtx<'_, '_>, fn_id: DefId) {
         }),
     );
 
+    // https://llvm.org/doxygen/group__LLVMCCoreTypes.html
+
+    /* starting from 1 to 80
+    allocalign allocptr alwaysinline builtin cold convergent disable_sanitizer_instrumentation fn_ret_thunk_extern hot
+    immarg inreg inlinehint jumptable minsize mustprogress naked nest noalias
+    nobuiltin nocallback nocapture nocf_check noduplicate nofree noimplicitfloat
+    noinline nomerge noprofile norecurse noredzone noreturn nosanitize_bounds
+    nosanitize_coverage nosync noundef nounwind nonlazybind nonnull null_pointer_is_valid
+    optforfuzzing optsize optnone presplitcoroutine readnone readonly returned returns_twice
+    signext safestack sanitize_address sanitize_hwaddress sanitize_memtag sanitize_memory
+    sanitize_thread shadowcallstack skipprofile speculatable speculative_load_hardening ssp
+    sspreq sspstrong strictfp swiftasync swifterror swiftself willreturn writeonly (67) zeroext byref byval elementtype inalloca
+    preallocated sret align 0 allockind(\"\") allocsize(0,0) dereferenceable(0) dereferenceable_or_null(0
+        */
+
+    // nounwind
+    fn_value.add_attribute(
+        inkwell::attributes::AttributeLoc::Function,
+        ctx.ctx.context.create_enum_attribute(36, 0),
+    );
+
     // nonlazybind
     fn_value.add_attribute(
         inkwell::attributes::AttributeLoc::Function,
         ctx.ctx.context.create_enum_attribute(37, 0),
     );
+
+    // willreturn
+    fn_value.add_attribute(
+        inkwell::attributes::AttributeLoc::Function,
+        ctx.ctx.context.create_enum_attribute(66, 0),
+    );
+
+    if body.name == "main" {
+        fn_value.set_call_conventions(0);
+    } else {
+        fn_value.set_call_conventions(1);
+    }
+
     let (_, line, _col) = ctx
         .ctx
         .session

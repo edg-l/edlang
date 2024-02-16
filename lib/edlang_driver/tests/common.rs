@@ -2,7 +2,7 @@ use std::{
     borrow::Cow,
     fmt,
     path::{Path, PathBuf},
-    process::Output,
+    process::Child,
 };
 
 use ariadne::Source;
@@ -80,9 +80,6 @@ pub fn compile_program(
     })
 }
 
-pub fn run_program(program: &Path, args: &[&str]) -> Result<Output, std::io::Error> {
-    std::process::Command::new(program)
-        .args(args)
-        .spawn()?
-        .wait_with_output()
+pub fn run_program(program: &Path, args: &[&str]) -> Result<Child, std::io::Error> {
+    std::process::Command::new(dbg!(program)).args(args).spawn()
 }

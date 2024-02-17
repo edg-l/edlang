@@ -473,9 +473,10 @@
 <a href="#472" id="472">472</a>
 <a href="#473" id="473">473</a>
 <a href="#474" id="474">474</a>
+<a href="#475" id="475">475</a>
 </pre></div><pre class="rust"><code><span class="comment">// Based on a cfg
 
-</span><span class="kw">use </span>std::collections::{BTreeMap, HashSet};
+</span><span class="kw">use </span>std::collections::{BTreeMap, HashMap, HashSet};
 
 <span class="kw">use </span>edlang_span::Span;
 <span class="kw">use </span>smallvec::SmallVec;
@@ -569,6 +570,7 @@
     <span class="kw">pub </span>is_pub: bool,
     <span class="kw">pub </span>name: String,
     <span class="kw">pub </span>variants: Vec&lt;AdtVariant&gt;,
+    <span class="kw">pub </span>name_to_idx: HashMap&lt;String, usize&gt;,
     <span class="kw">pub </span>span: Span,
 }
 
@@ -834,7 +836,7 @@
 <span class="attr">#[derive(Debug, Clone, Copy)]
 </span><span class="kw">pub enum </span>PlaceElem {
     Deref,
-    Field { field_idx: usize, type_info: usize },
+    Field { field_idx: usize },
     Index { local: usize },
 }
 

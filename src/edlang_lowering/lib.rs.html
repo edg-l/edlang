@@ -1139,6 +1139,7 @@
         is_pub: <span class="bool-val">true</span>, <span class="comment">// todo struct pub
         </span>name: info.name.name.clone(),
         variants: Vec::new(),
+        name_to_idx: Default::default(),
         span: info.span,
     };
 
@@ -1149,6 +1150,8 @@
             ty: lower_type(<span class="kw-2">&amp;</span>ctx, <span class="kw-2">&amp;</span>field.r#type, module_id),
         };
         body.variants.push(variant);
+        body.name_to_idx
+            .insert(field.name.name.clone(), body.variants.len() - <span class="number">1</span>);
     }
 
     ctx.body.structs.insert(body.def_id, body);
@@ -1454,21 +1457,6 @@
 <span class="kw">fn </span>lower_assign(builder: <span class="kw-2">&amp;mut </span>BodyBuilder, info: <span class="kw-2">&amp;</span>ast::AssignStmt) {
     <span class="kw">let </span>(<span class="kw-2">mut </span>place, <span class="kw-2">mut </span>ty) = lower_path(builder, <span class="kw-2">&amp;</span>info.name);
 
-    <span class="kw">if let </span><span class="prelude-val">Some</span>(PlaceElem::Deref) = place.projection.last() {
-        <span class="kw">match </span><span class="kw-2">&amp;</span>ty {
-            TypeKind::Ptr(inner) =&gt; {
-                ty = inner.kind.clone();
-            }
-            TypeKind::Ref(is_mut, inner) =&gt; {
-                <span class="kw">if </span>!is_mut {
-                    <span class="macro">panic!</span>(<span class="string">"trying to mutate non mut ref"</span>);
-                }
-                ty = inner.kind.clone();
-            }
-            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
-        }
-    }
-
     <span class="kw">for _ in </span><span class="number">0</span>..info.deref_times {
         <span class="kw">match </span><span class="kw-2">&amp;</span>ty {
             TypeKind::Ptr(inner) =&gt; {
@@ -1490,7 +1478,7 @@
     builder.statements.push(Statement {
         span: <span class="prelude-val">Some</span>(info.name.first.span),
         kind: StatementKind::Assign(place, rvalue),
-    })
+    });
 }
 
 <span class="kw">fn </span>find_expr_type(builder: <span class="kw-2">&amp;mut </span>BodyBuilder, info: <span class="kw-2">&amp;</span>ast::Expression) -&gt; <span class="prelude-ty">Option</span>&lt;TypeKind&gt; {
@@ -1923,8 +1911,7 @@
         },
         ast::ValueExpr::Str { value: <span class="kw">_</span>, span: <span class="kw">_ </span>} =&gt; <span class="macro">todo!</span>(),
         ast::ValueExpr::Path(info) =&gt; {
-            <span class="comment">// add deref info to path
-            </span><span class="kw">let </span>(place, ty) = lower_path(builder, info);
+            <span class="kw">let </span>(place, ty) = lower_path(builder, info);
             (Operand::Move(place), ty)
         }
     }
@@ -1958,13 +1945,26 @@
         .name_to_local
         .get(<span class="kw-2">&amp;</span>info.first.name)
         .expect(<span class="string">"local not found"</span>);
-    <span class="kw">let </span>ty = builder.body.locals[local].ty.kind.clone();
 
-    <span class="kw">let </span>projection = Vec::new();
+    <span class="kw">let </span><span class="kw-2">mut </span>ty = builder.body.locals[local].ty.kind.clone();
+    <span class="kw">let </span><span class="kw-2">mut </span>projection = Vec::new();
 
     <span class="kw">for </span>extra <span class="kw">in </span><span class="kw-2">&amp;</span>info.extra {
         <span class="kw">match </span>extra {
-            ast::PathSegment::Field(<span class="kw">_</span>) =&gt; <span class="macro">todo!</span>(),
+            ast::PathSegment::Field(name) =&gt; {
+                <span class="comment">// is while fine? auto deref
+                </span><span class="kw">while let </span>TypeKind::Ref(<span class="kw">_</span>, inner) = ty {
+                    projection.push(PlaceElem::Deref);
+                    ty = inner.kind;
+                }
+
+                <span class="kw">if let </span>TypeKind::Struct(id) = ty {
+                    <span class="kw">let </span>struct_body = builder.ctx.body.structs.get(<span class="kw-2">&amp;</span>id).unwrap();
+                    <span class="kw">let </span>idx = <span class="kw-2">*</span>struct_body.name_to_idx.get(<span class="kw-2">&amp;</span>name.name).unwrap();
+                    projection.push(PlaceElem::Field { field_idx: idx });
+                    ty = struct_body.variants[idx].ty.kind.clone();
+                }
+            }
             ast::PathSegment::Index { .. } =&gt; <span class="macro">todo!</span>(),
         }
     }
@@ -1972,7 +1972,7 @@
     (
         Place {
             local,
-            projection: projection.into(), <span class="comment">// todo, field array deref
+            projection: projection.into(), <span class="comment">// todo, array
         </span>},
         ty,
     )

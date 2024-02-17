@@ -1330,6 +1330,22 @@
 <a href="#1329" id="1329">1329</a>
 <a href="#1330" id="1330">1330</a>
 <a href="#1331" id="1331">1331</a>
+<a href="#1332" id="1332">1332</a>
+<a href="#1333" id="1333">1333</a>
+<a href="#1334" id="1334">1334</a>
+<a href="#1335" id="1335">1335</a>
+<a href="#1336" id="1336">1336</a>
+<a href="#1337" id="1337">1337</a>
+<a href="#1338" id="1338">1338</a>
+<a href="#1339" id="1339">1339</a>
+<a href="#1340" id="1340">1340</a>
+<a href="#1341" id="1341">1341</a>
+<a href="#1342" id="1342">1342</a>
+<a href="#1343" id="1343">1343</a>
+<a href="#1344" id="1344">1344</a>
+<a href="#1345" id="1345">1345</a>
+<a href="#1346" id="1346">1346</a>
+<a href="#1347" id="1347">1347</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{collections::HashMap, error::Error, path::PathBuf};
 
 <span class="kw">use </span>edlang_ir <span class="kw">as </span>ir;
@@ -2303,46 +2319,9 @@
     locals: <span class="kw-2">&amp;</span>HashMap&lt;usize, PointerValue&lt;<span class="lifetime">'ctx</span>&gt;&gt;,
     op: <span class="kw-2">&amp;</span>ir::Operand,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(BasicValueEnum&lt;<span class="lifetime">'ctx</span>&gt;, TypeInfo), BuilderError&gt; {
-    <span class="comment">// todo: implement projection
-    </span><span class="kw">let </span>body = ctx.ctx.program.functions.get(<span class="kw-2">&amp;</span>fn_id).unwrap();
     <span class="prelude-val">Ok</span>(<span class="kw">match </span>op {
-        ir::Operand::Copy(place) =&gt; {
-            <span class="kw">let </span>pointee_ty = compile_basic_type(ctx, <span class="kw-2">&amp;</span>body.locals[place.local].ty);
-            <span class="kw">let </span>ptr = <span class="kw-2">*</span>locals.get(<span class="kw-2">&amp;</span>place.local).unwrap();
-            (
-                ctx.builder.build_load(pointee_ty, ptr, <span class="string">""</span>)<span class="question-mark">?</span>,
-                body.locals[place.local].ty.clone(),
-            )
-        }
-        ir::Operand::Move(place) =&gt; {
-            <span class="kw">let </span><span class="kw-2">mut </span>ptr = <span class="kw-2">*</span>locals.get(<span class="kw-2">&amp;</span>place.local).unwrap();
-            <span class="kw">let </span><span class="kw-2">mut </span>local_ty = body.locals[place.local].ty.clone();
-
-            <span class="kw">for </span>proj <span class="kw">in </span><span class="kw-2">&amp;</span>place.projection {
-                <span class="kw">match </span>proj {
-                    ir::PlaceElem::Deref =&gt; {
-                        ptr = ctx
-                            .builder
-                            .build_load(compile_basic_type(ctx, <span class="kw-2">&amp;</span>local_ty), ptr, <span class="string">"deref"</span>)<span class="question-mark">?
-                            </span>.into_pointer_value();
-                        local_ty = <span class="kw">match </span>local_ty.kind {
-                            ir::TypeKind::Ptr(inner) =&gt; <span class="kw-2">*</span>inner,
-                            ir::TypeKind::Ref(<span class="kw">_</span>, inner) =&gt; <span class="kw-2">*</span>inner,
-                            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
-                        }
-                    }
-                    ir::PlaceElem::Field { .. } =&gt; <span class="macro">todo!</span>(),
-                    ir::PlaceElem::Index { .. } =&gt; <span class="macro">todo!</span>(),
-                }
-            }
-
-            <span class="kw">let </span>pointee_ty = compile_basic_type(ctx, <span class="kw-2">&amp;</span>local_ty);
-
-            (
-                ctx.builder.build_load(pointee_ty, ptr, <span class="string">""</span>)<span class="question-mark">?</span>,
-                body.locals[place.local].ty.clone(),
-            )
-        }
+        ir::Operand::Copy(place) =&gt; compile_load_place(ctx, fn_id, locals, place, <span class="bool-val">true</span>)<span class="question-mark">?</span>,
+        ir::Operand::Move(place) =&gt; compile_load_place(ctx, fn_id, locals, place, <span class="bool-val">false</span>)<span class="question-mark">?</span>,
         ir::Operand::Constant(data) =&gt; <span class="kw">match </span><span class="kw-2">&amp;</span>data.kind {
             ir::ConstKind::Value(value) =&gt; (
                 compile_value(ctx, value, <span class="kw-2">&amp;</span>data.type_info)<span class="question-mark">?</span>,
@@ -2351,6 +2330,59 @@
             ir::ConstKind::ZeroSized =&gt; <span class="macro">todo!</span>(),
         },
     })
+}
+
+<span class="kw">fn </span>compile_load_place&lt;<span class="lifetime">'ctx</span>&gt;(
+    ctx: <span class="kw-2">&amp;</span>ModuleCompileCtx&lt;<span class="lifetime">'ctx</span>, <span class="lifetime">'_</span>&gt;,
+    fn_id: DefId,
+    locals: <span class="kw-2">&amp;</span>HashMap&lt;usize, PointerValue&lt;<span class="lifetime">'ctx</span>&gt;&gt;,
+    place: <span class="kw-2">&amp;</span>ir::Place,
+    _is_copy: bool,
+) -&gt; <span class="prelude-ty">Result</span>&lt;(BasicValueEnum&lt;<span class="lifetime">'ctx</span>&gt;, TypeInfo), BuilderError&gt; {
+    <span class="kw">let </span>body = ctx.ctx.program.functions.get(<span class="kw-2">&amp;</span>fn_id).unwrap();
+    <span class="kw">let </span><span class="kw-2">mut </span>ptr = <span class="kw-2">*</span>locals.get(<span class="kw-2">&amp;</span>place.local).unwrap();
+    <span class="kw">let </span><span class="kw-2">mut </span>local_ty = body.locals[place.local].ty.clone();
+
+    <span class="kw">for </span>proj <span class="kw">in </span><span class="kw-2">&amp;</span>place.projection {
+        <span class="kw">match </span>proj {
+            ir::PlaceElem::Deref =&gt; {
+                ptr = ctx
+                    .builder
+                    .build_load(compile_basic_type(ctx, <span class="kw-2">&amp;</span>local_ty), ptr, <span class="string">"deref"</span>)<span class="question-mark">?
+                    </span>.into_pointer_value();
+                local_ty = <span class="kw">match </span>local_ty.kind {
+                    ir::TypeKind::Ptr(inner) =&gt; <span class="kw-2">*</span>inner,
+                    ir::TypeKind::Ref(<span class="kw">_</span>, inner) =&gt; <span class="kw-2">*</span>inner,
+                    <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
+                }
+            }
+            ir::PlaceElem::Field { field_idx } =&gt; {
+                local_ty = <span class="kw">match </span>local_ty.kind {
+                    ir::TypeKind::Struct(id) =&gt; {
+                        <span class="kw">let </span>struct_body = ctx.ctx.program.structs.get(<span class="kw-2">&amp;</span>id).unwrap();
+                        <span class="kw">let </span>ty = struct_body.variants[<span class="kw-2">*</span>field_idx].ty.clone();
+                        <span class="kw">let </span>field_name = struct_body.variants[<span class="kw-2">*</span>field_idx].name.clone();
+                        ptr = ctx.builder.build_struct_gep(
+                            compile_basic_type(ctx, <span class="kw-2">&amp;</span>local_ty),
+                            ptr,
+                            (<span class="kw-2">*</span>field_idx).try_into().unwrap(),
+                            <span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"ptr_field_{field_name}"</span>),
+                        )<span class="question-mark">?</span>;
+                        ty
+                    }
+                    <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
+                }
+            }
+            ir::PlaceElem::Index { .. } =&gt; <span class="macro">todo!</span>(),
+        }
+    }
+
+    <span class="kw">let </span>pointee_ty = compile_basic_type(ctx, <span class="kw-2">&amp;</span>local_ty);
+
+    <span class="prelude-val">Ok</span>((
+        ctx.builder.build_load(pointee_ty, ptr, <span class="string">""</span>)<span class="question-mark">?</span>,
+        body.locals[place.local].ty.clone(),
+    ))
 }
 
 <span class="kw">fn </span>compile_value&lt;<span class="lifetime">'ctx</span>&gt;(

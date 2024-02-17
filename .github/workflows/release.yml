@@ -36,16 +36,16 @@ jobs:
         uses: orhun/git-cliff-action@v2
         id: git-cliff
         with:
-          args: -l
+          args: -vv --latest --strip header
         env:
-          OUTPUT: CHANGELOG-CURRENT.md
+          OUTPUT: CHANGES.md
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
-          body_path: ${{ github.workspace }}/CHANGELOG-CURRENT.md
+          body_path: ${{ github.workspace }}/CHANGES.md
           generate_release_notes: true
           files: |
             README.md
             LICENSE
-            CHANGELOG-CURRENT.md
+            CHANGES.md
             target/release/edlang

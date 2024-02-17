@@ -802,7 +802,7 @@ fn lower_path(builder: &mut BodyBuilder, info: &ast::PathExpr) -> (ir::Place, Ty
 
 #[allow(clippy::only_used_in_recursion)]
 pub fn lower_type(ctx: &BuildCtx, t: &ast::Type) -> ir::TypeInfo {
-    match t.name.name.as_str() {
+    let inner_ty = match t.name.name.as_str() {
         "()" => ir::TypeInfo {
             span: Some(t.span),
             kind: ir::TypeKind::Unit,
@@ -860,5 +860,19 @@ pub fn lower_type(ctx: &BuildCtx, t: &ast::Type) -> ir::TypeInfo {
             kind: ir::TypeKind::Ptr(Box::new(lower_type(ctx, t.generics.first().unwrap()))),
         },
         x => todo!("{:?}", x),
+    };
+
+    match t.is_ref {
+        Some(x) => ir::TypeInfo {
+            span: Some(t.span),
+            kind: TypeKind::Ref(
+                match x {
+                    ast::RefType::Not => false,
+                    ast::RefType::Mut => true,
+                },
+                Box::new(inner_ty),
+            ),
+        },
+        None => inner_ty,
     }
 }

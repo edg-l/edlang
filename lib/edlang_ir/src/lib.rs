@@ -204,6 +204,7 @@ pub enum TypeKind {
     Float(FloatTy),
     FnDef(DefId, Vec<TypeInfo>), // The vec are generic types, not arg types
     Ptr(Box<TypeInfo>),
+    Ref(bool, Box<TypeInfo>),
 }
 
 impl TypeKind {
@@ -235,6 +236,7 @@ impl TypeKind {
             TypeKind::Unit => unreachable!(),
             TypeKind::FnDef(_, _) => unreachable!(),
             TypeKind::Ptr(_pointee) => todo!(),
+            TypeKind::Ref(_, inner) => inner.kind.get_falsy_value(),
         }
     }
 }

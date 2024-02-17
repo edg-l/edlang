@@ -141,14 +141,16 @@ pub(crate) Ident: ast::Ident = {
 }
 
 pub(crate) Type: ast::Type = {
-    <lo:@L> <name:Ident> <hi:@R> => ast::Type {
+    <lo:@L> <is_ref:RefType?> <name:Ident> <hi:@R> => ast::Type {
         name,
         generics: vec![],
+        is_ref,
         span: ast::Span::new(lo, hi),
     },
-    <lo:@L> <name:Ident> "<" <generics:Comma<Type>> ">" <hi:@R> => ast::Type {
+    <lo:@L> <is_ref:RefType?> <name:Ident> "<" <generics:Comma<Type>> ">" <hi:@R> => ast::Type {
         name,
         generics,
+        is_ref,
         span: ast::Span::new(lo, hi),
     },
 }
@@ -344,6 +346,11 @@ pub(crate) ValueExpr: ast::ValueExpr = {
     span: ast::Span::new(lo, hi),
   },
   <PathExpr> => ast::ValueExpr::Path(<>),
+}
+
+pub(crate) RefType: ast::RefType = {
+    "&" => ast::RefType::Not,
+    "&" "mut" => ast::RefType::Mut,
 }
 
 pub(crate) FnParam: ast::FnParam = {

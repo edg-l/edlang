@@ -18,7 +18,7 @@ use inkwell::{
     AddressSpace,
 };
 use ir::{LocalKind, ModuleBody, ProgramBody, TypeInfo, ValueTree};
-use llvm_sys::debuginfo::LLVMDIFlagPublic;
+use llvm_sys::debuginfo::{LLVMDIFlagLValueReference, LLVMDIFlagPublic};
 use tracing::{info, trace};
 
 #[derive(Debug, Clone, Copy)]
@@ -1083,6 +1083,12 @@ fn compile_basic_type<'ctx>(
             .ptr_sized_int_type(&ctx.target_data, None)
             .ptr_type(AddressSpace::default())
             .as_basic_type_enum(),
+        ir::TypeKind::Ref(_, _) => ctx
+            .ctx
+            .context
+            .ptr_sized_int_type(&ctx.target_data, None)
+            .ptr_type(AddressSpace::default())
+            .as_basic_type_enum(),
     }
 }
 
@@ -1093,6 +1099,8 @@ fn compile_debug_type<'ctx>(ctx: &ModuleCompileCtx<'ctx, '_>, ty: &ir::TypeInfo)
     // 5 = signed
     // 11 = numeric string
     // https://dwarfstd.org/doc/DWARF5.pdf#section.7.8
+
+    // https://github.com/GaloisInc/dwarf-tools/blob/master/src/DWARF/DW/TAG.hs
     match &ty.kind {
         ir::TypeKind::Unit => todo!(),
         ir::TypeKind::Bool => ctx
@@ -1193,6 +1201,10 @@ fn compile_debug_type<'ctx>(ctx: &ModuleCompileCtx<'ctx, '_>, ty: &ir::TypeInfo)
                 ctx.target_data.get_pointer_byte_size(None),
                 AddressSpace::default(),
             )
+            .as_type(),
+        ir::TypeKind::Ref(_, inner) => ctx
+            .di_builder
+            .create_reference_type(compile_debug_type(ctx, inner), 0x10)
             .as_type(),
     }
 }

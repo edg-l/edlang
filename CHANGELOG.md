@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.0.1-alpha.6] - 2024-02-17
+
+### Bug Fixes
+
+- Fix a miscompilation
+
+### Features
+
+- Implement while
+- Improved logging
+- Ptr repr
+
 ## [0.0.1-alpha.5] - 2024-02-14
 
 ### Bug Fixes

@@ -5,8 +5,8 @@ use common::{BodyBuilder, BuildCtx};
 use edlang_ast as ast;
 use edlang_ir as ir;
 use ir::{
-    BasicBlock, Body, DefId, Local, LocalKind, Operand, Place, ProgramBody, Statement,
-    StatementKind, SwitchTarget, Terminator, TypeInfo, TypeKind,
+    BasicBlock, Body, DefId, Local, LocalKind, Operand, Place, PlaceElem, ProgramBody, RValue,
+    Statement, StatementKind, SwitchTarget, Terminator, TypeInfo, TypeKind,
 };
 use tracing::trace;
 
@@ -371,10 +371,40 @@ fn lower_let(builder: &mut BodyBuilder, info: &ast::LetStmt) {
 }
 
 fn lower_assign(builder: &mut BodyBuilder, info: &ast::AssignStmt) {
-    let local = *builder.name_to_local.get(&info.name.first.name).unwrap();
-    let ty = builder.body.locals[local].ty.clone();
-    let (rvalue, _ty) = lower_expr(builder, &info.value, Some(&ty.kind));
-    let (place, _ty) = lower_path(builder, &info.name);
+    let (mut place, mut ty) = lower_path(builder, &info.name);
+
+    if let Some(PlaceElem::Deref) = place.projection.last() {
+        match &ty {
+            TypeKind::Ptr(inner) => {
+                ty = inner.kind.clone();
+            }
+            TypeKind::Ref(is_mut, inner) => {
+                if !is_mut {
+                    panic!("trying to mutate non mut ref");
+                }
+                ty = inner.kind.clone();
+            }
+            _ => unreachable!(),
+        }
+    }
+
+    for _ in 0..info.deref_times {
+        match &ty {
+            TypeKind::Ptr(inner) => {
+                ty = inner.kind.clone();
+            }
+            TypeKind::Ref(is_mut, inner) => {
+                if !is_mut {
+                    panic!("trying to mutate non mut ref");
+                }
+                ty = inner.kind.clone();
+            }
+            _ => unreachable!(),
+        }
+        place.projection.push(PlaceElem::Deref);
+    }
+
+    let (rvalue, _ty) = lower_expr(builder, &info.value, Some(&ty));
 
     builder.statements.push(Statement {
         span: Some(info.name.first.span),
@@ -426,6 +456,8 @@ fn find_expr_type(builder: &mut BodyBuilder, info: &ast::Expression) -> Option<T
                 find_expr_type(builder, lhs).or(find_expr_type(builder, rhs))?
             }
         }
+        ast::Expression::Deref(_) => todo!(),
+        ast::Expression::AsRef(_, _) => todo!(),
     })
 }
 
@@ -447,6 +479,50 @@ fn lower_expr(
         ast::Expression::Binary(lhs, op, rhs) => {
             lower_binary_expr(builder, lhs, op, rhs, type_hint)
         }
+        ast::Expression::Deref(_) => todo!(),
+        ast::Expression::AsRef(inner, mutable) => {
+            let type_hint = match type_hint {
+                Some(inner) => match inner {
+                    TypeKind::Ref(_, inner) => Some(&inner.kind),
+                    _ => unreachable!(),
+                },
+                None => None,
+            };
+            let (mut value, ty) = lower_expr(builder, inner, type_hint);
+
+            // check if its a use directly, to avoid a temporary.
+            value = match value {
+                RValue::Use(op) => RValue::Ref(*mutable, op),
+                value => {
+                    let inner_local = builder.add_local(Local::temp(ty.clone()));
+                    let inner_place = Place {
+                        local: inner_local,
+                        projection: Default::default(),
+                    };
+
+                    builder.statements.push(Statement {
+                        span: None,
+                        kind: StatementKind::StorageLive(inner_local),
+                    });
+
+                    builder.statements.push(Statement {
+                        span: None,
+                        kind: StatementKind::Assign(inner_place.clone(), value),
+                    });
+                    RValue::Ref(*mutable, Operand::Move(inner_place))
+                }
+            };
+
+            let ty = TypeKind::Ref(
+                *mutable,
+                Box::new(TypeInfo {
+                    span: None,
+                    kind: ty,
+                }),
+            );
+
+            (value, ty)
+        }
     }
 }
 
@@ -459,7 +535,6 @@ fn lower_binary_expr(
 ) -> (ir::RValue, TypeKind) {
     trace!("lowering binary op: {:?}", op);
 
-    // todo: if lhs or rhs is a simple place, dont make another temporary?
     let (lhs, lhs_ty) = if type_hint.is_none() {
         let ty = find_expr_type(builder, lhs)
             .unwrap_or_else(|| find_expr_type(builder, rhs).expect("cant find type"));
@@ -474,39 +549,49 @@ fn lower_binary_expr(
         lower_expr(builder, rhs, type_hint)
     };
 
-    let lhs_local = builder.add_local(Local::temp(lhs_ty.clone()));
-    let rhs_local = builder.add_local(Local::temp(rhs_ty.clone()));
-    let lhs_place = Place {
-        local: lhs_local,
-        projection: Default::default(),
+    let lhs = match lhs {
+        RValue::Use(op) => op,
+        lhs => {
+            let lhs_local = builder.add_local(Local::temp(lhs_ty.clone()));
+            let lhs_place = Place {
+                local: lhs_local,
+                projection: Default::default(),
+            };
+
+            builder.statements.push(Statement {
+                span: None,
+                kind: StatementKind::StorageLive(lhs_local),
+            });
+
+            builder.statements.push(Statement {
+                span: None,
+                kind: StatementKind::Assign(lhs_place.clone(), lhs),
+            });
+            Operand::Move(lhs_place)
+        }
     };
-    let rhs_place = Place {
-        local: rhs_local,
-        projection: Default::default(),
+
+    let rhs = match rhs {
+        RValue::Use(op) => op,
+        rhs => {
+            let rhs_local = builder.add_local(Local::temp(rhs_ty.clone()));
+            let rhs_place = Place {
+                local: rhs_local,
+                projection: Default::default(),
+            };
+
+            builder.statements.push(Statement {
+                span: None,
+                kind: StatementKind::StorageLive(rhs_local),
+            });
+
+            builder.statements.push(Statement {
+                span: None,
+                kind: StatementKind::Assign(rhs_place.clone(), rhs),
+            });
+            Operand::Move(rhs_place)
+        }
     };
-
-    builder.statements.push(Statement {
-        span: None,
-        kind: StatementKind::StorageLive(lhs_local),
-    });
-
-    builder.statements.push(Statement {
-        span: None,
-        kind: StatementKind::Assign(lhs_place.clone(), lhs),
-    });
-
-    builder.statements.push(Statement {
-        span: None,
-        kind: StatementKind::StorageLive(rhs_local),
-    });
-
-    builder.statements.push(Statement {
-        span: None,
-        kind: StatementKind::Assign(rhs_place.clone(), rhs),
-    });
-
-    let lhs = Operand::Move(lhs_place);
-    let rhs = Operand::Move(rhs_place);
 
     match op {
         ast::BinaryOp::Arith(op, _) => (
@@ -791,10 +876,19 @@ fn lower_path(builder: &mut BodyBuilder, info: &ast::PathExpr) -> (ir::Place, Ty
         .expect("local not found");
     let ty = builder.body.locals[local].ty.kind.clone();
 
+    let projection = Vec::new();
+
+    for extra in &info.extra {
+        match extra {
+            ast::PathSegment::Field(_) => todo!(),
+            ast::PathSegment::Index { .. } => todo!(),
+        }
+    }
+
     (
         Place {
             local,
-            projection: Default::default(), // todo, field array deref
+            projection: projection.into(), // todo, field array deref
         },
         ty,
     )

@@ -208,8 +208,12 @@ pub enum TypeKind {
 }
 
 impl TypeKind {
-    pub fn is_unit(&self) -> bool {
+    pub const fn is_unit(&self) -> bool {
         matches!(self, Self::Unit)
+    }
+
+    pub const fn is_integer(&self) -> bool {
+        matches!(self, Self::Int(_) | Self::Uint(_))
     }
 
     pub fn get_falsy_value(&self) -> ValueTree {

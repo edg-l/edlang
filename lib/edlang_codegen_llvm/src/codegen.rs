@@ -18,7 +18,7 @@ use inkwell::{
     AddressSpace,
 };
 use ir::{LocalKind, ModuleBody, ProgramBody, TypeInfo, ValueTree};
-use llvm_sys::debuginfo::{LLVMDIFlagLValueReference, LLVMDIFlagPublic};
+use llvm_sys::debuginfo::LLVMDIFlagPublic;
 use tracing::{info, trace};
 
 #[derive(Debug, Clone, Copy)]
@@ -234,40 +234,7 @@ fn compile_fn_signature(ctx: &ModuleCompileCtx<'_, '_>, fn_id: DefId) {
 
     // https://llvm.org/doxygen/group__LLVMCCoreTypes.html
 
-    /* starting from 1 to 80
-    allocalign allocptr alwaysinline builtin cold convergent disable_sanitizer_instrumentation fn_ret_thunk_extern hot
-    immarg inreg inlinehint jumptable minsize mustprogress naked nest noalias
-    nobuiltin nocallback nocapture nocf_check noduplicate nofree noimplicitfloat
-    noinline nomerge noprofile norecurse noredzone noreturn nosanitize_bounds
-    nosanitize_coverage nosync noundef nounwind nonlazybind nonnull null_pointer_is_valid
-    optforfuzzing optsize optnone presplitcoroutine readnone readonly returned returns_twice
-    signext safestack sanitize_address sanitize_hwaddress sanitize_memtag sanitize_memory
-    sanitize_thread shadowcallstack skipprofile speculatable speculative_load_hardening ssp
-    sspreq sspstrong strictfp swiftasync swifterror swiftself willreturn writeonly (67) zeroext byref byval elementtype inalloca
-    preallocated sret align 0 allockind(\"\") allocsize(0,0) dereferenceable(0) dereferenceable_or_null(0
-        */
-
-    /*
-    // nounwind
-    fn_value.add_attribute(
-        inkwell::attributes::AttributeLoc::Function,
-        ctx.ctx.context.create_enum_attribute(36, 0),
-    );
-
-    // nonlazybind
-    fn_value.add_attribute(
-        inkwell::attributes::AttributeLoc::Function,
-        ctx.ctx.context.create_enum_attribute(37, 0),
-    );
-
-    // willreturn
-    fn_value.add_attribute(
-        inkwell::attributes::AttributeLoc::Function,
-        ctx.ctx.context.create_enum_attribute(66, 0),
-    );
-    */
-
-    fn_value.set_call_conventions(0);
+    fn_value.set_call_conventions(0); // cconv
 
     let (_, line, _col) = ctx
         .ctx
@@ -420,11 +387,29 @@ fn compile_fn(ctx: &ModuleCompileCtx, fn_id: DefId) -> Result<(), BuilderError> 
             match &stmt.kind {
                 ir::StatementKind::Assign(place, rvalue) => {
                     let local = &body.locals[place.local];
+                    let mut local_ty = local.ty.clone();
+                    let mut ptr = *locals.get(&place.local).unwrap();
+
+                    for proj in &place.projection {
+                        match proj {
+                            ir::PlaceElem::Deref => {
+                                ptr = ctx
+                                    .builder
+                                    .build_load(compile_basic_type(ctx, &local_ty), ptr, "deref")?
+                                    .into_pointer_value();
+                                local_ty = match local_ty.kind {
+                                    ir::TypeKind::Ptr(inner) => *inner,
+                                    ir::TypeKind::Ref(_, inner) => *inner,
+                                    _ => unreachable!(),
+                                }
+                            }
+                            ir::PlaceElem::Field { .. } => todo!(),
+                            ir::PlaceElem::Index { .. } => todo!(),
+                        }
+                    }
 
                     let (value, _value_ty) = compile_rvalue(ctx, fn_id, &locals, rvalue)?;
-                    let instruction = ctx
-                        .builder
-                        .build_store(*locals.get(&place.local).unwrap(), value)?;
+                    let instruction = ctx.builder.build_store(ptr, value)?;
 
                     if let Some(_debug_name) = &local.debug_name {
                         let di_local = di_locals.get(&place.local).unwrap();
@@ -556,6 +541,41 @@ fn compile_fn(ctx: &ModuleCompileCtx, fn_id: DefId) -> Result<(), BuilderError> 
     }
 
     Ok(())
+}
+
+fn compile_unary_op<'ctx>(
+    ctx: &ModuleCompileCtx<'ctx, '_>,
+    fn_id: DefId,
+    locals: &HashMap<usize, PointerValue<'ctx>>,
+    op: ir::UnOp,
+    value: &ir::Operand,
+) -> Result<(BasicValueEnum<'ctx>, TypeInfo), BuilderError> {
+    let (value, ty) = compile_load_operand(ctx, fn_id, locals, value)?;
+
+    let is_float = matches!(ty.kind, ir::TypeKind::Float(_));
+
+    Ok(match op {
+        ir::UnOp::Not => {
+            assert!(ty.kind.is_integer(), "must be a integer");
+            let value = ctx
+                .builder
+                .build_not(value.into_int_value(), "not")?
+                .as_basic_value_enum();
+            (value, ty)
+        }
+        ir::UnOp::Neg => {
+            let value = if is_float {
+                ctx.builder
+                    .build_float_neg(value.into_float_value(), "negf")?
+                    .as_basic_value_enum()
+            } else {
+                ctx.builder
+                    .build_int_neg(value.into_int_value(), "negi")?
+                    .as_basic_value_enum()
+            };
+            (value, ty)
+        }
+    })
 }
 
 fn compile_bin_op<'ctx>(
@@ -908,10 +928,40 @@ fn compile_rvalue<'ctx>(
 ) -> Result<(BasicValueEnum<'ctx>, TypeInfo), BuilderError> {
     Ok(match rvalue {
         ir::RValue::Use(op) => compile_load_operand(ctx, fn_id, locals, op)?,
-        ir::RValue::Ref(_, _) => todo!(),
+        ir::RValue::Ref(_mutable, op) => match op {
+            ir::Operand::Copy(_) => todo!(),
+            ir::Operand::Move(place) => {
+                let mut ptr = *locals.get(&place.local).unwrap();
+                let mut local_ty = {
+                    let body = ctx.ctx.program.functions.get(&fn_id).unwrap();
+                    body.locals[place.local].ty.clone()
+                };
+
+                for proj in &place.projection {
+                    match proj {
+                        ir::PlaceElem::Deref => {
+                            ptr = ctx
+                                .builder
+                                .build_load(compile_basic_type(ctx, &local_ty), ptr, "deref")?
+                                .into_pointer_value();
+                            local_ty = match local_ty.kind {
+                                ir::TypeKind::Ptr(inner) => *inner,
+                                ir::TypeKind::Ref(_, inner) => *inner,
+                                _ => unreachable!(),
+                            }
+                        }
+                        ir::PlaceElem::Field { .. } => todo!(),
+                        ir::PlaceElem::Index { .. } => todo!(),
+                    }
+                }
+
+                (ptr.as_basic_value_enum(), local_ty)
+            }
+            ir::Operand::Constant(_) => todo!("references to constants not yet implemented"),
+        },
         ir::RValue::BinOp(op, lhs, rhs) => compile_bin_op(ctx, fn_id, locals, *op, lhs, rhs)?,
         ir::RValue::LogicOp(_, _, _) => todo!(),
-        ir::RValue::UnOp(_, _) => todo!(),
+        ir::RValue::UnOp(op, value) => compile_unary_op(ctx, fn_id, locals, *op, value)?,
     })
 }
 
@@ -933,8 +983,29 @@ fn compile_load_operand<'ctx>(
             )
         }
         ir::Operand::Move(place) => {
-            let pointee_ty = compile_basic_type(ctx, &body.locals[place.local].ty);
-            let ptr = *locals.get(&place.local).unwrap();
+            let mut ptr = *locals.get(&place.local).unwrap();
+            let mut local_ty = body.locals[place.local].ty.clone();
+
+            for proj in &place.projection {
+                match proj {
+                    ir::PlaceElem::Deref => {
+                        ptr = ctx
+                            .builder
+                            .build_load(compile_basic_type(ctx, &local_ty), ptr, "deref")?
+                            .into_pointer_value();
+                        local_ty = match local_ty.kind {
+                            ir::TypeKind::Ptr(inner) => *inner,
+                            ir::TypeKind::Ref(_, inner) => *inner,
+                            _ => unreachable!(),
+                        }
+                    }
+                    ir::PlaceElem::Field { .. } => todo!(),
+                    ir::PlaceElem::Index { .. } => todo!(),
+                }
+            }
+
+            let pointee_ty = compile_basic_type(ctx, &local_ty);
+
             (
                 ctx.builder.build_load(pointee_ty, ptr, "")?,
                 body.locals[place.local].ty.clone(),

@@ -160,7 +160,7 @@ pub(crate) PathExpr: ast::PathExpr = {
     first,
     extra: extra.unwrap_or(vec![]),
     span: ast::Span::new(lo, hi),
-  }
+  },
 }
 
 pub PathSegments: Vec<ast::PathSegment> = {
@@ -215,9 +215,10 @@ pub(crate) LetStmt: ast::LetStmt = {
 }
 
 pub(crate) AssignStmt: ast::AssignStmt = {
-  <lo:@L> <name:PathExpr> "=" <value:Expression> <hi:@R> => ast::AssignStmt {
+  <lo:@L> <deref:"*"*> <name:PathExpr> "=" <value:Expression> <hi:@R> => ast::AssignStmt {
     name,
     value,
+    deref_times: deref.len(),
     span: ast::Span::new(lo, hi),
   },
 }
@@ -268,32 +269,38 @@ pub(crate) IfStmt: ast::IfStmt = {
 }
 
 pub(crate) Term: ast::Expression = {
+  #[precedence(level="0")]
   <ValueExpr> => ast::Expression::Value(<>),
   <FnCallExpr> => ast::Expression::FnCall(<>),
+  #[precedence(level="2")] #[assoc(side="left")]
   "(" <Expression> ")",
 }
 
 pub(crate) Expression: ast::Expression = {
   #[precedence(level="0")]
   <Term>,
+  #[precedence(level="1")] #[assoc(side="left")]
+  "&" "mut" <Expression> => ast::Expression::AsRef(Box::new(<>), true),
+  "&" <Expression> => ast::Expression::AsRef(Box::new(<>), false),
+  "*" <Expression> => ast::Expression::Deref(Box::new(<>)),
   <op:UnaryOp> <rhs:Expression> => ast::Expression::Unary(
     op,
     Box::new(rhs)
   ),
-  // <op:UnaryOp> <e:Expression> => ast::Expression::UnaryOp(op, Box::new(e)),
-  #[precedence(level="1")] #[assoc(side="left")]
+
+  #[precedence(level="2")] #[assoc(side="left")]
   <lhs:Expression> <op:BinaryFirstLvlOp> <rhs:Expression> => ast::Expression::Binary(
     Box::new(lhs),
     op,
     Box::new(rhs)
   ),
-  #[precedence(level="2")] #[assoc(side="left")]
+  #[precedence(level="3")] #[assoc(side="left")]
   <lhs:Expression> <op:BinarySecondLvlOp> <rhs:Expression> => ast::Expression::Binary(
     Box::new(lhs),
     op,
     Box::new(rhs)
   ),
-  #[precedence(level="3")] #[assoc(side="left")]
+  #[precedence(level="4")] #[assoc(side="left")]
   <lhs:Expression> <op:BinaryThirdLvlOp> <rhs:Expression> => ast::Expression::Binary(
     Box::new(lhs),
     op,

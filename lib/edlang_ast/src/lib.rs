@@ -31,20 +31,6 @@ pub struct PathExpr {
     pub span: Span,
 }
 
-impl PathExpr {
-    pub fn get_full_path(&self) -> String {
-        let mut result = self.first.name.clone();
-        for path in &self.extra {
-            result.push('.');
-            match path {
-                PathSegment::Field(name) => result.push_str(&name.name),
-                PathSegment::Index { .. } => result.push_str("[]"),
-            }
-        }
-        result
-    }
-}
-
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum PathSegment {
     Field(Ident),
@@ -109,6 +95,7 @@ pub struct LetStmt {
 pub struct AssignStmt {
     pub name: PathExpr,
     pub value: Expression,
+    pub deref_times: usize,
     pub span: Span,
 }
 
@@ -182,6 +169,8 @@ pub enum Expression {
     FnCall(FnCallExpr),
     Unary(UnaryOp, Box<Self>),
     Binary(Box<Self>, BinaryOp, Box<Self>),
+    Deref(Box<Self>),
+    AsRef(Box<Self>, bool),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]

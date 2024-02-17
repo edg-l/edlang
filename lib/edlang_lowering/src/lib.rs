@@ -159,6 +159,15 @@ fn lower_function(ctx: BuildCtx, func: &ast::Function, module_id: DefId) -> Buil
         lower_statement(&mut builder, stmt, &ret_ty.kind);
     }
 
+    if !builder.statements.is_empty() {
+        let statements = std::mem::take(&mut builder.statements);
+        builder.body.blocks.push(BasicBlock {
+            statements: statements.into(),
+            terminator: Terminator::Return,
+            terminator_span: None,
+        });
+    }
+
     let (mut ctx, body) = (builder.ctx, builder.body);
     ctx.unresolved_function_signatures.remove(&body.def_id);
     ctx.body.functions.insert(body.def_id, body);

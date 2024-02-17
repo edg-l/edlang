@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.0.1-alpha.7] - 2024-02-17
+
+### Features
+
+- Compile unary op, compile asref, compile deref, reference arguments, avoid some temporaries on direct use
+
 ## [0.0.1-alpha.6] - 2024-02-17
 
 ### Bug Fixes

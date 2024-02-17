@@ -237,10 +237,6 @@
 <a href="#236" id="236">236</a>
 <a href="#237" id="237">237</a>
 <a href="#238" id="238">238</a>
-<a href="#239" id="239">239</a>
-<a href="#240" id="240">240</a>
-<a href="#241" id="241">241</a>
-<a href="#242" id="242">242</a>
 </pre></div><pre class="rust"><code><span class="kw">pub use </span>edlang_span::Span;
 
 <span class="attr">#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -274,20 +270,6 @@
     <span class="kw">pub </span>span: Span,
 }
 
-<span class="kw">impl </span>PathExpr {
-    <span class="kw">pub fn </span>get_full_path(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String {
-        <span class="kw">let </span><span class="kw-2">mut </span>result = <span class="self">self</span>.first.name.clone();
-        <span class="kw">for </span>path <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.extra {
-            result.push(<span class="string">'.'</span>);
-            <span class="kw">match </span>path {
-                PathSegment::Field(name) =&gt; result.push_str(<span class="kw-2">&amp;</span>name.name),
-                PathSegment::Index { .. } =&gt; result.push_str(<span class="string">"[]"</span>),
-            }
-        }
-        result
-    }
-}
-
 <span class="attr">#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 </span><span class="kw">pub enum </span>PathSegment {
     Field(Ident),
@@ -305,6 +287,7 @@
 </span><span class="kw">pub struct </span>Type {
     <span class="kw">pub </span>name: Ident,
     <span class="kw">pub </span>generics: Vec&lt;Type&gt;,
+    <span class="kw">pub </span>is_ref: <span class="prelude-ty">Option</span>&lt;RefType&gt;,
     <span class="kw">pub </span>span: Span,
 }
 
@@ -313,6 +296,12 @@
     <span class="kw">pub </span>name: Ident,
     <span class="kw">pub </span>arg_type: Type,
     <span class="kw">pub </span>span: Span,
+}
+
+<span class="attr">#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+</span><span class="kw">pub enum </span>RefType {
+    Not,
+    Mut,
 }
 
 <span class="attr">#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -345,6 +334,7 @@
 </span><span class="kw">pub struct </span>AssignStmt {
     <span class="kw">pub </span>name: PathExpr,
     <span class="kw">pub </span>value: Expression,
+    <span class="kw">pub </span>deref_times: usize,
     <span class="kw">pub </span>span: Span,
 }
 
@@ -418,6 +408,8 @@
     FnCall(FnCallExpr),
     Unary(UnaryOp, Box&lt;<span class="self">Self</span>&gt;),
     Binary(Box&lt;<span class="self">Self</span>&gt;, BinaryOp, Box&lt;<span class="self">Self</span>&gt;),
+    Deref(Box&lt;<span class="self">Self</span>&gt;),
+    AsRef(Box&lt;<span class="self">Self</span>&gt;, bool),
 }
 
 <span class="attr">#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]

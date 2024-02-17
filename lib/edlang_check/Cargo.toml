@@ -1,6 +1,6 @@
 [package]
 name = "edlang_check"
-version = "0.0.1-alpha.5"
+version = "0.0.1-alpha.6"
 authors = ["Edgar Luque <edgar@edgarluque.com>"]
 description = "edlang check"
 edition = "2021"
@@ -14,5 +14,5 @@ repository = "https://github.com/edg-l/edlang"
 
 [dependencies]
 ariadne = { version = "0.4.0", features = ["auto-color"] }
-edlang_ast = { version = "0.0.1-alpha.5", path = "../edlang_ast" }
+edlang_ast = { version = "0.0.1-alpha.6", path = "../edlang_ast" }
 tracing = { workspace = true }

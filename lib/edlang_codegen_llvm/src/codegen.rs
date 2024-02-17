@@ -1160,6 +1160,21 @@ fn compile_basic_type<'ctx>(
             .ptr_sized_int_type(&ctx.target_data, None)
             .ptr_type(AddressSpace::default())
             .as_basic_type_enum(),
+        ir::TypeKind::Struct(id) => {
+            let body = ctx.ctx.program.structs.get(id).unwrap();
+
+            let mut fields = Vec::new();
+
+            for field in &body.variants {
+                let ty = compile_basic_type(ctx, &field.ty);
+                fields.push(ty);
+            }
+
+            ctx.ctx
+                .context
+                .struct_type(&fields, false)
+                .as_basic_type_enum()
+        }
     }
 }
 
@@ -1277,5 +1292,40 @@ fn compile_debug_type<'ctx>(ctx: &ModuleCompileCtx<'ctx, '_>, ty: &ir::TypeInfo)
             .di_builder
             .create_reference_type(compile_debug_type(ctx, inner), 0x10)
             .as_type(),
+        ir::TypeKind::Struct(id) => {
+            let body = ctx.ctx.program.structs.get(id).unwrap();
+
+            let mut fields = Vec::new();
+
+            for field in &body.variants {
+                let ty = compile_debug_type(ctx, &field.ty);
+                fields.push(ty);
+            }
+
+            let (_, line, _column) = ctx
+                .ctx
+                .session
+                .source
+                .get_offset_line(body.span.lo)
+                .unwrap();
+            let real_ty = compile_basic_type(ctx, ty);
+
+            ctx.di_builder
+                .create_struct_type(
+                    ctx.di_namespace,
+                    &body.name,
+                    ctx.di_unit.get_file(),
+                    (line + 1).try_into().unwrap(),
+                    ctx.target_data.get_bit_size(&real_ty),
+                    ctx.target_data.get_abi_alignment(&real_ty),
+                    0,
+                    None,
+                    &fields,
+                    0,
+                    None,
+                    &body.name,
+                )
+                .as_type()
+        }
     }
 }

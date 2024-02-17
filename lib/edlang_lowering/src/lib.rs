@@ -5,8 +5,8 @@ use common::{BodyBuilder, BuildCtx};
 use edlang_ast as ast;
 use edlang_ir as ir;
 use ir::{
-    BasicBlock, Body, DefId, Local, LocalKind, Operand, Place, PlaceElem, ProgramBody, RValue,
-    Statement, StatementKind, SwitchTarget, Terminator, TypeInfo, TypeKind,
+    AdtBody, AdtVariant, BasicBlock, Body, DefId, Local, LocalKind, Operand, Place, PlaceElem,
+    ProgramBody, RValue, Statement, StatementKind, SwitchTarget, Terminator, TypeInfo, TypeKind,
 };
 use tracing::trace;
 
@@ -40,6 +40,18 @@ pub fn lower_modules(modules: &[ast::Module]) -> ProgramBody {
 }
 
 fn lower_module(mut ctx: BuildCtx, module: &ast::Module, id: DefId) -> BuildCtx {
+    // lower first structs, constants, types
+    for content in &module.contents {
+        match content {
+            ModuleStatement::Constant(_) => todo!(),
+            ModuleStatement::Struct(info) => {
+                ctx = lower_struct(ctx, info, id);
+            }
+            // ModuleStatement::Type(_) => todo!(),
+            _ => {}
+        }
+    }
+
     let body = ctx.body.modules.get(&id).unwrap();
 
     // fill fn sigs
@@ -51,12 +63,12 @@ fn lower_module(mut ctx: BuildCtx, module: &ast::Module, id: DefId) -> BuildCtx 
             let ret_type;
 
             for arg in &fn_def.params {
-                let ty = lower_type(&ctx, &arg.arg_type);
+                let ty = lower_type(&ctx, &arg.arg_type, id);
                 args.push(ty);
             }
 
             if let Some(ty) = &fn_def.return_type {
-                ret_type = lower_type(&ctx, ty);
+                ret_type = lower_type(&ctx, ty, id);
             } else {
                 ret_type = TypeInfo {
                     span: None,
@@ -70,16 +82,40 @@ fn lower_module(mut ctx: BuildCtx, module: &ast::Module, id: DefId) -> BuildCtx 
 
     for content in &module.contents {
         match content {
-            ModuleStatement::Constant(_) => todo!(),
             ModuleStatement::Function(fn_def) => {
                 ctx = lower_function(ctx, fn_def, id);
             }
-            ModuleStatement::Struct(_) => todo!(),
             // ModuleStatement::Type(_) => todo!(),
             ModuleStatement::Module(_mod_def) => {}
+            _ => {}
         }
     }
 
+    ctx
+}
+
+fn lower_struct(mut ctx: BuildCtx, info: &ast::Struct, module_id: DefId) -> BuildCtx {
+    let mut body = AdtBody {
+        def_id: {
+            let body = ctx.body.modules.get(&module_id).unwrap();
+            *body.symbols.structs.get(&info.name.name).unwrap()
+        },
+        is_pub: true, // todo struct pub
+        name: info.name.name.clone(),
+        variants: Vec::new(),
+        span: info.span,
+    };
+
+    for field in &info.fields {
+        let variant = AdtVariant {
+            def_id: ctx.gen.next_defid(),
+            name: field.name.name.clone(),
+            ty: lower_type(&ctx, &field.r#type, module_id),
+        };
+        body.variants.push(variant);
+    }
+
+    ctx.body.structs.insert(body.def_id, body);
     ctx
 }
 
@@ -141,7 +177,7 @@ fn lower_function(ctx: BuildCtx, func: &ast::Function, module_id: DefId) -> Buil
     // Get all user defined locals
     for stmt in &func.body.body {
         if let ast::Statement::Let(info) = stmt {
-            let ty = lower_type(&builder.ctx, &info.r#type);
+            let ty = lower_type(&builder.ctx, &info.r#type, builder.local_module);
             builder
                 .name_to_local
                 .insert(info.name.name.clone(), builder.body.locals.len());
@@ -360,7 +396,7 @@ fn lower_if_stmt(builder: &mut BodyBuilder, info: &ast::IfStmt, ret_type: &TypeK
 }
 
 fn lower_let(builder: &mut BodyBuilder, info: &ast::LetStmt) {
-    let ty = lower_type(&builder.ctx, &info.r#type);
+    let ty = lower_type(&builder.ctx, &info.r#type, builder.local_module);
     let (rvalue, _ty) = lower_expr(builder, &info.value, Some(&ty.kind));
     let local_idx = builder.name_to_local.get(&info.name.name).copied().unwrap();
     builder.statements.push(Statement {
@@ -665,10 +701,13 @@ fn lower_fn_call(builder: &mut BodyBuilder, info: &ast::FnCallExpr) -> (Operand,
                 .get(&fn_id)
                 .unwrap();
 
-            let args: Vec<_> = args.iter().map(|x| lower_type(&builder.ctx, x)).collect();
+            let args: Vec<_> = args
+                .iter()
+                .map(|x| lower_type(&builder.ctx, x, builder.local_module))
+                .collect();
             let ret = ret
                 .as_ref()
-                .map(|x| lower_type(&builder.ctx, x))
+                .map(|x| lower_type(&builder.ctx, x, builder.local_module))
                 .unwrap_or(TypeInfo {
                     span: None,
                     kind: TypeKind::Unit,
@@ -904,7 +943,7 @@ fn lower_path(builder: &mut BodyBuilder, info: &ast::PathExpr) -> (ir::Place, Ty
 }
 
 #[allow(clippy::only_used_in_recursion)]
-pub fn lower_type(ctx: &BuildCtx, t: &ast::Type) -> ir::TypeInfo {
+pub fn lower_type(ctx: &BuildCtx, t: &ast::Type, module_id: DefId) -> ir::TypeInfo {
     let inner_ty = match t.name.name.as_str() {
         "()" => ir::TypeInfo {
             span: Some(t.span),
@@ -960,9 +999,24 @@ pub fn lower_type(ctx: &BuildCtx, t: &ast::Type) -> ir::TypeInfo {
         },
         "ptr" => ir::TypeInfo {
             span: Some(t.span),
-            kind: ir::TypeKind::Ptr(Box::new(lower_type(ctx, t.generics.first().unwrap()))),
+            kind: ir::TypeKind::Ptr(Box::new(lower_type(
+                ctx,
+                t.generics.first().unwrap(),
+                module_id,
+            ))),
         },
-        x => todo!("{:?}", x),
+        other => {
+            let module = ctx.body.modules.get(&module_id).expect("module not found");
+            if let Some(struct_id) = module.symbols.structs.get(other) {
+                let struct_body = ctx.body.structs.get(struct_id).unwrap();
+                ir::TypeInfo {
+                    span: Some(struct_body.span),
+                    kind: TypeKind::Struct(*struct_id),
+                }
+            } else {
+                todo!("{:?}", other)
+            }
+        }
     };
 
     match t.is_ref {

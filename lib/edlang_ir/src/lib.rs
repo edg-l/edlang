@@ -26,6 +26,7 @@ pub struct ProgramBody {
     pub modules: BTreeMap<DefId, ModuleBody>,
     /// This stores all the functions from all modules
     pub functions: BTreeMap<DefId, Body>,
+    pub structs: BTreeMap<DefId, AdtBody>,
     /// The function signatures.
     pub function_signatures: BTreeMap<DefId, (Vec<TypeInfo>, TypeInfo)>,
 }
@@ -85,6 +86,23 @@ impl Body {
     pub fn get_return_local(&self) -> Local {
         self.locals[0].clone()
     }
+}
+
+#[derive(Debug, Clone)]
+pub struct AdtBody {
+    pub def_id: DefId,
+    pub is_pub: bool,
+    pub name: String,
+    pub variants: Vec<AdtVariant>,
+    pub span: Span,
+}
+
+/// struct field or enum variant
+#[derive(Debug, Clone)]
+pub struct AdtVariant {
+    pub def_id: DefId,
+    pub name: String,
+    pub ty: TypeInfo,
 }
 
 #[derive(Debug, Clone)]
@@ -205,6 +223,7 @@ pub enum TypeKind {
     FnDef(DefId, Vec<TypeInfo>), // The vec are generic types, not arg types
     Ptr(Box<TypeInfo>),
     Ref(bool, Box<TypeInfo>),
+    Struct(DefId),
 }
 
 impl TypeKind {
@@ -241,6 +260,7 @@ impl TypeKind {
             TypeKind::FnDef(_, _) => unreachable!(),
             TypeKind::Ptr(_pointee) => todo!(),
             TypeKind::Ref(_, inner) => inner.kind.get_falsy_value(),
+            TypeKind::Struct(_) => todo!(),
         }
     }
 }

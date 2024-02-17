@@ -1280,6 +1280,56 @@
 <a href="#1279" id="1279">1279</a>
 <a href="#1280" id="1280">1280</a>
 <a href="#1281" id="1281">1281</a>
+<a href="#1282" id="1282">1282</a>
+<a href="#1283" id="1283">1283</a>
+<a href="#1284" id="1284">1284</a>
+<a href="#1285" id="1285">1285</a>
+<a href="#1286" id="1286">1286</a>
+<a href="#1287" id="1287">1287</a>
+<a href="#1288" id="1288">1288</a>
+<a href="#1289" id="1289">1289</a>
+<a href="#1290" id="1290">1290</a>
+<a href="#1291" id="1291">1291</a>
+<a href="#1292" id="1292">1292</a>
+<a href="#1293" id="1293">1293</a>
+<a href="#1294" id="1294">1294</a>
+<a href="#1295" id="1295">1295</a>
+<a href="#1296" id="1296">1296</a>
+<a href="#1297" id="1297">1297</a>
+<a href="#1298" id="1298">1298</a>
+<a href="#1299" id="1299">1299</a>
+<a href="#1300" id="1300">1300</a>
+<a href="#1301" id="1301">1301</a>
+<a href="#1302" id="1302">1302</a>
+<a href="#1303" id="1303">1303</a>
+<a href="#1304" id="1304">1304</a>
+<a href="#1305" id="1305">1305</a>
+<a href="#1306" id="1306">1306</a>
+<a href="#1307" id="1307">1307</a>
+<a href="#1308" id="1308">1308</a>
+<a href="#1309" id="1309">1309</a>
+<a href="#1310" id="1310">1310</a>
+<a href="#1311" id="1311">1311</a>
+<a href="#1312" id="1312">1312</a>
+<a href="#1313" id="1313">1313</a>
+<a href="#1314" id="1314">1314</a>
+<a href="#1315" id="1315">1315</a>
+<a href="#1316" id="1316">1316</a>
+<a href="#1317" id="1317">1317</a>
+<a href="#1318" id="1318">1318</a>
+<a href="#1319" id="1319">1319</a>
+<a href="#1320" id="1320">1320</a>
+<a href="#1321" id="1321">1321</a>
+<a href="#1322" id="1322">1322</a>
+<a href="#1323" id="1323">1323</a>
+<a href="#1324" id="1324">1324</a>
+<a href="#1325" id="1325">1325</a>
+<a href="#1326" id="1326">1326</a>
+<a href="#1327" id="1327">1327</a>
+<a href="#1328" id="1328">1328</a>
+<a href="#1329" id="1329">1329</a>
+<a href="#1330" id="1330">1330</a>
+<a href="#1331" id="1331">1331</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{collections::HashMap, error::Error, path::PathBuf};
 
 <span class="kw">use </span>edlang_ir <span class="kw">as </span>ir;
@@ -2442,6 +2492,21 @@
             .ptr_sized_int_type(<span class="kw-2">&amp;</span>ctx.target_data, <span class="prelude-val">None</span>)
             .ptr_type(AddressSpace::default())
             .as_basic_type_enum(),
+        ir::TypeKind::Struct(id) =&gt; {
+            <span class="kw">let </span>body = ctx.ctx.program.structs.get(id).unwrap();
+
+            <span class="kw">let </span><span class="kw-2">mut </span>fields = Vec::new();
+
+            <span class="kw">for </span>field <span class="kw">in </span><span class="kw-2">&amp;</span>body.variants {
+                <span class="kw">let </span>ty = compile_basic_type(ctx, <span class="kw-2">&amp;</span>field.ty);
+                fields.push(ty);
+            }
+
+            ctx.ctx
+                .context
+                .struct_type(<span class="kw-2">&amp;</span>fields, <span class="bool-val">false</span>)
+                .as_basic_type_enum()
+        }
     }
 }
 
@@ -2559,6 +2624,41 @@
             .di_builder
             .create_reference_type(compile_debug_type(ctx, inner), <span class="number">0x10</span>)
             .as_type(),
+        ir::TypeKind::Struct(id) =&gt; {
+            <span class="kw">let </span>body = ctx.ctx.program.structs.get(id).unwrap();
+
+            <span class="kw">let </span><span class="kw-2">mut </span>fields = Vec::new();
+
+            <span class="kw">for </span>field <span class="kw">in </span><span class="kw-2">&amp;</span>body.variants {
+                <span class="kw">let </span>ty = compile_debug_type(ctx, <span class="kw-2">&amp;</span>field.ty);
+                fields.push(ty);
+            }
+
+            <span class="kw">let </span>(<span class="kw">_</span>, line, _column) = ctx
+                .ctx
+                .session
+                .source
+                .get_offset_line(body.span.lo)
+                .unwrap();
+            <span class="kw">let </span>real_ty = compile_basic_type(ctx, ty);
+
+            ctx.di_builder
+                .create_struct_type(
+                    ctx.di_namespace,
+                    <span class="kw-2">&amp;</span>body.name,
+                    ctx.di_unit.get_file(),
+                    (line + <span class="number">1</span>).try_into().unwrap(),
+                    ctx.target_data.get_bit_size(<span class="kw-2">&amp;</span>real_ty),
+                    ctx.target_data.get_abi_alignment(<span class="kw-2">&amp;</span>real_ty),
+                    <span class="number">0</span>,
+                    <span class="prelude-val">None</span>,
+                    <span class="kw-2">&amp;</span>fields,
+                    <span class="number">0</span>,
+                    <span class="prelude-val">None</span>,
+                    <span class="kw-2">&amp;</span>body.name,
+                )
+                .as_type()
+        }
     }
 }
 </code></pre></div></section></main></body></html>

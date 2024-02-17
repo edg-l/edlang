@@ -1075,7 +1075,7 @@
                 <span class="kw">let </span>body = ctx.body.modules.get(<span class="kw-2">&amp;</span>module_id).unwrap();
                 <span class="kw-2">*</span>body.symbols.functions.get(<span class="kw-2">&amp;</span>func.name.name).unwrap()
             },
-            is_pub: func.is_public,
+            is_pub: func.is_public || func.name.name == <span class="string">"main"</span>,
             is_extern: func.is_extern,
             fn_span: func.span,
         },

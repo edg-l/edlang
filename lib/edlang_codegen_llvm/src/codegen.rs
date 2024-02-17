@@ -971,46 +971,9 @@ fn compile_load_operand<'ctx>(
     locals: &HashMap<usize, PointerValue<'ctx>>,
     op: &ir::Operand,
 ) -> Result<(BasicValueEnum<'ctx>, TypeInfo), BuilderError> {
-    // todo: implement projection
-    let body = ctx.ctx.program.functions.get(&fn_id).unwrap();
     Ok(match op {
-        ir::Operand::Copy(place) => {
-            let pointee_ty = compile_basic_type(ctx, &body.locals[place.local].ty);
-            let ptr = *locals.get(&place.local).unwrap();
-            (
-                ctx.builder.build_load(pointee_ty, ptr, "")?,
-                body.locals[place.local].ty.clone(),
-            )
-        }
-        ir::Operand::Move(place) => {
-            let mut ptr = *locals.get(&place.local).unwrap();
-            let mut local_ty = body.locals[place.local].ty.clone();
-
-            for proj in &place.projection {
-                match proj {
-                    ir::PlaceElem::Deref => {
-                        ptr = ctx
-                            .builder
-                            .build_load(compile_basic_type(ctx, &local_ty), ptr, "deref")?
-                            .into_pointer_value();
-                        local_ty = match local_ty.kind {
-                            ir::TypeKind::Ptr(inner) => *inner,
-                            ir::TypeKind::Ref(_, inner) => *inner,
-                            _ => unreachable!(),
-                        }
-                    }
-                    ir::PlaceElem::Field { .. } => todo!(),
-                    ir::PlaceElem::Index { .. } => todo!(),
-                }
-            }
-
-            let pointee_ty = compile_basic_type(ctx, &local_ty);
-
-            (
-                ctx.builder.build_load(pointee_ty, ptr, "")?,
-                body.locals[place.local].ty.clone(),
-            )
-        }
+        ir::Operand::Copy(place) => compile_load_place(ctx, fn_id, locals, place, true)?,
+        ir::Operand::Move(place) => compile_load_place(ctx, fn_id, locals, place, false)?,
         ir::Operand::Constant(data) => match &data.kind {
             ir::ConstKind::Value(value) => (
                 compile_value(ctx, value, &data.type_info)?,
@@ -1019,6 +982,59 @@ fn compile_load_operand<'ctx>(
             ir::ConstKind::ZeroSized => todo!(),
         },
     })
+}
+
+fn compile_load_place<'ctx>(
+    ctx: &ModuleCompileCtx<'ctx, '_>,
+    fn_id: DefId,
+    locals: &HashMap<usize, PointerValue<'ctx>>,
+    place: &ir::Place,
+    _is_copy: bool,
+) -> Result<(BasicValueEnum<'ctx>, TypeInfo), BuilderError> {
+    let body = ctx.ctx.program.functions.get(&fn_id).unwrap();
+    let mut ptr = *locals.get(&place.local).unwrap();
+    let mut local_ty = body.locals[place.local].ty.clone();
+
+    for proj in &place.projection {
+        match proj {
+            ir::PlaceElem::Deref => {
+                ptr = ctx
+                    .builder
+                    .build_load(compile_basic_type(ctx, &local_ty), ptr, "deref")?
+                    .into_pointer_value();
+                local_ty = match local_ty.kind {
+                    ir::TypeKind::Ptr(inner) => *inner,
+                    ir::TypeKind::Ref(_, inner) => *inner,
+                    _ => unreachable!(),
+                }
+            }
+            ir::PlaceElem::Field { field_idx } => {
+                local_ty = match local_ty.kind {
+                    ir::TypeKind::Struct(id) => {
+                        let struct_body = ctx.ctx.program.structs.get(&id).unwrap();
+                        let ty = struct_body.variants[*field_idx].ty.clone();
+                        let field_name = struct_body.variants[*field_idx].name.clone();
+                        ptr = ctx.builder.build_struct_gep(
+                            compile_basic_type(ctx, &local_ty),
+                            ptr,
+                            (*field_idx).try_into().unwrap(),
+                            &format!("ptr_field_{field_name}"),
+                        )?;
+                        ty
+                    }
+                    _ => unreachable!(),
+                }
+            }
+            ir::PlaceElem::Index { .. } => todo!(),
+        }
+    }
+
+    let pointee_ty = compile_basic_type(ctx, &local_ty);
+
+    Ok((
+        ctx.builder.build_load(pointee_ty, ptr, "")?,
+        body.locals[place.local].ty.clone(),
+    ))
 }
 
 fn compile_value<'ctx>(

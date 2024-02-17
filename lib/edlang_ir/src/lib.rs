@@ -1,6 +1,6 @@
 // Based on a cfg
 
-use std::collections::{BTreeMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 
 use edlang_span::Span;
 use smallvec::SmallVec;
@@ -94,6 +94,7 @@ pub struct AdtBody {
     pub is_pub: bool,
     pub name: String,
     pub variants: Vec<AdtVariant>,
+    pub name_to_idx: HashMap<String, usize>,
     pub span: Span,
 }
 
@@ -359,7 +360,7 @@ pub struct Place {
 #[derive(Debug, Clone, Copy)]
 pub enum PlaceElem {
     Deref,
-    Field { field_idx: usize, type_info: usize },
+    Field { field_idx: usize },
     Index { local: usize },
 }
 

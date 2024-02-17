@@ -103,6 +103,7 @@ fn lower_struct(mut ctx: BuildCtx, info: &ast::Struct, module_id: DefId) -> Buil
         is_pub: true, // todo struct pub
         name: info.name.name.clone(),
         variants: Vec::new(),
+        name_to_idx: Default::default(),
         span: info.span,
     };
 
@@ -113,6 +114,8 @@ fn lower_struct(mut ctx: BuildCtx, info: &ast::Struct, module_id: DefId) -> Buil
             ty: lower_type(&ctx, &field.r#type, module_id),
         };
         body.variants.push(variant);
+        body.name_to_idx
+            .insert(field.name.name.clone(), body.variants.len() - 1);
     }
 
     ctx.body.structs.insert(body.def_id, body);
@@ -418,21 +421,6 @@ fn lower_let(builder: &mut BodyBuilder, info: &ast::LetStmt) {
 fn lower_assign(builder: &mut BodyBuilder, info: &ast::AssignStmt) {
     let (mut place, mut ty) = lower_path(builder, &info.name);
 
-    if let Some(PlaceElem::Deref) = place.projection.last() {
-        match &ty {
-            TypeKind::Ptr(inner) => {
-                ty = inner.kind.clone();
-            }
-            TypeKind::Ref(is_mut, inner) => {
-                if !is_mut {
-                    panic!("trying to mutate non mut ref");
-                }
-                ty = inner.kind.clone();
-            }
-            _ => unreachable!(),
-        }
-    }
-
     for _ in 0..info.deref_times {
         match &ty {
             TypeKind::Ptr(inner) => {
@@ -454,7 +442,7 @@ fn lower_assign(builder: &mut BodyBuilder, info: &ast::AssignStmt) {
     builder.statements.push(Statement {
         span: Some(info.name.first.span),
         kind: StatementKind::Assign(place, rvalue),
-    })
+    });
 }
 
 fn find_expr_type(builder: &mut BodyBuilder, info: &ast::Expression) -> Option<TypeKind> {
@@ -887,7 +875,6 @@ fn lower_value(
         },
         ast::ValueExpr::Str { value: _, span: _ } => todo!(),
         ast::ValueExpr::Path(info) => {
-            // add deref info to path
             let (place, ty) = lower_path(builder, info);
             (Operand::Move(place), ty)
         }
@@ -922,13 +909,26 @@ fn lower_path(builder: &mut BodyBuilder, info: &ast::PathExpr) -> (ir::Place, Ty
         .name_to_local
         .get(&info.first.name)
         .expect("local not found");
-    let ty = builder.body.locals[local].ty.kind.clone();
 
-    let projection = Vec::new();
+    let mut ty = builder.body.locals[local].ty.kind.clone();
+    let mut projection = Vec::new();
 
     for extra in &info.extra {
         match extra {
-            ast::PathSegment::Field(_) => todo!(),
+            ast::PathSegment::Field(name) => {
+                // is while fine? auto deref
+                while let TypeKind::Ref(_, inner) = ty {
+                    projection.push(PlaceElem::Deref);
+                    ty = inner.kind;
+                }
+
+                if let TypeKind::Struct(id) = ty {
+                    let struct_body = builder.ctx.body.structs.get(&id).unwrap();
+                    let idx = *struct_body.name_to_idx.get(&name.name).unwrap();
+                    projection.push(PlaceElem::Field { field_idx: idx });
+                    ty = struct_body.variants[idx].ty.kind.clone();
+                }
+            }
             ast::PathSegment::Index { .. } => todo!(),
         }
     }
@@ -936,7 +936,7 @@ fn lower_path(builder: &mut BodyBuilder, info: &ast::PathExpr) -> (ir::Place, Ty
     (
         Place {
             local,
-            projection: projection.into(), // todo, field array deref
+            projection: projection.into(), // todo, array
         },
         ty,
     )

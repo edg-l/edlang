@@ -1185,6 +1185,18 @@
 <a href="#1184" id="1184">1184</a>
 <a href="#1185" id="1185">1185</a>
 <a href="#1186" id="1186">1186</a>
+<a href="#1187" id="1187">1187</a>
+<a href="#1188" id="1188">1188</a>
+<a href="#1189" id="1189">1189</a>
+<a href="#1190" id="1190">1190</a>
+<a href="#1191" id="1191">1191</a>
+<a href="#1192" id="1192">1192</a>
+<a href="#1193" id="1193">1193</a>
+<a href="#1194" id="1194">1194</a>
+<a href="#1195" id="1195">1195</a>
+<a href="#1196" id="1196">1196</a>
+<a href="#1197" id="1197">1197</a>
+<a href="#1198" id="1198">1198</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{collections::HashMap, error::Error, path::PathBuf};
 
 <span class="kw">use </span>edlang_ir <span class="kw">as </span>ir;
@@ -1198,6 +1210,7 @@
         AsDIScope, DICompileUnit, DIFlagsConstants, DILocation, DIScope, DIType, DebugInfoBuilder,
     },
     module::Module,
+    passes::PassBuilderOptions,
     targets::{InitializationConfig, Target, TargetData, TargetMachine},
     types::{AnyType, BasicMetadataTypeEnum, BasicType},
     values::{BasicValue, BasicValueEnum, PointerValue},
@@ -1281,6 +1294,7 @@
         )
         .unwrap();
     machine.set_asm_verbosity(<span class="bool-val">true</span>);
+
     <span class="macro">info!</span>(<span class="string">"compiling for: {:?}"</span>, target.get_description());
 
     <span class="kw">let </span>filename = session.file_path.file_name().unwrap().to_string_lossy();
@@ -1328,6 +1342,18 @@
 
         module_ctx.di_builder.finalize();
         module_ctx.module.verify()<span class="question-mark">?</span>;
+
+        <span class="kw">let </span>opt = <span class="kw">match </span>session.optlevel {
+            edlang_session::OptLevel::None =&gt; <span class="string">"0"</span>,
+            edlang_session::OptLevel::Less =&gt; <span class="string">"1"</span>,
+            edlang_session::OptLevel::Default =&gt; <span class="string">"2"</span>,
+            edlang_session::OptLevel::Aggressive =&gt; <span class="string">"3"</span>,
+        };
+
+        <span class="kw">let </span>passopt = PassBuilderOptions::create();
+        module_ctx
+            .module
+            .run_passes(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"default&lt;O{}&gt;"</span>, opt), <span class="kw-2">&amp;</span>machine, passopt)<span class="question-mark">?</span>;
 
         <span class="kw">if </span>session.output_llvm {
             module_ctx
@@ -1420,29 +1446,27 @@
     preallocated sret align 0 allockind(\"\") allocsize(0,0) dereferenceable(0) dereferenceable_or_null(0
         */
 
+    /*
     // nounwind
-    </span>fn_value.add_attribute(
+    fn_value.add_attribute(
         inkwell::attributes::AttributeLoc::Function,
-        ctx.ctx.context.create_enum_attribute(<span class="number">36</span>, <span class="number">0</span>),
+        ctx.ctx.context.create_enum_attribute(36, 0),
     );
 
-    <span class="comment">// nonlazybind
-    </span>fn_value.add_attribute(
+    // nonlazybind
+    fn_value.add_attribute(
         inkwell::attributes::AttributeLoc::Function,
-        ctx.ctx.context.create_enum_attribute(<span class="number">37</span>, <span class="number">0</span>),
+        ctx.ctx.context.create_enum_attribute(37, 0),
     );
 
-    <span class="comment">// willreturn
-    </span>fn_value.add_attribute(
+    // willreturn
+    fn_value.add_attribute(
         inkwell::attributes::AttributeLoc::Function,
-        ctx.ctx.context.create_enum_attribute(<span class="number">66</span>, <span class="number">0</span>),
+        ctx.ctx.context.create_enum_attribute(66, 0),
     );
+    */
 
-    <span class="kw">if </span>body.name == <span class="string">"main" </span>{
-        fn_value.set_call_conventions(<span class="number">0</span>);
-    } <span class="kw">else </span>{
-        fn_value.set_call_conventions(<span class="number">1</span>);
-    }
+    </span>fn_value.set_call_conventions(<span class="number">0</span>);
 
     <span class="kw">let </span>(<span class="kw">_</span>, line, _col) = ctx
         .ctx

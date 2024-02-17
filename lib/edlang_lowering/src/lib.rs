@@ -93,7 +93,7 @@ fn lower_function(ctx: BuildCtx, func: &ast::Function, module_id: DefId) -> Buil
                 let body = ctx.body.modules.get(&module_id).unwrap();
                 *body.symbols.functions.get(&func.name.name).unwrap()
             },
-            is_pub: func.is_public,
+            is_pub: func.is_public || func.name.name == "main",
             is_extern: func.is_extern,
             fn_span: func.span,
         },

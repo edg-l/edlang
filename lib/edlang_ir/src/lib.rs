@@ -224,7 +224,7 @@ pub enum TypeKind {
     FnDef(DefId, Vec<TypeInfo>), // The vec are generic types, not arg types
     Ptr(Box<TypeInfo>),
     Ref(bool, Box<TypeInfo>),
-    Struct(DefId),
+    Struct(DefId), // todo, add generics
 }
 
 impl TypeKind {

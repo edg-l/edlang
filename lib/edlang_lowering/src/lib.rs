@@ -496,7 +496,7 @@ fn find_expr_type(builder: &mut BodyBuilder, info: &ast::Expression) -> Option<T
                 .get_module_body()
                 .symbols
                 .structs
-                .get(&info.name.name)
+                .get(&info.name.name.name)
                 .expect("struct not found");
             ir::TypeKind::Struct(id)
         }
@@ -570,7 +570,7 @@ fn lower_expr(
                 .get_module_body()
                 .symbols
                 .structs
-                .get(&info.name.name)
+                .get(&info.name.name.name)
                 .expect("struct not found");
             let struct_body = builder.ctx.body.structs.get(&id).unwrap().clone();
             let ty = TypeKind::Struct(id);

@@ -155,6 +155,22 @@ pub(crate) Type: ast::Type = {
     },
 }
 
+/// For things like A::<T> { a: value }
+pub(crate) IdentWithOptionalType: ast::Type = {
+    <lo:@L> <name:Ident> <hi:@R> => ast::Type {
+        name,
+        generics: vec![],
+        is_ref: None,
+        span: ast::Span::new(lo, hi),
+    },
+    <lo:@L> <name:Ident> "::" "<" <generics:Comma<Type>> ">" <hi:@R> => ast::Type {
+        name,
+        generics,
+        is_ref: None,
+        span: ast::Span::new(lo, hi),
+    },
+}
+
 pub(crate) PathExpr: ast::PathExpr = {
   <lo:@L> <first:Ident> <extra:PathSegments?> <hi:@R> => ast::PathExpr {
     first,
@@ -212,7 +228,7 @@ pub(crate) LetStmt: ast::LetStmt = {
     value,
     span: ast::Span::new(lo, hi),
   },
-   <lo:@L> "let" <is_mut:"mut"?> <name:Ident> ":" <target_type:Type> "=" <value:StructInitExpr> <hi:@R> => ast::LetStmt {
+  <lo:@L> "let" <is_mut:"mut"?> <name:Ident> ":" <target_type:Type> "=" <value:StructInitExpr> <hi:@R> => ast::LetStmt {
     is_mut: is_mut.is_some(),
     name,
     r#type: target_type,
@@ -381,7 +397,7 @@ pub(crate) StructInitField: (ast::Ident, ast::StructInitField) = {
 }
 
 pub(crate) StructInitExpr: ast::StructInitExpr = {
-  <lo:@L> <name:Ident> "{" <fields:Comma<StructInitField>> "}" <hi:@R> => ast::StructInitExpr {
+  <lo:@L> <name:IdentWithOptionalType> "{" <fields:Comma<StructInitField>> "}" <hi:@R> => ast::StructInitExpr {
     name,
     fields: fields.into_iter().collect(),
     span: ast::Span::new(lo, hi),

@@ -194,7 +194,7 @@ pub struct StructInitField {
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct StructInitExpr {
-    pub name: Ident,
+    pub name: Type,
     pub fields: BTreeMap<Ident, StructInitField>,
     pub span: Span,
 }

@@ -212,12 +212,25 @@ pub(crate) LetStmt: ast::LetStmt = {
     value,
     span: ast::Span::new(lo, hi),
   },
+   <lo:@L> "let" <is_mut:"mut"?> <name:Ident> ":" <target_type:Type> "=" <value:StructInitExpr> <hi:@R> => ast::LetStmt {
+    is_mut: is_mut.is_some(),
+    name,
+    r#type: target_type,
+    value: ast::Expression::StructInit(value),
+    span: ast::Span::new(lo, hi),
+  },
 }
 
 pub(crate) AssignStmt: ast::AssignStmt = {
   <lo:@L> <deref:"*"*> <name:PathExpr> "=" <value:Expression> <hi:@R> => ast::AssignStmt {
     name,
     value,
+    deref_times: deref.len(),
+    span: ast::Span::new(lo, hi),
+  },
+  <lo:@L> <deref:"*"*> <name:PathExpr> "=" <value:StructInitExpr> <hi:@R> => ast::AssignStmt {
+    name,
+    value: ast::Expression::StructInit(value),
     deref_times: deref.len(),
     span: ast::Span::new(lo, hi),
   },
@@ -272,6 +285,7 @@ pub(crate) Term: ast::Expression = {
   #[precedence(level="0")]
   <ValueExpr> => ast::Expression::Value(<>),
   <FnCallExpr> => ast::Expression::FnCall(<>),
+  "(" <StructInitExpr> ")" => ast::Expression::StructInit(<>),
   #[precedence(level="2")] #[assoc(side="left")]
   "(" <Expression> ")",
 }
@@ -353,6 +367,25 @@ pub(crate) ValueExpr: ast::ValueExpr = {
     span: ast::Span::new(lo, hi),
   },
   <PathExpr> => ast::ValueExpr::Path(<>),
+}
+
+pub(crate) StructInitField: (ast::Ident, ast::StructInitField) = {
+    <lo:@L> <name:Ident> ":" <value:Expression> <hi:@R> => (name, ast::StructInitField {
+        value,
+        span: ast::Span::new(lo, hi),
+    }),
+    <lo:@L> <name:Ident> ":" <value:StructInitExpr> <hi:@R> => (name, ast::StructInitField {
+        value: ast::Expression::StructInit(value),
+        span: ast::Span::new(lo, hi),
+    })
+}
+
+pub(crate) StructInitExpr: ast::StructInitExpr = {
+  <lo:@L> <name:Ident> "{" <fields:Comma<StructInitField>> "}" <hi:@R> => ast::StructInitExpr {
+    name,
+    fields: fields.into_iter().collect(),
+    span: ast::Span::new(lo, hi),
+  }
 }
 
 pub(crate) RefType: ast::RefType = {

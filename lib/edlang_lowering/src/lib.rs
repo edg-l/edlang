@@ -491,6 +491,7 @@ fn find_expr_type(builder: &mut BodyBuilder, info: &ast::Expression) -> Option<T
         }
         ast::Expression::Deref(_) => todo!(),
         ast::Expression::AsRef(_, _) => todo!(),
+        ast::Expression::StructInit(_) => todo!(),
     })
 }
 
@@ -556,6 +557,7 @@ fn lower_expr(
 
             (value, ty)
         }
+        ast::Expression::StructInit(_) => todo!(),
     }
 }
 

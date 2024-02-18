@@ -1,3 +1,5 @@
+use std::collections::{BTreeMap, HashMap};
+
 pub use edlang_span::Span;
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -167,6 +169,7 @@ pub struct Struct {
 pub enum Expression {
     Value(ValueExpr),
     FnCall(FnCallExpr),
+    StructInit(StructInitExpr),
     Unary(UnaryOp, Box<Self>),
     Binary(Box<Self>, BinaryOp, Box<Self>),
     Deref(Box<Self>),
@@ -181,6 +184,19 @@ pub enum ValueExpr {
     Float { value: String, span: Span },
     Str { value: String, span: Span },
     Path(PathExpr),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct StructInitField {
+    pub value: Expression,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct StructInitExpr {
+    pub name: Ident,
+    pub fields: BTreeMap<Ident, StructInitField>,
+    pub span: Span,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]

@@ -403,7 +403,21 @@ fn compile_fn(ctx: &ModuleCompileCtx, fn_id: DefId) -> Result<(), BuilderError> 
                                     _ => unreachable!(),
                                 }
                             }
-                            ir::PlaceElem::Field { .. } => todo!(),
+                            ir::PlaceElem::Field { field_idx } => {
+                                ptr = ctx.builder.build_struct_gep(
+                                    compile_basic_type(ctx, &local_ty),
+                                    ptr,
+                                    (*field_idx) as u32,
+                                    "",
+                                )?;
+                                local_ty = match local_ty.kind {
+                                    ir::TypeKind::Struct(id) => {
+                                        let strc = ctx.ctx.program.structs.get(&id).unwrap();
+                                        strc.variants[*field_idx].ty.clone()
+                                    }
+                                    _ => unreachable!(),
+                                }
+                            }
                             ir::PlaceElem::Index { .. } => todo!(),
                         }
                     }

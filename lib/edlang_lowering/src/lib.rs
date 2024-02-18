@@ -491,7 +491,15 @@ fn find_expr_type(builder: &mut BodyBuilder, info: &ast::Expression) -> Option<T
         }
         ast::Expression::Deref(_) => todo!(),
         ast::Expression::AsRef(_, _) => todo!(),
-        ast::Expression::StructInit(_) => todo!(),
+        ast::Expression::StructInit(info) => {
+            let id = *builder
+                .get_module_body()
+                .symbols
+                .structs
+                .get(&info.name.name)
+                .expect("struct not found");
+            ir::TypeKind::Struct(id)
+        }
     })
 }
 
@@ -557,7 +565,50 @@ fn lower_expr(
 
             (value, ty)
         }
-        ast::Expression::StructInit(_) => todo!(),
+        ast::Expression::StructInit(info) => {
+            let id = *builder
+                .get_module_body()
+                .symbols
+                .structs
+                .get(&info.name.name)
+                .expect("struct not found");
+            let struct_body = builder.ctx.body.structs.get(&id).unwrap().clone();
+            let ty = TypeKind::Struct(id);
+            let struct_local = builder.add_local(Local::temp(ty.clone()));
+
+            let place = Place {
+                local: struct_local,
+                projection: Default::default(),
+            };
+
+            builder.statements.push(Statement {
+                span: None,
+                kind: StatementKind::StorageLive(struct_local),
+            });
+
+            for (field, value) in info.fields.iter() {
+                let idx = *struct_body
+                    .name_to_idx
+                    .get(&field.name)
+                    .expect("failed to find field");
+                let mut field_place = place.clone();
+                field_place
+                    .projection
+                    .push(PlaceElem::Field { field_idx: idx });
+                let span = value.span;
+
+                let variant = &struct_body.variants[idx].ty.kind;
+
+                let (value, _value_ty) = lower_expr(builder, &value.value, Some(variant));
+
+                builder.statements.push(Statement {
+                    span: Some(span),
+                    kind: StatementKind::Assign(field_place, value),
+                });
+            }
+
+            (RValue::Use(Operand::Move(place)), ty)
+        }
     }
 }
 

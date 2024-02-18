@@ -1585,7 +1585,7 @@
                 .get_module_body()
                 .symbols
                 .structs
-                .get(<span class="kw-2">&amp;</span>info.name.name)
+                .get(<span class="kw-2">&amp;</span>info.name.name.name)
                 .expect(<span class="string">"struct not found"</span>);
             ir::TypeKind::Struct(id)
         }
@@ -1659,7 +1659,7 @@
                 .get_module_body()
                 .symbols
                 .structs
-                .get(<span class="kw-2">&amp;</span>info.name.name)
+                .get(<span class="kw-2">&amp;</span>info.name.name.name)
                 .expect(<span class="string">"struct not found"</span>);
             <span class="kw">let </span>struct_body = builder.ctx.body.structs.get(<span class="kw-2">&amp;</span>id).unwrap().clone();
             <span class="kw">let </span>ty = TypeKind::Struct(id);

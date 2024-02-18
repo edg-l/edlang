@@ -700,8 +700,8 @@
     FnDef(DefId, Vec&lt;TypeInfo&gt;), <span class="comment">// The vec are generic types, not arg types
     </span>Ptr(Box&lt;TypeInfo&gt;),
     Ref(bool, Box&lt;TypeInfo&gt;),
-    Struct(DefId),
-}
+    Struct(DefId), <span class="comment">// todo, add generics
+</span>}
 
 <span class="kw">impl </span>TypeKind {
     <span class="kw">pub const fn </span>is_unit(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {

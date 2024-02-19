@@ -34,6 +34,7 @@ pub fn link_shared_lib(
                 "-L/lib/../lib64",
                 "-L/usr/lib/../lib64",
                 "-lc",
+                "-O1",
                 &input_path.display().to_string(),
             ]
         }
@@ -102,6 +103,7 @@ pub fn link_binary(
                 "-zrelro",
                 "--no-as-needed",
                 "-lc",
+                "-O1",
                 crtn,
                 &input_path.display().to_string(),
             ]

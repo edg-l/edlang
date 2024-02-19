@@ -20,7 +20,6 @@ mod common;
 #[test_case(TEST_IF_NO_ELSE, "TEST_IF_NO_ELSE", false, 1, &[] ; "TEST_IF_NO_ELSE")]
 #[test_case(TEST_IF_NO_ELSE, "TEST_IF_NO_ELSE", false, 2, &["a"] ; "TEST_IF_NO_ELSE args")]
 fn example_tests(source: &str, name: &str, is_library: bool, status_code: i32, args: &[&str]) {
-    dbg!(source);
     let program = compile_program(source, name, is_library).unwrap();
 
     assert!(program.binary_file.exists(), "program not compiled");

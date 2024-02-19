@@ -123,6 +123,8 @@
 <a href="#122" id="122">122</a>
 <a href="#123" id="123">123</a>
 <a href="#124" id="124">124</a>
+<a href="#125" id="125">125</a>
+<a href="#126" id="126">126</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::path::Path;
 
 <span class="kw">use </span>tracing::instrument;
@@ -159,6 +161,7 @@
                 <span class="string">"-L/lib/../lib64"</span>,
                 <span class="string">"-L/usr/lib/../lib64"</span>,
                 <span class="string">"-lc"</span>,
+                <span class="string">"-O1"</span>,
                 <span class="kw-2">&amp;</span>input_path.display().to_string(),
             ]
         }
@@ -227,6 +230,7 @@
                 <span class="string">"-zrelro"</span>,
                 <span class="string">"--no-as-needed"</span>,
                 <span class="string">"-lc"</span>,
+                <span class="string">"-O1"</span>,
                 crtn,
                 <span class="kw-2">&amp;</span>input_path.display().to_string(),
             ]

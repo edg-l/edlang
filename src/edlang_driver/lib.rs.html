@@ -146,6 +146,14 @@
 <a href="#145" id="145">145</a>
 <a href="#146" id="146">146</a>
 <a href="#147" id="147">147</a>
+<a href="#148" id="148">148</a>
+<a href="#149" id="149">149</a>
+<a href="#150" id="150">150</a>
+<a href="#151" id="151">151</a>
+<a href="#152" id="152">152</a>
+<a href="#153" id="153">153</a>
+<a href="#154" id="154">154</a>
+<a href="#155" id="155">155</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{error::Error, path::PathBuf, time::Instant};
 
 <span class="kw">use </span>ariadne::Source;
@@ -273,7 +281,15 @@
         <span class="kw">return </span><span class="prelude-val">Ok</span>(());
     }
 
-    <span class="kw">let </span>program_ir = lower_modules(<span class="kw-2">&amp;</span>[module.clone()]);
+    <span class="kw">let </span>program_ir = <span class="kw">match </span>lower_modules(<span class="kw-2">&amp;</span>[module.clone()]) {
+        <span class="prelude-val">Ok</span>(ir) =&gt; ir,
+        <span class="prelude-val">Err</span>(error) =&gt; {
+            <span class="kw">let </span>report = edlang_check::lowering_error_to_report(error, <span class="kw-2">&amp;</span>session);
+            <span class="kw">let </span>path = session.file_path.display().to_string();
+            report.eprint((path, session.source.clone()))<span class="question-mark">?</span>;
+            std::process::exit(<span class="number">1</span>);
+        }
+    };
 
     <span class="kw">if </span>args.ir {
         <span class="macro">println!</span>(<span class="string">"{:#?}"</span>, program_ir);

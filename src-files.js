@@ -25,7 +25,7 @@ var srcIndex = new Map(JSON.parse('[\
 ["edlang_codegen_llvm",["",[],["codegen.rs","lib.rs","linker.rs"]]],\
 ["edlang_driver",["",[],["lib.rs"]]],\
 ["edlang_ir",["",[],["lib.rs","scalar_int.rs"]]],\
-["edlang_lowering",["",[],["common.rs","lib.rs","prepass.rs"]]],\
+["edlang_lowering",["",[],["common.rs","errors.rs","lib.rs","prepass.rs"]]],\
 ["edlang_parser",["",[],["error.rs","lexer.rs","lib.rs","tokens.rs"]]],\
 ["edlang_session",["",[],["lib.rs"]]],\
 ["edlang_span",["",[],["lib.rs"]]],\

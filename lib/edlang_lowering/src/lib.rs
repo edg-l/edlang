@@ -4,6 +4,7 @@ use ast::{BinaryOp, ModuleStatement, Span, WhileStmt};
 use common::{BodyBuilder, BuildCtx};
 use edlang_ast as ast;
 use edlang_ir as ir;
+use errors::LoweringError;
 use ir::{
     AdtBody, AdtVariant, BasicBlock, Body, DefId, Local, LocalKind, Operand, Place, PlaceElem,
     ProgramBody, RValue, Statement, StatementKind, SwitchTarget, Terminator, TypeInfo, TypeKind,
@@ -11,19 +12,20 @@ use ir::{
 use tracing::trace;
 
 mod common;
+pub mod errors;
 mod prepass;
 
-pub fn lower_modules(modules: &[ast::Module]) -> ProgramBody {
+pub fn lower_modules(modules: &[ast::Module]) -> Result<ProgramBody, LoweringError> {
     let mut ctx = BuildCtx::default();
 
     // resolve symbols
     for module in modules {
-        ctx = prepass::prepass_module(ctx, module);
+        ctx = prepass::prepass_module(ctx, module)?;
     }
 
     // resolve imports
     for module in modules {
-        ctx = prepass::prepass_imports(ctx, module);
+        ctx = prepass::prepass_imports(ctx, module)?;
     }
 
     for mod_def in modules {
@@ -33,19 +35,23 @@ pub fn lower_modules(modules: &[ast::Module]) -> ProgramBody {
             .get(&mod_def.name.name)
             .expect("module should exist");
 
-        ctx = lower_module(ctx, mod_def, id);
+        ctx = lower_module(ctx, mod_def, id)?;
     }
 
-    ctx.body
+    Ok(ctx.body)
 }
 
-fn lower_module(mut ctx: BuildCtx, module: &ast::Module, id: DefId) -> BuildCtx {
+fn lower_module(
+    mut ctx: BuildCtx,
+    module: &ast::Module,
+    id: DefId,
+) -> Result<BuildCtx, LoweringError> {
     // lower first structs, constants, types
     for content in &module.contents {
         match content {
             ModuleStatement::Constant(_) => todo!(),
             ModuleStatement::Struct(info) => {
-                ctx = lower_struct(ctx, info, id);
+                ctx = lower_struct(ctx, info, id)?;
             }
             // ModuleStatement::Type(_) => todo!(),
             _ => {}
@@ -63,12 +69,12 @@ fn lower_module(mut ctx: BuildCtx, module: &ast::Module, id: DefId) -> BuildCtx 
             let ret_type;
 
             for arg in &fn_def.params {
-                let ty = lower_type(&ctx, &arg.arg_type, id);
+                let ty = lower_type(&ctx, &arg.arg_type, id)?;
                 args.push(ty);
             }
 
             if let Some(ty) = &fn_def.return_type {
-                ret_type = lower_type(&ctx, ty, id);
+                ret_type = lower_type(&ctx, ty, id)?;
             } else {
                 ret_type = TypeInfo {
                     span: None,
@@ -83,7 +89,7 @@ fn lower_module(mut ctx: BuildCtx, module: &ast::Module, id: DefId) -> BuildCtx 
     for content in &module.contents {
         match content {
             ModuleStatement::Function(fn_def) => {
-                ctx = lower_function(ctx, fn_def, id);
+                ctx = lower_function(ctx, fn_def, id)?;
             }
             // ModuleStatement::Type(_) => todo!(),
             ModuleStatement::Module(_mod_def) => {}
@@ -91,10 +97,14 @@ fn lower_module(mut ctx: BuildCtx, module: &ast::Module, id: DefId) -> BuildCtx 
         }
     }
 
-    ctx
+    Ok(ctx)
 }
 
-fn lower_struct(mut ctx: BuildCtx, info: &ast::Struct, module_id: DefId) -> BuildCtx {
+fn lower_struct(
+    mut ctx: BuildCtx,
+    info: &ast::Struct,
+    module_id: DefId,
+) -> Result<BuildCtx, LoweringError> {
     let mut body = AdtBody {
         def_id: {
             let body = ctx.body.modules.get(&module_id).unwrap();
@@ -111,7 +121,7 @@ fn lower_struct(mut ctx: BuildCtx, info: &ast::Struct, module_id: DefId) -> Buil
         let variant = AdtVariant {
             def_id: ctx.gen.next_defid(),
             name: field.name.name.clone(),
-            ty: lower_type(&ctx, &field.r#type, module_id),
+            ty: lower_type(&ctx, &field.r#type, module_id)?,
         };
         body.variants.push(variant);
         body.name_to_idx
@@ -119,10 +129,14 @@ fn lower_struct(mut ctx: BuildCtx, info: &ast::Struct, module_id: DefId) -> Buil
     }
 
     ctx.body.structs.insert(body.def_id, body);
-    ctx
+    Ok(ctx)
 }
 
-fn lower_function(ctx: BuildCtx, func: &ast::Function, module_id: DefId) -> BuildCtx {
+fn lower_function(
+    ctx: BuildCtx,
+    func: &ast::Function,
+    module_id: DefId,
+) -> Result<BuildCtx, LoweringError> {
     let mut builder = BodyBuilder {
         body: Body {
             blocks: Default::default(),
@@ -180,7 +194,7 @@ fn lower_function(ctx: BuildCtx, func: &ast::Function, module_id: DefId) -> Buil
     // Get all user defined locals
     for stmt in &func.body.body {
         if let ast::Statement::Let(info) = stmt {
-            let ty = lower_type(&builder.ctx, &info.r#type, builder.local_module);
+            let ty = lower_type(&builder.ctx, &info.r#type, builder.local_module)?;
             builder
                 .name_to_local
                 .insert(info.name.name.clone(), builder.body.locals.len());
@@ -195,7 +209,7 @@ fn lower_function(ctx: BuildCtx, func: &ast::Function, module_id: DefId) -> Buil
     }
 
     for stmt in &func.body.body {
-        lower_statement(&mut builder, stmt, &ret_ty.kind);
+        lower_statement(&mut builder, stmt, &ret_ty.kind)?;
     }
 
     if !builder.statements.is_empty() {
@@ -210,10 +224,14 @@ fn lower_function(ctx: BuildCtx, func: &ast::Function, module_id: DefId) -> Buil
     let (mut ctx, body) = (builder.ctx, builder.body);
     ctx.unresolved_function_signatures.remove(&body.def_id);
     ctx.body.functions.insert(body.def_id, body);
-    ctx
+    Ok(ctx)
 }
 
-fn lower_statement(builder: &mut BodyBuilder, info: &ast::Statement, ret_type: &TypeKind) {
+fn lower_statement(
+    builder: &mut BodyBuilder,
+    info: &ast::Statement,
+    ret_type: &TypeKind,
+) -> Result<(), LoweringError> {
     match info {
         ast::Statement::Let(info) => lower_let(builder, info),
         ast::Statement::Assign(info) => lower_assign(builder, info),
@@ -222,12 +240,17 @@ fn lower_statement(builder: &mut BodyBuilder, info: &ast::Statement, ret_type: &
         ast::Statement::If(info) => lower_if_stmt(builder, info, ret_type),
         ast::Statement::Return(info) => lower_return(builder, info, ret_type),
         ast::Statement::FnCall(info) => {
-            lower_fn_call(builder, info);
+            lower_fn_call(builder, info)?;
+            Ok(())
         }
     }
 }
 
-fn lower_while(builder: &mut BodyBuilder, info: &WhileStmt, ret_type: &TypeKind) {
+fn lower_while(
+    builder: &mut BodyBuilder,
+    info: &WhileStmt,
+    ret_type: &TypeKind,
+) -> Result<(), LoweringError> {
     let statements = std::mem::take(&mut builder.statements);
     builder.body.blocks.push(BasicBlock {
         statements: statements.into(),
@@ -235,7 +258,8 @@ fn lower_while(builder: &mut BodyBuilder, info: &WhileStmt, ret_type: &TypeKind)
         terminator_span: Some(info.block.span),
     });
 
-    let (discriminator, discriminator_type, disc_span) = lower_expr(builder, &info.condition, None);
+    let (discriminator, discriminator_type, disc_span) =
+        lower_expr(builder, &info.condition, None)?;
 
     let local = builder.add_temp_local(TypeKind::Bool);
     let place = Place {
@@ -262,7 +286,7 @@ fn lower_while(builder: &mut BodyBuilder, info: &WhileStmt, ret_type: &TypeKind)
     let first_then_block_idx = builder.body.blocks.len();
 
     for stmt in &info.block.body {
-        lower_statement(builder, stmt, ret_type);
+        lower_statement(builder, stmt, ret_type)?;
     }
 
     // keet idx to change terminator if there is no return
@@ -299,11 +323,18 @@ fn lower_while(builder: &mut BodyBuilder, info: &WhileStmt, ret_type: &TypeKind)
     if let Some(last_then_block_idx) = last_then_block_idx {
         builder.body.blocks[last_then_block_idx].terminator = Terminator::Target(check_block_idx);
     }
+
+    Ok(())
 }
 
-fn lower_if_stmt(builder: &mut BodyBuilder, info: &ast::IfStmt, ret_type: &TypeKind) {
-    let cond_ty = find_expr_type(builder, &info.condition).expect("coouldnt find cond type");
-    let (condition, condition_ty, cond_span) = lower_expr(builder, &info.condition, Some(&cond_ty));
+fn lower_if_stmt(
+    builder: &mut BodyBuilder,
+    info: &ast::IfStmt,
+    ret_type: &TypeKind,
+) -> Result<(), LoweringError> {
+    let cond_ty = find_expr_type(builder, &info.condition).expect("couldnt find cond type");
+    let (condition, condition_ty, cond_span) =
+        lower_expr(builder, &info.condition, Some(&cond_ty))?;
 
     let local = builder.add_temp_local(TypeKind::Bool);
     let place = Place {
@@ -330,7 +361,7 @@ fn lower_if_stmt(builder: &mut BodyBuilder, info: &ast::IfStmt, ret_type: &TypeK
     let first_then_block_idx = builder.body.blocks.len();
 
     for stmt in &info.then_block.body {
-        lower_statement(builder, stmt, ret_type);
+        lower_statement(builder, stmt, ret_type)?;
     }
 
     // keet idx to change terminator
@@ -354,7 +385,7 @@ fn lower_if_stmt(builder: &mut BodyBuilder, info: &ast::IfStmt, ret_type: &TypeK
 
     if let Some(contents) = &info.else_block {
         for stmt in &contents.body {
-            lower_statement(builder, stmt, ret_type);
+            lower_statement(builder, stmt, ret_type)?;
         }
     }
 
@@ -396,11 +427,13 @@ fn lower_if_stmt(builder: &mut BodyBuilder, info: &ast::IfStmt, ret_type: &TypeK
     if let Some(idx) = last_else_block_idx {
         builder.body.blocks[idx].terminator = Terminator::Target(next_block_idx);
     }
+
+    Ok(())
 }
 
-fn lower_let(builder: &mut BodyBuilder, info: &ast::LetStmt) {
-    let ty = lower_type(&builder.ctx, &info.r#type, builder.local_module);
-    let (rvalue, _ty, _span) = lower_expr(builder, &info.value, Some(&ty.kind));
+fn lower_let(builder: &mut BodyBuilder, info: &ast::LetStmt) -> Result<(), LoweringError> {
+    let ty = lower_type(&builder.ctx, &info.r#type, builder.local_module)?;
+    let (rvalue, _ty, _span) = lower_expr(builder, &info.value, Some(&ty.kind))?;
     let local_idx = builder.name_to_local.get(&info.name.name).copied().unwrap();
     builder.statements.push(Statement {
         span: Some(info.name.span),
@@ -416,10 +449,12 @@ fn lower_let(builder: &mut BodyBuilder, info: &ast::LetStmt) {
             rvalue,
         ),
     });
+
+    Ok(())
 }
 
-fn lower_assign(builder: &mut BodyBuilder, info: &ast::AssignStmt) {
-    let (mut place, mut ty, _span) = lower_path(builder, &info.name);
+fn lower_assign(builder: &mut BodyBuilder, info: &ast::AssignStmt) -> Result<(), LoweringError> {
+    let (mut place, mut ty, _span) = lower_path(builder, &info.name)?;
 
     for _ in 0..info.deref_times {
         match &ty {
@@ -440,12 +475,14 @@ fn lower_assign(builder: &mut BodyBuilder, info: &ast::AssignStmt) {
         place.projection.push(PlaceElem::Deref);
     }
 
-    let (rvalue, _ty, _span) = lower_expr(builder, &info.value, Some(&ty));
+    let (rvalue, _ty, _span) = lower_expr(builder, &info.value, Some(&ty))?;
 
     builder.statements.push(Statement {
         span: Some(info.name.first.span),
         kind: StatementKind::Assign(place, rvalue),
     });
+
+    Ok(())
 }
 
 fn find_expr_type(builder: &mut BodyBuilder, info: &ast::Expression) -> Option<TypeKind> {
@@ -510,22 +547,22 @@ fn lower_expr(
     builder: &mut BodyBuilder,
     info: &ast::Expression,
     type_hint: Option<&TypeKind>,
-) -> (ir::RValue, TypeKind, Span) {
-    match info {
+) -> Result<(ir::RValue, TypeKind, Span), LoweringError> {
+    Ok(match info {
         ast::Expression::Value(info) => {
-            let (value, ty, span) = lower_value(builder, info, type_hint);
+            let (value, ty, span) = lower_value(builder, info, type_hint)?;
             (ir::RValue::Use(value, span), ty, span)
         }
         ast::Expression::FnCall(info) => {
-            let (value, ty, span) = lower_fn_call(builder, info);
+            let (value, ty, span) = lower_fn_call(builder, info)?;
             (ir::RValue::Use(value, span), ty, span)
         }
         ast::Expression::Unary(_, _) => todo!(),
         ast::Expression::Binary(lhs, op, rhs) => {
-            lower_binary_expr(builder, lhs, op, rhs, type_hint)
+            lower_binary_expr(builder, lhs, op, rhs, type_hint)?
         }
         ast::Expression::Deref(inner) => {
-            let (value, ty, span) = lower_expr(builder, inner, type_hint);
+            let (value, ty, span) = lower_expr(builder, inner, type_hint)?;
 
             // check if its a use directly, to avoid a temporary.
             let mut value = match value {
@@ -549,7 +586,7 @@ fn lower_expr(
                 },
                 None => None,
             };
-            let (mut value, ty, span) = lower_expr(builder, inner, type_hint);
+            let (mut value, ty, span) = lower_expr(builder, inner, type_hint)?;
 
             // check if its a use directly, to avoid a temporary.
             value = match value {
@@ -617,7 +654,7 @@ fn lower_expr(
 
                 let variant = &struct_body.variants[idx].ty.kind;
 
-                let (value, _value_ty, span) = lower_expr(builder, &value.value, Some(variant));
+                let (value, _value_ty, span) = lower_expr(builder, &value.value, Some(variant))?;
 
                 builder.statements.push(Statement {
                     span: Some(span),
@@ -627,7 +664,7 @@ fn lower_expr(
 
             (RValue::Use(Operand::Move(place), info.span), ty, info.span)
         }
-    }
+    })
 }
 
 fn lower_binary_expr(
@@ -636,21 +673,21 @@ fn lower_binary_expr(
     op: &ast::BinaryOp,
     rhs: &ast::Expression,
     type_hint: Option<&TypeKind>,
-) -> (ir::RValue, TypeKind, Span) {
+) -> Result<(ir::RValue, TypeKind, Span), LoweringError> {
     trace!("lowering binary op: {:?}", op);
 
     let (lhs, lhs_ty, _) = if type_hint.is_none() {
         let ty = find_expr_type(builder, lhs)
             .unwrap_or_else(|| find_expr_type(builder, rhs).expect("cant find type"));
-        lower_expr(builder, lhs, Some(&ty))
+        lower_expr(builder, lhs, Some(&ty))?
     } else {
-        lower_expr(builder, lhs, type_hint)
+        lower_expr(builder, lhs, type_hint)?
     };
     let (rhs, rhs_ty, _) = if type_hint.is_none() {
         let ty = find_expr_type(builder, rhs).unwrap_or(lhs_ty.clone());
-        lower_expr(builder, rhs, Some(&ty))
+        lower_expr(builder, rhs, Some(&ty))?
     } else {
-        lower_expr(builder, rhs, type_hint)
+        lower_expr(builder, rhs, type_hint)?
     };
 
     let lhs = match lhs {
@@ -697,7 +734,7 @@ fn lower_binary_expr(
         }
     };
 
-    match op {
+    Ok(match op {
         ast::BinaryOp::Arith(op, span) => (
             match op {
                 ast::ArithOp::Add => ir::RValue::BinOp(ir::BinOp::Add, lhs, rhs, *span),
@@ -738,10 +775,13 @@ fn lower_binary_expr(
             lhs_ty,
             *span,
         ),
-    }
+    })
 }
 
-fn lower_fn_call(builder: &mut BodyBuilder, info: &ast::FnCallExpr) -> (Operand, TypeKind, Span) {
+fn lower_fn_call(
+    builder: &mut BodyBuilder,
+    info: &ast::FnCallExpr,
+) -> Result<(Operand, TypeKind, Span), LoweringError> {
     let fn_id = {
         let mod_body = builder.get_module_body();
 
@@ -767,14 +807,14 @@ fn lower_fn_call(builder: &mut BodyBuilder, info: &ast::FnCallExpr) -> (Operand,
             let args: Vec<_> = args
                 .iter()
                 .map(|x| lower_type(&builder.ctx, x, builder.local_module))
-                .collect();
+                .collect::<Result<Vec<_>, LoweringError>>()?;
             let ret = ret
                 .as_ref()
                 .map(|x| lower_type(&builder.ctx, x, builder.local_module))
-                .unwrap_or(TypeInfo {
+                .unwrap_or(Ok(TypeInfo {
                     span: None,
                     kind: TypeKind::Unit,
-                });
+                }))?;
             builder
                 .ctx
                 .body
@@ -787,7 +827,7 @@ fn lower_fn_call(builder: &mut BodyBuilder, info: &ast::FnCallExpr) -> (Operand,
     let mut args = Vec::new();
 
     for (arg, arg_ty) in info.params.iter().zip(args_ty) {
-        let (rvalue, _rvalue_ty, _span) = lower_expr(builder, arg, Some(&arg_ty.kind));
+        let (rvalue, _rvalue_ty, _span) = lower_expr(builder, arg, Some(&arg_ty.kind))?;
         args.push(rvalue);
     }
 
@@ -815,15 +855,15 @@ fn lower_fn_call(builder: &mut BodyBuilder, info: &ast::FnCallExpr) -> (Operand,
         terminator_span: Some(info.span),
     });
 
-    (Operand::Move(dest_place), ret_ty.kind.clone(), info.span)
+    Ok((Operand::Move(dest_place), ret_ty.kind.clone(), info.span))
 }
 
 fn lower_value(
     builder: &mut BodyBuilder,
     info: &ast::ValueExpr,
     type_hint: Option<&TypeKind>,
-) -> (Operand, TypeKind, Span) {
-    match info {
+) -> Result<(Operand, TypeKind, Span), LoweringError> {
+    Ok(match info {
         ast::ValueExpr::Bool { value, span } => (
             ir::Operand::Constant(ir::ConstData {
                 span: Some(*span),
@@ -959,15 +999,19 @@ fn lower_value(
         },
         ast::ValueExpr::Str { value: _, span: _ } => todo!(),
         ast::ValueExpr::Path(info) => {
-            let (place, ty, span) = lower_path(builder, info);
+            let (place, ty, span) = lower_path(builder, info)?;
             (Operand::Move(place), ty, span)
         }
-    }
+    })
 }
 
-fn lower_return(builder: &mut BodyBuilder, info: &ast::ReturnStmt, return_type: &TypeKind) {
+fn lower_return(
+    builder: &mut BodyBuilder,
+    info: &ast::ReturnStmt,
+    return_type: &TypeKind,
+) -> Result<(), LoweringError> {
     if let Some(value_expr) = &info.value {
-        let (value, _ty, span) = lower_expr(builder, value_expr, Some(return_type));
+        let (value, _ty, span) = lower_expr(builder, value_expr, Some(return_type))?;
         builder.statements.push(Statement {
             span: Some(span),
             kind: StatementKind::Assign(
@@ -986,9 +1030,14 @@ fn lower_return(builder: &mut BodyBuilder, info: &ast::ReturnStmt, return_type: 
         terminator: Terminator::Return,
         terminator_span: Some(info.span),
     });
+
+    Ok(())
 }
 
-fn lower_path(builder: &mut BodyBuilder, info: &ast::PathExpr) -> (ir::Place, TypeKind, Span) {
+fn lower_path(
+    builder: &mut BodyBuilder,
+    info: &ast::PathExpr,
+) -> Result<(ir::Place, TypeKind, Span), LoweringError> {
     let local = *builder
         .name_to_local
         .get(&info.first.name)
@@ -1017,18 +1066,22 @@ fn lower_path(builder: &mut BodyBuilder, info: &ast::PathExpr) -> (ir::Place, Ty
         }
     }
 
-    (
+    Ok((
         Place {
             local,
             projection: projection.into(), // todo, array
         },
         ty,
         info.span,
-    )
+    ))
 }
 
 #[allow(clippy::only_used_in_recursion)]
-pub fn lower_type(ctx: &BuildCtx, t: &ast::Type, module_id: DefId) -> ir::TypeInfo {
+pub fn lower_type(
+    ctx: &BuildCtx,
+    t: &ast::Type,
+    module_id: DefId,
+) -> Result<ir::TypeInfo, LoweringError> {
     let mut ty = match t.name.name.as_str() {
         "()" => ir::TypeInfo {
             span: Some(t.span),
@@ -1095,7 +1148,10 @@ pub fn lower_type(ctx: &BuildCtx, t: &ast::Type, module_id: DefId) -> ir::TypeIn
                     kind: TypeKind::Struct(*struct_id),
                 }
             } else {
-                todo!("{:?}", other)
+                Err(LoweringError::UnrecognizedType {
+                    span: t.name.span,
+                    name: t.name.name.clone(),
+                })?
             }
         }
     };
@@ -1114,5 +1170,5 @@ pub fn lower_type(ctx: &BuildCtx, t: &ast::Type, module_id: DefId) -> ir::TypeIn
         };
     }
 
-    ty
+    Ok(ty)
 }

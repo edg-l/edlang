@@ -315,6 +315,8 @@ version = "0.0.1-alpha.8"
 dependencies = [
  "ariadne",
  "edlang_ast",
+ "edlang_lowering",
+ "edlang_session",
  "tracing",
 ]
 
@@ -365,6 +367,7 @@ version = "0.0.1-alpha.8"
 dependencies = [
  "edlang_ast",
  "edlang_ir",
+ "thiserror",
  "tracing",
 ]
 

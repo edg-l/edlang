@@ -63,7 +63,7 @@ pub fn compile_program(
         output_asm: false,
     };
 
-    let program_ir = lower_modules(&[module]);
+    let program_ir = lower_modules(&[module])?;
 
     let object_path = edlang_codegen_llvm::compile(&session, &program_ir)?;
 

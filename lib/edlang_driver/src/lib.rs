@@ -125,7 +125,15 @@ pub fn main() -> Result<(), Box<dyn Error>> {
         return Ok(());
     }
 
-    let program_ir = lower_modules(&[module.clone()]);
+    let program_ir = match lower_modules(&[module.clone()]) {
+        Ok(ir) => ir,
+        Err(error) => {
+            let report = edlang_check::lowering_error_to_report(error, &session);
+            let path = session.file_path.display().to_string();
+            report.eprint((path, session.source.clone()))?;
+            std::process::exit(1);
+        }
+    };
 
     if args.ir {
         println!("{:#?}", program_ir);

@@ -15,4 +15,6 @@ repository = "https://github.com/edg-l/edlang"
 [dependencies]
 ariadne = { version = "0.4.0", features = ["auto-color"] }
 edlang_ast = { version = "0.0.1-alpha.8", path = "../edlang_ast" }
+edlang_lowering = { version = "0.0.1-alpha.8", path = "../edlang_lowering" }
+edlang_session = { version = "0.0.1-alpha.8", path = "../edlang_session" }
 tracing = { workspace = true }

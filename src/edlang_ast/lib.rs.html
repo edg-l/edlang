@@ -253,6 +253,8 @@
 <a href="#252" id="252">252</a>
 <a href="#253" id="253">253</a>
 <a href="#254" id="254">254</a>
+<a href="#255" id="255">255</a>
+<a href="#256" id="256">256</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::BTreeMap;
 
 <span class="kw">pub use </span>edlang_span::Span;
@@ -305,21 +307,23 @@
 </span><span class="kw">pub struct </span>Type {
     <span class="kw">pub </span>name: Ident,
     <span class="kw">pub </span>generics: Vec&lt;Type&gt;,
-    <span class="kw">pub </span>is_ref: <span class="prelude-ty">Option</span>&lt;RefType&gt;,
+    <span class="kw">pub </span>qualifiers: Vec&lt;TypeQualifier&gt;,
     <span class="kw">pub </span>span: Span,
 }
+
+<span class="attr">#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+</span><span class="kw">pub enum </span>TypeQualifier {
+    Ref,    <span class="comment">// &amp;
+    </span>RefMut, <span class="comment">// &amp;mut
+    </span>Ptr,    <span class="comment">// *const
+    </span>PtrMut, <span class="comment">// *mut
+</span>}
 
 <span class="attr">#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 </span><span class="kw">pub struct </span>FnParam {
     <span class="kw">pub </span>name: Ident,
     <span class="kw">pub </span>arg_type: Type,
     <span class="kw">pub </span>span: Span,
-}
-
-<span class="attr">#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-</span><span class="kw">pub enum </span>RefType {
-    Not,
-    Mut,
 }
 
 <span class="attr">#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]

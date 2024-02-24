@@ -1087,6 +1087,36 @@
 <a href="#1086" id="1086">1086</a>
 <a href="#1087" id="1087">1087</a>
 <a href="#1088" id="1088">1088</a>
+<a href="#1089" id="1089">1089</a>
+<a href="#1090" id="1090">1090</a>
+<a href="#1091" id="1091">1091</a>
+<a href="#1092" id="1092">1092</a>
+<a href="#1093" id="1093">1093</a>
+<a href="#1094" id="1094">1094</a>
+<a href="#1095" id="1095">1095</a>
+<a href="#1096" id="1096">1096</a>
+<a href="#1097" id="1097">1097</a>
+<a href="#1098" id="1098">1098</a>
+<a href="#1099" id="1099">1099</a>
+<a href="#1100" id="1100">1100</a>
+<a href="#1101" id="1101">1101</a>
+<a href="#1102" id="1102">1102</a>
+<a href="#1103" id="1103">1103</a>
+<a href="#1104" id="1104">1104</a>
+<a href="#1105" id="1105">1105</a>
+<a href="#1106" id="1106">1106</a>
+<a href="#1107" id="1107">1107</a>
+<a href="#1108" id="1108">1108</a>
+<a href="#1109" id="1109">1109</a>
+<a href="#1110" id="1110">1110</a>
+<a href="#1111" id="1111">1111</a>
+<a href="#1112" id="1112">1112</a>
+<a href="#1113" id="1113">1113</a>
+<a href="#1114" id="1114">1114</a>
+<a href="#1115" id="1115">1115</a>
+<a href="#1116" id="1116">1116</a>
+<a href="#1117" id="1117">1117</a>
+<a href="#1118" id="1118">1118</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::HashMap;
 
 <span class="kw">use </span>ast::{BinaryOp, ModuleStatement, Span, WhileStmt};
@@ -1324,7 +1354,7 @@
         terminator_span: <span class="prelude-val">Some</span>(info.block.span),
     });
 
-    <span class="kw">let </span>(discriminator, discriminator_type) = lower_expr(builder, <span class="kw-2">&amp;</span>info.condition, <span class="prelude-val">None</span>);
+    <span class="kw">let </span>(discriminator, discriminator_type, disc_span) = lower_expr(builder, <span class="kw-2">&amp;</span>info.condition, <span class="prelude-val">None</span>);
 
     <span class="kw">let </span>local = builder.add_temp_local(TypeKind::Bool);
     <span class="kw">let </span>place = Place {
@@ -1333,7 +1363,7 @@
     };
 
     builder.statements.push(Statement {
-        span: <span class="prelude-val">Some</span>(info.span),
+        span: <span class="prelude-val">Some</span>(disc_span),
         kind: StatementKind::Assign(place.clone(), discriminator),
     });
 
@@ -1392,7 +1422,7 @@
 
 <span class="kw">fn </span>lower_if_stmt(builder: <span class="kw-2">&amp;mut </span>BodyBuilder, info: <span class="kw-2">&amp;</span>ast::IfStmt, ret_type: <span class="kw-2">&amp;</span>TypeKind) {
     <span class="kw">let </span>cond_ty = find_expr_type(builder, <span class="kw-2">&amp;</span>info.condition).expect(<span class="string">"coouldnt find cond type"</span>);
-    <span class="kw">let </span>(condition, condition_ty) = lower_expr(builder, <span class="kw-2">&amp;</span>info.condition, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>cond_ty));
+    <span class="kw">let </span>(condition, condition_ty, cond_span) = lower_expr(builder, <span class="kw-2">&amp;</span>info.condition, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>cond_ty));
 
     <span class="kw">let </span>local = builder.add_temp_local(TypeKind::Bool);
     <span class="kw">let </span>place = Place {
@@ -1401,7 +1431,7 @@
     };
 
     builder.statements.push(Statement {
-        span: <span class="prelude-val">Some</span>(info.span),
+        span: <span class="prelude-val">Some</span>(cond_span),
         kind: StatementKind::Assign(place.clone(), condition),
     });
 
@@ -1489,7 +1519,7 @@
 
 <span class="kw">fn </span>lower_let(builder: <span class="kw-2">&amp;mut </span>BodyBuilder, info: <span class="kw-2">&amp;</span>ast::LetStmt) {
     <span class="kw">let </span>ty = lower_type(<span class="kw-2">&amp;</span>builder.ctx, <span class="kw-2">&amp;</span>info.r#type, builder.local_module);
-    <span class="kw">let </span>(rvalue, _ty) = lower_expr(builder, <span class="kw-2">&amp;</span>info.value, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>ty.kind));
+    <span class="kw">let </span>(rvalue, _ty, _span) = lower_expr(builder, <span class="kw-2">&amp;</span>info.value, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>ty.kind));
     <span class="kw">let </span>local_idx = builder.name_to_local.get(<span class="kw-2">&amp;</span>info.name.name).copied().unwrap();
     builder.statements.push(Statement {
         span: <span class="prelude-val">Some</span>(info.name.span),
@@ -1508,11 +1538,14 @@
 }
 
 <span class="kw">fn </span>lower_assign(builder: <span class="kw-2">&amp;mut </span>BodyBuilder, info: <span class="kw-2">&amp;</span>ast::AssignStmt) {
-    <span class="kw">let </span>(<span class="kw-2">mut </span>place, <span class="kw-2">mut </span>ty) = lower_path(builder, <span class="kw-2">&amp;</span>info.name);
+    <span class="kw">let </span>(<span class="kw-2">mut </span>place, <span class="kw-2">mut </span>ty, _span) = lower_path(builder, <span class="kw-2">&amp;</span>info.name);
 
     <span class="kw">for _ in </span><span class="number">0</span>..info.deref_times {
         <span class="kw">match </span><span class="kw-2">&amp;</span>ty {
-            TypeKind::Ptr(inner) =&gt; {
+            TypeKind::Ptr(is_mut, inner) =&gt; {
+                <span class="kw">if </span>!is_mut {
+                    <span class="macro">panic!</span>(<span class="string">"trying to mutate non mut ptr"</span>);
+                }
                 ty = inner.kind.clone();
             }
             TypeKind::Ref(is_mut, inner) =&gt; {
@@ -1526,7 +1559,7 @@
         place.projection.push(PlaceElem::Deref);
     }
 
-    <span class="kw">let </span>(rvalue, _ty) = lower_expr(builder, <span class="kw-2">&amp;</span>info.value, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>ty));
+    <span class="kw">let </span>(rvalue, _ty, _span) = lower_expr(builder, <span class="kw-2">&amp;</span>info.value, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>ty));
 
     builder.statements.push(Statement {
         span: <span class="prelude-val">Some</span>(info.name.first.span),
@@ -1596,21 +1629,37 @@
     builder: <span class="kw-2">&amp;mut </span>BodyBuilder,
     info: <span class="kw-2">&amp;</span>ast::Expression,
     type_hint: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>TypeKind&gt;,
-) -&gt; (ir::RValue, TypeKind) {
+) -&gt; (ir::RValue, TypeKind, Span) {
     <span class="kw">match </span>info {
         ast::Expression::Value(info) =&gt; {
-            <span class="kw">let </span>(value, ty) = lower_value(builder, info, type_hint);
-            (ir::RValue::Use(value), ty)
+            <span class="kw">let </span>(value, ty, span) = lower_value(builder, info, type_hint);
+            (ir::RValue::Use(value, span), ty, span)
         }
         ast::Expression::FnCall(info) =&gt; {
-            <span class="kw">let </span>(value, ty) = lower_fn_call(builder, info);
-            (ir::RValue::Use(value), ty)
+            <span class="kw">let </span>(value, ty, span) = lower_fn_call(builder, info);
+            (ir::RValue::Use(value, span), ty, span)
         }
         ast::Expression::Unary(<span class="kw">_</span>, <span class="kw">_</span>) =&gt; <span class="macro">todo!</span>(),
         ast::Expression::Binary(lhs, op, rhs) =&gt; {
             lower_binary_expr(builder, lhs, op, rhs, type_hint)
         }
-        ast::Expression::Deref(<span class="kw">_</span>) =&gt; <span class="macro">todo!</span>(),
+        ast::Expression::Deref(inner) =&gt; {
+            <span class="kw">let </span>(value, ty, span) = lower_expr(builder, inner, type_hint);
+
+            <span class="comment">// check if its a use directly, to avoid a temporary.
+            </span><span class="kw">let </span><span class="kw-2">mut </span>value = <span class="kw">match </span>value {
+                RValue::Use(op, <span class="kw">_</span>) =&gt; <span class="kw">match </span>op {
+                    Operand::Copy(place) =&gt; place,
+                    Operand::Move(place) =&gt; place,
+                    Operand::Constant(<span class="kw">_</span>) =&gt; <span class="macro">todo!</span>(<span class="string">"constant data deref"</span>),
+                },
+                <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
+            };
+
+            value.projection.push(PlaceElem::Deref);
+
+            (RValue::Use(Operand::Move(value), span), ty, span)
+        }
         ast::Expression::AsRef(inner, mutable) =&gt; {
             <span class="kw">let </span>type_hint = <span class="kw">match </span>type_hint {
                 <span class="prelude-val">Some</span>(inner) =&gt; <span class="kw">match </span>inner {
@@ -1619,11 +1668,11 @@
                 },
                 <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
             };
-            <span class="kw">let </span>(<span class="kw-2">mut </span>value, ty) = lower_expr(builder, inner, type_hint);
+            <span class="kw">let </span>(<span class="kw-2">mut </span>value, ty, span) = lower_expr(builder, inner, type_hint);
 
             <span class="comment">// check if its a use directly, to avoid a temporary.
             </span>value = <span class="kw">match </span>value {
-                RValue::Use(op) =&gt; RValue::Ref(<span class="kw-2">*</span>mutable, op),
+                RValue::Use(op, _span) =&gt; RValue::Ref(<span class="kw-2">*</span>mutable, op, span),
                 value =&gt; {
                     <span class="kw">let </span>inner_local = builder.add_local(Local::temp(ty.clone()));
                     <span class="kw">let </span>inner_place = Place {
@@ -1640,19 +1689,19 @@
                         span: <span class="prelude-val">None</span>,
                         kind: StatementKind::Assign(inner_place.clone(), value),
                     });
-                    RValue::Ref(<span class="kw-2">*</span>mutable, Operand::Move(inner_place))
+                    RValue::Ref(<span class="kw-2">*</span>mutable, Operand::Move(inner_place), span)
                 }
             };
 
             <span class="kw">let </span>ty = TypeKind::Ref(
                 <span class="kw-2">*</span>mutable,
                 Box::new(TypeInfo {
-                    span: <span class="prelude-val">None</span>,
+                    span: <span class="prelude-val">Some</span>(span),
                     kind: ty,
                 }),
             );
 
-            (value, ty)
+            (value, ty, span)
         }
         ast::Expression::StructInit(info) =&gt; {
             <span class="kw">let </span>id = <span class="kw-2">*</span>builder
@@ -1684,11 +1733,10 @@
                 field_place
                     .projection
                     .push(PlaceElem::Field { field_idx: idx });
-                <span class="kw">let </span>span = value.span;
 
                 <span class="kw">let </span>variant = <span class="kw-2">&amp;</span>struct_body.variants[idx].ty.kind;
 
-                <span class="kw">let </span>(value, _value_ty) = lower_expr(builder, <span class="kw-2">&amp;</span>value.value, <span class="prelude-val">Some</span>(variant));
+                <span class="kw">let </span>(value, _value_ty, span) = lower_expr(builder, <span class="kw-2">&amp;</span>value.value, <span class="prelude-val">Some</span>(variant));
 
                 builder.statements.push(Statement {
                     span: <span class="prelude-val">Some</span>(span),
@@ -1696,7 +1744,7 @@
                 });
             }
 
-            (RValue::Use(Operand::Move(place)), ty)
+            (RValue::Use(Operand::Move(place), info.span), ty, info.span)
         }
     }
 }
@@ -1707,17 +1755,17 @@
     op: <span class="kw-2">&amp;</span>ast::BinaryOp,
     rhs: <span class="kw-2">&amp;</span>ast::Expression,
     type_hint: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>TypeKind&gt;,
-) -&gt; (ir::RValue, TypeKind) {
+) -&gt; (ir::RValue, TypeKind, Span) {
     <span class="macro">trace!</span>(<span class="string">"lowering binary op: {:?}"</span>, op);
 
-    <span class="kw">let </span>(lhs, lhs_ty) = <span class="kw">if </span>type_hint.is_none() {
+    <span class="kw">let </span>(lhs, lhs_ty, <span class="kw">_</span>) = <span class="kw">if </span>type_hint.is_none() {
         <span class="kw">let </span>ty = find_expr_type(builder, lhs)
             .unwrap_or_else(|| find_expr_type(builder, rhs).expect(<span class="string">"cant find type"</span>));
         lower_expr(builder, lhs, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>ty))
     } <span class="kw">else </span>{
         lower_expr(builder, lhs, type_hint)
     };
-    <span class="kw">let </span>(rhs, rhs_ty) = <span class="kw">if </span>type_hint.is_none() {
+    <span class="kw">let </span>(rhs, rhs_ty, <span class="kw">_</span>) = <span class="kw">if </span>type_hint.is_none() {
         <span class="kw">let </span>ty = find_expr_type(builder, rhs).unwrap_or(lhs_ty.clone());
         lower_expr(builder, rhs, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>ty))
     } <span class="kw">else </span>{
@@ -1725,7 +1773,7 @@
     };
 
     <span class="kw">let </span>lhs = <span class="kw">match </span>lhs {
-        RValue::Use(op) =&gt; op,
+        RValue::Use(op, _span) =&gt; op,
         lhs =&gt; {
             <span class="kw">let </span>lhs_local = builder.add_local(Local::temp(lhs_ty.clone()));
             <span class="kw">let </span>lhs_place = Place {
@@ -1747,7 +1795,7 @@
     };
 
     <span class="kw">let </span>rhs = <span class="kw">match </span>rhs {
-        RValue::Use(op) =&gt; op,
+        RValue::Use(op, _span) =&gt; op,
         rhs =&gt; {
             <span class="kw">let </span>rhs_local = builder.add_local(Local::temp(rhs_ty.clone()));
             <span class="kw">let </span>rhs_place = Place {
@@ -1769,46 +1817,50 @@
     };
 
     <span class="kw">match </span>op {
-        ast::BinaryOp::Arith(op, <span class="kw">_</span>) =&gt; (
+        ast::BinaryOp::Arith(op, span) =&gt; (
             <span class="kw">match </span>op {
-                ast::ArithOp::Add =&gt; ir::RValue::BinOp(ir::BinOp::Add, lhs, rhs),
-                ast::ArithOp::Sub =&gt; ir::RValue::BinOp(ir::BinOp::Sub, lhs, rhs),
-                ast::ArithOp::Mul =&gt; ir::RValue::BinOp(ir::BinOp::Mul, lhs, rhs),
-                ast::ArithOp::Div =&gt; ir::RValue::BinOp(ir::BinOp::Div, lhs, rhs),
-                ast::ArithOp::Mod =&gt; ir::RValue::BinOp(ir::BinOp::Rem, lhs, rhs),
+                ast::ArithOp::Add =&gt; ir::RValue::BinOp(ir::BinOp::Add, lhs, rhs, <span class="kw-2">*</span>span),
+                ast::ArithOp::Sub =&gt; ir::RValue::BinOp(ir::BinOp::Sub, lhs, rhs, <span class="kw-2">*</span>span),
+                ast::ArithOp::Mul =&gt; ir::RValue::BinOp(ir::BinOp::Mul, lhs, rhs, <span class="kw-2">*</span>span),
+                ast::ArithOp::Div =&gt; ir::RValue::BinOp(ir::BinOp::Div, lhs, rhs, <span class="kw-2">*</span>span),
+                ast::ArithOp::Mod =&gt; ir::RValue::BinOp(ir::BinOp::Rem, lhs, rhs, <span class="kw-2">*</span>span),
             },
             lhs_ty,
+            <span class="kw-2">*</span>span,
         ),
-        ast::BinaryOp::Logic(op, <span class="kw">_</span>) =&gt; (
+        ast::BinaryOp::Logic(op, span) =&gt; (
             <span class="kw">match </span>op {
-                ast::LogicOp::And =&gt; ir::RValue::LogicOp(ir::LogicalOp::And, lhs, rhs),
-                ast::LogicOp::Or =&gt; ir::RValue::LogicOp(ir::LogicalOp::Or, lhs, rhs),
+                ast::LogicOp::And =&gt; ir::RValue::LogicOp(ir::LogicalOp::And, lhs, rhs, <span class="kw-2">*</span>span),
+                ast::LogicOp::Or =&gt; ir::RValue::LogicOp(ir::LogicalOp::Or, lhs, rhs, <span class="kw-2">*</span>span),
             },
             TypeKind::Bool,
+            <span class="kw-2">*</span>span,
         ),
-        ast::BinaryOp::Compare(op, <span class="kw">_</span>) =&gt; (
+        ast::BinaryOp::Compare(op, span) =&gt; (
             <span class="kw">match </span>op {
-                ast::CmpOp::Eq =&gt; ir::RValue::BinOp(ir::BinOp::Eq, lhs, rhs),
-                ast::CmpOp::NotEq =&gt; ir::RValue::BinOp(ir::BinOp::Ne, lhs, rhs),
-                ast::CmpOp::Lt =&gt; ir::RValue::BinOp(ir::BinOp::Lt, lhs, rhs),
-                ast::CmpOp::LtEq =&gt; ir::RValue::BinOp(ir::BinOp::Le, lhs, rhs),
-                ast::CmpOp::Gt =&gt; ir::RValue::BinOp(ir::BinOp::Gt, lhs, rhs),
-                ast::CmpOp::GtEq =&gt; ir::RValue::BinOp(ir::BinOp::Ge, lhs, rhs),
+                ast::CmpOp::Eq =&gt; ir::RValue::BinOp(ir::BinOp::Eq, lhs, rhs, <span class="kw-2">*</span>span),
+                ast::CmpOp::NotEq =&gt; ir::RValue::BinOp(ir::BinOp::Ne, lhs, rhs, <span class="kw-2">*</span>span),
+                ast::CmpOp::Lt =&gt; ir::RValue::BinOp(ir::BinOp::Lt, lhs, rhs, <span class="kw-2">*</span>span),
+                ast::CmpOp::LtEq =&gt; ir::RValue::BinOp(ir::BinOp::Le, lhs, rhs, <span class="kw-2">*</span>span),
+                ast::CmpOp::Gt =&gt; ir::RValue::BinOp(ir::BinOp::Gt, lhs, rhs, <span class="kw-2">*</span>span),
+                ast::CmpOp::GtEq =&gt; ir::RValue::BinOp(ir::BinOp::Ge, lhs, rhs, <span class="kw-2">*</span>span),
             },
             TypeKind::Bool,
+            <span class="kw-2">*</span>span,
         ),
-        ast::BinaryOp::Bitwise(op, <span class="kw">_</span>) =&gt; (
+        ast::BinaryOp::Bitwise(op, span) =&gt; (
             <span class="kw">match </span>op {
-                ast::BitwiseOp::And =&gt; ir::RValue::BinOp(ir::BinOp::BitAnd, lhs, rhs),
-                ast::BitwiseOp::Or =&gt; ir::RValue::BinOp(ir::BinOp::BitOr, lhs, rhs),
-                ast::BitwiseOp::Xor =&gt; ir::RValue::BinOp(ir::BinOp::BitXor, lhs, rhs),
+                ast::BitwiseOp::And =&gt; ir::RValue::BinOp(ir::BinOp::BitAnd, lhs, rhs, <span class="kw-2">*</span>span),
+                ast::BitwiseOp::Or =&gt; ir::RValue::BinOp(ir::BinOp::BitOr, lhs, rhs, <span class="kw-2">*</span>span),
+                ast::BitwiseOp::Xor =&gt; ir::RValue::BinOp(ir::BinOp::BitXor, lhs, rhs, <span class="kw-2">*</span>span),
             },
             lhs_ty,
+            <span class="kw-2">*</span>span,
         ),
     }
 }
 
-<span class="kw">fn </span>lower_fn_call(builder: <span class="kw-2">&amp;mut </span>BodyBuilder, info: <span class="kw-2">&amp;</span>ast::FnCallExpr) -&gt; (Operand, TypeKind) {
+<span class="kw">fn </span>lower_fn_call(builder: <span class="kw-2">&amp;mut </span>BodyBuilder, info: <span class="kw-2">&amp;</span>ast::FnCallExpr) -&gt; (Operand, TypeKind, Span) {
     <span class="kw">let </span>fn_id = {
         <span class="kw">let </span>mod_body = builder.get_module_body();
 
@@ -1854,7 +1906,7 @@
     <span class="kw">let </span><span class="kw-2">mut </span>args = Vec::new();
 
     <span class="kw">for </span>(arg, arg_ty) <span class="kw">in </span>info.params.iter().zip(args_ty) {
-        <span class="kw">let </span>(rvalue, _rvalue_ty) = lower_expr(builder, arg, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>arg_ty.kind));
+        <span class="kw">let </span>(rvalue, _rvalue_ty, _span) = lower_expr(builder, arg, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>arg_ty.kind));
         args.push(rvalue);
     }
 
@@ -1882,14 +1934,14 @@
         terminator_span: <span class="prelude-val">Some</span>(info.span),
     });
 
-    (Operand::Move(dest_place), ret_ty.kind.clone())
+    (Operand::Move(dest_place), ret_ty.kind.clone(), info.span)
 }
 
 <span class="kw">fn </span>lower_value(
     builder: <span class="kw-2">&amp;mut </span>BodyBuilder,
     info: <span class="kw-2">&amp;</span>ast::ValueExpr,
     type_hint: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>TypeKind&gt;,
-) -&gt; (Operand, TypeKind) {
+) -&gt; (Operand, TypeKind, Span) {
     <span class="kw">match </span>info {
         ast::ValueExpr::Bool { value, span } =&gt; (
             ir::Operand::Constant(ir::ConstData {
@@ -1901,6 +1953,7 @@
                 kind: ir::ConstKind::Value(ir::ValueTree::Leaf(ir::ConstValue::Bool(<span class="kw-2">*</span>value))),
             }),
             TypeKind::Bool,
+            <span class="kw-2">*</span>span,
         ),
         ast::ValueExpr::Char { value, span } =&gt; (
             ir::Operand::Constant(ir::ConstData {
@@ -1914,6 +1967,7 @@
                 ))),
             }),
             TypeKind::Char,
+            <span class="kw-2">*</span>span,
         ),
         ast::ValueExpr::Int { value, span } =&gt; {
             <span class="kw">let </span>(ty, val) = <span class="kw">match </span>type_hint {
@@ -1964,6 +2018,10 @@
                         ),
                         <span class="kw">_ </span>=&gt; <span class="macro">todo!</span>(),
                     },
+                    ir::TypeKind::Ptr(<span class="kw">_</span>, <span class="kw">_</span>) =&gt; (
+                        ir::TypeKind::Int(ir::IntTy::Isize),
+                        ir::ConstValue::Isize((<span class="kw-2">*</span>value) <span class="kw">as </span>isize),
+                    ),
                     <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
                 },
                 <span class="prelude-val">None </span>=&gt; <span class="macro">todo!</span>(),
@@ -1979,6 +2037,7 @@
                     kind: ir::ConstKind::Value(ir::ValueTree::Leaf(val)),
                 }),
                 ty,
+                <span class="kw-2">*</span>span,
             )
         }
         ast::ValueExpr::Float { value, span } =&gt; <span class="kw">match </span>type_hint {
@@ -1996,6 +2055,7 @@
                             ))),
                         }),
                         type_hint.clone(),
+                        <span class="kw-2">*</span>span,
                     ),
                     ir::FloatTy::F64 =&gt; (
                         ir::Operand::Constant(ir::ConstData {
@@ -2009,6 +2069,7 @@
                             ))),
                         }),
                         type_hint.clone(),
+                        <span class="kw-2">*</span>span,
                     ),
                 },
                 <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
@@ -2017,17 +2078,17 @@
         },
         ast::ValueExpr::Str { value: <span class="kw">_</span>, span: <span class="kw">_ </span>} =&gt; <span class="macro">todo!</span>(),
         ast::ValueExpr::Path(info) =&gt; {
-            <span class="kw">let </span>(place, ty) = lower_path(builder, info);
-            (Operand::Move(place), ty)
+            <span class="kw">let </span>(place, ty, span) = lower_path(builder, info);
+            (Operand::Move(place), ty, span)
         }
     }
 }
 
 <span class="kw">fn </span>lower_return(builder: <span class="kw-2">&amp;mut </span>BodyBuilder, info: <span class="kw-2">&amp;</span>ast::ReturnStmt, return_type: <span class="kw-2">&amp;</span>TypeKind) {
     <span class="kw">if let </span><span class="prelude-val">Some</span>(value_expr) = <span class="kw-2">&amp;</span>info.value {
-        <span class="kw">let </span>(value, _ty) = lower_expr(builder, value_expr, <span class="prelude-val">Some</span>(return_type));
+        <span class="kw">let </span>(value, _ty, span) = lower_expr(builder, value_expr, <span class="prelude-val">Some</span>(return_type));
         builder.statements.push(Statement {
-            span: <span class="prelude-val">Some</span>(info.span),
+            span: <span class="prelude-val">Some</span>(span),
             kind: StatementKind::Assign(
                 Place {
                     local: builder.ret_local,
@@ -2046,7 +2107,7 @@
     });
 }
 
-<span class="kw">fn </span>lower_path(builder: <span class="kw-2">&amp;mut </span>BodyBuilder, info: <span class="kw-2">&amp;</span>ast::PathExpr) -&gt; (ir::Place, TypeKind) {
+<span class="kw">fn </span>lower_path(builder: <span class="kw-2">&amp;mut </span>BodyBuilder, info: <span class="kw-2">&amp;</span>ast::PathExpr) -&gt; (ir::Place, TypeKind, Span) {
     <span class="kw">let </span>local = <span class="kw-2">*</span>builder
         .name_to_local
         .get(<span class="kw-2">&amp;</span>info.first.name)
@@ -2081,12 +2142,13 @@
             projection: projection.into(), <span class="comment">// todo, array
         </span>},
         ty,
+        info.span,
     )
 }
 
 <span class="attr">#[allow(clippy::only_used_in_recursion)]
 </span><span class="kw">pub fn </span>lower_type(ctx: <span class="kw-2">&amp;</span>BuildCtx, t: <span class="kw-2">&amp;</span>ast::Type, module_id: DefId) -&gt; ir::TypeInfo {
-    <span class="kw">let </span>inner_ty = <span class="kw">match </span>t.name.name.as_str() {
+    <span class="kw">let </span><span class="kw-2">mut </span>ty = <span class="kw">match </span>t.name.name.as_str() {
         <span class="string">"()" </span>=&gt; ir::TypeInfo {
             span: <span class="prelude-val">Some</span>(t.span),
             kind: ir::TypeKind::Unit,
@@ -2139,13 +2201,9 @@
             span: <span class="prelude-val">Some</span>(t.span),
             kind: ir::TypeKind::Bool,
         },
-        <span class="string">"ptr" </span>=&gt; ir::TypeInfo {
+        <span class="string">"str" </span>=&gt; ir::TypeInfo {
             span: <span class="prelude-val">Some</span>(t.span),
-            kind: ir::TypeKind::Ptr(Box::new(lower_type(
-                ctx,
-                t.generics.first().unwrap(),
-                module_id,
-            ))),
+            kind: ir::TypeKind::Str,
         },
         other =&gt; {
             <span class="kw">let </span>module = ctx.body.modules.get(<span class="kw-2">&amp;</span>module_id).expect(<span class="string">"module not found"</span>);
@@ -2161,18 +2219,20 @@
         }
     };
 
-    <span class="kw">match </span>t.is_ref {
-        <span class="prelude-val">Some</span>(x) =&gt; ir::TypeInfo {
+    <span class="kw">for </span>qualifier <span class="kw">in </span><span class="kw-2">&amp;</span>t.qualifiers {
+        <span class="kw">let </span>kind = <span class="kw">match </span>qualifier {
+            ast::TypeQualifier::Ref =&gt; TypeKind::Ref(<span class="bool-val">false</span>, Box::new(ty)),
+            ast::TypeQualifier::RefMut =&gt; TypeKind::Ref(<span class="bool-val">true</span>, Box::new(ty)),
+            ast::TypeQualifier::Ptr =&gt; TypeKind::Ptr(<span class="bool-val">false</span>, Box::new(ty)),
+            ast::TypeQualifier::PtrMut =&gt; TypeKind::Ptr(<span class="bool-val">true</span>, Box::new(ty)),
+        };
+
+        ty = TypeInfo {
             span: <span class="prelude-val">Some</span>(t.span),
-            kind: TypeKind::Ref(
-                <span class="kw">match </span>x {
-                    ast::RefType::Not =&gt; <span class="bool-val">false</span>,
-                    ast::RefType::Mut =&gt; <span class="bool-val">true</span>,
-                },
-                Box::new(inner_ty),
-            ),
-        },
-        <span class="prelude-val">None </span>=&gt; inner_ty,
+            kind,
+        };
     }
+
+    ty
 }
 </code></pre></div></section></main></body></html>

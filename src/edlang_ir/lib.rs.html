@@ -474,6 +474,10 @@
 <a href="#473" id="473">473</a>
 <a href="#474" id="474">474</a>
 <a href="#475" id="475">475</a>
+<a href="#476" id="476">476</a>
+<a href="#477" id="477">477</a>
+<a href="#478" id="478">478</a>
+<a href="#479" id="479">479</a>
 </pre></div><pre class="rust"><code><span class="comment">// Based on a cfg
 
 </span><span class="kw">use </span>std::collections::{BTreeMap, HashMap, HashSet};
@@ -698,7 +702,8 @@
     Uint(UintTy),
     Float(FloatTy),
     FnDef(DefId, Vec&lt;TypeInfo&gt;), <span class="comment">// The vec are generic types, not arg types
-    </span>Ptr(Box&lt;TypeInfo&gt;),
+    </span>Str,
+    Ptr(bool, Box&lt;TypeInfo&gt;),
     Ref(bool, Box&lt;TypeInfo&gt;),
     Struct(DefId), <span class="comment">// todo, add generics
 </span>}
@@ -735,9 +740,10 @@
             <span class="self">Self</span>::Float(<span class="kw">_</span>) =&gt; <span class="macro">todo!</span>(),
             TypeKind::Unit =&gt; <span class="macro">unreachable!</span>(),
             TypeKind::FnDef(<span class="kw">_</span>, <span class="kw">_</span>) =&gt; <span class="macro">unreachable!</span>(),
-            TypeKind::Ptr(_pointee) =&gt; <span class="macro">todo!</span>(),
+            TypeKind::Ptr(<span class="kw">_</span>, _pointee) =&gt; <span class="macro">todo!</span>(),
             TypeKind::Ref(<span class="kw">_</span>, inner) =&gt; inner.kind.get_falsy_value(),
             TypeKind::Struct(<span class="kw">_</span>) =&gt; <span class="macro">todo!</span>(),
+            TypeKind::Str =&gt; <span class="macro">todo!</span>(),
         }
     }
 }
@@ -805,6 +811,7 @@
                 ConstValue::F32(<span class="kw">_</span>) =&gt; TypeKind::Float(FloatTy::F32),
                 ConstValue::F64(<span class="kw">_</span>) =&gt; TypeKind::Float(FloatTy::F64),
                 ConstValue::Char(<span class="kw">_</span>) =&gt; TypeKind::Char,
+                ConstValue::Isize(<span class="kw">_</span>) =&gt; TypeKind::Int(IntTy::Isize),
             },
             ValueTree::Branch(<span class="kw">_</span>) =&gt; <span class="macro">todo!</span>(),
         }
@@ -813,11 +820,11 @@
 
 <span class="attr">#[derive(Debug, Clone)]
 </span><span class="kw">pub enum </span>RValue {
-    Use(Operand),
-    Ref(bool, Operand),
-    BinOp(BinOp, Operand, Operand),
-    LogicOp(LogicalOp, Operand, Operand),
-    UnOp(UnOp, Operand),
+    Use(Operand, Span),
+    Ref(bool, Operand, Span),
+    BinOp(BinOp, Operand, Operand, Span),
+    LogicOp(LogicalOp, Operand, Operand, Span),
+    UnOp(UnOp, Operand, Span),
 }
 
 <span class="attr">#[derive(Debug, Clone)]
@@ -941,6 +948,7 @@
     I32(i32),
     I64(i64),
     I128(i128),
+    Isize(isize),
     U8(u8),
     U16(u16),
     U32(u32),

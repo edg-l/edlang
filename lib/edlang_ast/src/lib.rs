@@ -50,8 +50,16 @@ pub struct Ident {
 pub struct Type {
     pub name: Ident,
     pub generics: Vec<Type>,
-    pub is_ref: Option<RefType>,
+    pub qualifiers: Vec<TypeQualifier>,
     pub span: Span,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum TypeQualifier {
+    Ref,    // &
+    RefMut, // &mut
+    Ptr,    // *const
+    PtrMut, // *mut
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -59,12 +67,6 @@ pub struct FnParam {
     pub name: Ident,
     pub arg_type: Type,
     pub span: Span,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum RefType {
-    Not,
-    Mut,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]

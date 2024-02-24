@@ -235,7 +235,7 @@ fn lower_while(builder: &mut BodyBuilder, info: &WhileStmt, ret_type: &TypeKind)
         terminator_span: Some(info.block.span),
     });
 
-    let (discriminator, discriminator_type) = lower_expr(builder, &info.condition, None);
+    let (discriminator, discriminator_type, disc_span) = lower_expr(builder, &info.condition, None);
 
     let local = builder.add_temp_local(TypeKind::Bool);
     let place = Place {
@@ -244,7 +244,7 @@ fn lower_while(builder: &mut BodyBuilder, info: &WhileStmt, ret_type: &TypeKind)
     };
 
     builder.statements.push(Statement {
-        span: Some(info.span),
+        span: Some(disc_span),
         kind: StatementKind::Assign(place.clone(), discriminator),
     });
 
@@ -303,7 +303,7 @@ fn lower_while(builder: &mut BodyBuilder, info: &WhileStmt, ret_type: &TypeKind)
 
 fn lower_if_stmt(builder: &mut BodyBuilder, info: &ast::IfStmt, ret_type: &TypeKind) {
     let cond_ty = find_expr_type(builder, &info.condition).expect("coouldnt find cond type");
-    let (condition, condition_ty) = lower_expr(builder, &info.condition, Some(&cond_ty));
+    let (condition, condition_ty, cond_span) = lower_expr(builder, &info.condition, Some(&cond_ty));
 
     let local = builder.add_temp_local(TypeKind::Bool);
     let place = Place {
@@ -312,7 +312,7 @@ fn lower_if_stmt(builder: &mut BodyBuilder, info: &ast::IfStmt, ret_type: &TypeK
     };
 
     builder.statements.push(Statement {
-        span: Some(info.span),
+        span: Some(cond_span),
         kind: StatementKind::Assign(place.clone(), condition),
     });
 
@@ -400,7 +400,7 @@ fn lower_if_stmt(builder: &mut BodyBuilder, info: &ast::IfStmt, ret_type: &TypeK
 
 fn lower_let(builder: &mut BodyBuilder, info: &ast::LetStmt) {
     let ty = lower_type(&builder.ctx, &info.r#type, builder.local_module);
-    let (rvalue, _ty) = lower_expr(builder, &info.value, Some(&ty.kind));
+    let (rvalue, _ty, _span) = lower_expr(builder, &info.value, Some(&ty.kind));
     let local_idx = builder.name_to_local.get(&info.name.name).copied().unwrap();
     builder.statements.push(Statement {
         span: Some(info.name.span),
@@ -419,11 +419,14 @@ fn lower_let(builder: &mut BodyBuilder, info: &ast::LetStmt) {
 }
 
 fn lower_assign(builder: &mut BodyBuilder, info: &ast::AssignStmt) {
-    let (mut place, mut ty) = lower_path(builder, &info.name);
+    let (mut place, mut ty, _span) = lower_path(builder, &info.name);
 
     for _ in 0..info.deref_times {
         match &ty {
-            TypeKind::Ptr(inner) => {
+            TypeKind::Ptr(is_mut, inner) => {
+                if !is_mut {
+                    panic!("trying to mutate non mut ptr");
+                }
                 ty = inner.kind.clone();
             }
             TypeKind::Ref(is_mut, inner) => {
@@ -437,7 +440,7 @@ fn lower_assign(builder: &mut BodyBuilder, info: &ast::AssignStmt) {
         place.projection.push(PlaceElem::Deref);
     }
 
-    let (rvalue, _ty) = lower_expr(builder, &info.value, Some(&ty));
+    let (rvalue, _ty, _span) = lower_expr(builder, &info.value, Some(&ty));
 
     builder.statements.push(Statement {
         span: Some(info.name.first.span),
@@ -507,21 +510,37 @@ fn lower_expr(
     builder: &mut BodyBuilder,
     info: &ast::Expression,
     type_hint: Option<&TypeKind>,
-) -> (ir::RValue, TypeKind) {
+) -> (ir::RValue, TypeKind, Span) {
     match info {
         ast::Expression::Value(info) => {
-            let (value, ty) = lower_value(builder, info, type_hint);
-            (ir::RValue::Use(value), ty)
+            let (value, ty, span) = lower_value(builder, info, type_hint);
+            (ir::RValue::Use(value, span), ty, span)
         }
         ast::Expression::FnCall(info) => {
-            let (value, ty) = lower_fn_call(builder, info);
-            (ir::RValue::Use(value), ty)
+            let (value, ty, span) = lower_fn_call(builder, info);
+            (ir::RValue::Use(value, span), ty, span)
         }
         ast::Expression::Unary(_, _) => todo!(),
         ast::Expression::Binary(lhs, op, rhs) => {
             lower_binary_expr(builder, lhs, op, rhs, type_hint)
         }
-        ast::Expression::Deref(_) => todo!(),
+        ast::Expression::Deref(inner) => {
+            let (value, ty, span) = lower_expr(builder, inner, type_hint);
+
+            // check if its a use directly, to avoid a temporary.
+            let mut value = match value {
+                RValue::Use(op, _) => match op {
+                    Operand::Copy(place) => place,
+                    Operand::Move(place) => place,
+                    Operand::Constant(_) => todo!("constant data deref"),
+                },
+                _ => unreachable!(),
+            };
+
+            value.projection.push(PlaceElem::Deref);
+
+            (RValue::Use(Operand::Move(value), span), ty, span)
+        }
         ast::Expression::AsRef(inner, mutable) => {
             let type_hint = match type_hint {
                 Some(inner) => match inner {
@@ -530,11 +549,11 @@ fn lower_expr(
                 },
                 None => None,
             };
-            let (mut value, ty) = lower_expr(builder, inner, type_hint);
+            let (mut value, ty, span) = lower_expr(builder, inner, type_hint);
 
             // check if its a use directly, to avoid a temporary.
             value = match value {
-                RValue::Use(op) => RValue::Ref(*mutable, op),
+                RValue::Use(op, _span) => RValue::Ref(*mutable, op, span),
                 value => {
                     let inner_local = builder.add_local(Local::temp(ty.clone()));
                     let inner_place = Place {
@@ -551,19 +570,19 @@ fn lower_expr(
                         span: None,
                         kind: StatementKind::Assign(inner_place.clone(), value),
                     });
-                    RValue::Ref(*mutable, Operand::Move(inner_place))
+                    RValue::Ref(*mutable, Operand::Move(inner_place), span)
                 }
             };
 
             let ty = TypeKind::Ref(
                 *mutable,
                 Box::new(TypeInfo {
-                    span: None,
+                    span: Some(span),
                     kind: ty,
                 }),
             );
 
-            (value, ty)
+            (value, ty, span)
         }
         ast::Expression::StructInit(info) => {
             let id = *builder
@@ -595,11 +614,10 @@ fn lower_expr(
                 field_place
                     .projection
                     .push(PlaceElem::Field { field_idx: idx });
-                let span = value.span;
 
                 let variant = &struct_body.variants[idx].ty.kind;
 
-                let (value, _value_ty) = lower_expr(builder, &value.value, Some(variant));
+                let (value, _value_ty, span) = lower_expr(builder, &value.value, Some(variant));
 
                 builder.statements.push(Statement {
                     span: Some(span),
@@ -607,7 +625,7 @@ fn lower_expr(
                 });
             }
 
-            (RValue::Use(Operand::Move(place)), ty)
+            (RValue::Use(Operand::Move(place), info.span), ty, info.span)
         }
     }
 }
@@ -618,17 +636,17 @@ fn lower_binary_expr(
     op: &ast::BinaryOp,
     rhs: &ast::Expression,
     type_hint: Option<&TypeKind>,
-) -> (ir::RValue, TypeKind) {
+) -> (ir::RValue, TypeKind, Span) {
     trace!("lowering binary op: {:?}", op);
 
-    let (lhs, lhs_ty) = if type_hint.is_none() {
+    let (lhs, lhs_ty, _) = if type_hint.is_none() {
         let ty = find_expr_type(builder, lhs)
             .unwrap_or_else(|| find_expr_type(builder, rhs).expect("cant find type"));
         lower_expr(builder, lhs, Some(&ty))
     } else {
         lower_expr(builder, lhs, type_hint)
     };
-    let (rhs, rhs_ty) = if type_hint.is_none() {
+    let (rhs, rhs_ty, _) = if type_hint.is_none() {
         let ty = find_expr_type(builder, rhs).unwrap_or(lhs_ty.clone());
         lower_expr(builder, rhs, Some(&ty))
     } else {
@@ -636,7 +654,7 @@ fn lower_binary_expr(
     };
 
     let lhs = match lhs {
-        RValue::Use(op) => op,
+        RValue::Use(op, _span) => op,
         lhs => {
             let lhs_local = builder.add_local(Local::temp(lhs_ty.clone()));
             let lhs_place = Place {
@@ -658,7 +676,7 @@ fn lower_binary_expr(
     };
 
     let rhs = match rhs {
-        RValue::Use(op) => op,
+        RValue::Use(op, _span) => op,
         rhs => {
             let rhs_local = builder.add_local(Local::temp(rhs_ty.clone()));
             let rhs_place = Place {
@@ -680,46 +698,50 @@ fn lower_binary_expr(
     };
 
     match op {
-        ast::BinaryOp::Arith(op, _) => (
+        ast::BinaryOp::Arith(op, span) => (
             match op {
-                ast::ArithOp::Add => ir::RValue::BinOp(ir::BinOp::Add, lhs, rhs),
-                ast::ArithOp::Sub => ir::RValue::BinOp(ir::BinOp::Sub, lhs, rhs),
-                ast::ArithOp::Mul => ir::RValue::BinOp(ir::BinOp::Mul, lhs, rhs),
-                ast::ArithOp::Div => ir::RValue::BinOp(ir::BinOp::Div, lhs, rhs),
-                ast::ArithOp::Mod => ir::RValue::BinOp(ir::BinOp::Rem, lhs, rhs),
+                ast::ArithOp::Add => ir::RValue::BinOp(ir::BinOp::Add, lhs, rhs, *span),
+                ast::ArithOp::Sub => ir::RValue::BinOp(ir::BinOp::Sub, lhs, rhs, *span),
+                ast::ArithOp::Mul => ir::RValue::BinOp(ir::BinOp::Mul, lhs, rhs, *span),
+                ast::ArithOp::Div => ir::RValue::BinOp(ir::BinOp::Div, lhs, rhs, *span),
+                ast::ArithOp::Mod => ir::RValue::BinOp(ir::BinOp::Rem, lhs, rhs, *span),
             },
             lhs_ty,
+            *span,
         ),
-        ast::BinaryOp::Logic(op, _) => (
+        ast::BinaryOp::Logic(op, span) => (
             match op {
-                ast::LogicOp::And => ir::RValue::LogicOp(ir::LogicalOp::And, lhs, rhs),
-                ast::LogicOp::Or => ir::RValue::LogicOp(ir::LogicalOp::Or, lhs, rhs),
+                ast::LogicOp::And => ir::RValue::LogicOp(ir::LogicalOp::And, lhs, rhs, *span),
+                ast::LogicOp::Or => ir::RValue::LogicOp(ir::LogicalOp::Or, lhs, rhs, *span),
             },
             TypeKind::Bool,
+            *span,
         ),
-        ast::BinaryOp::Compare(op, _) => (
+        ast::BinaryOp::Compare(op, span) => (
             match op {
-                ast::CmpOp::Eq => ir::RValue::BinOp(ir::BinOp::Eq, lhs, rhs),
-                ast::CmpOp::NotEq => ir::RValue::BinOp(ir::BinOp::Ne, lhs, rhs),
-                ast::CmpOp::Lt => ir::RValue::BinOp(ir::BinOp::Lt, lhs, rhs),
-                ast::CmpOp::LtEq => ir::RValue::BinOp(ir::BinOp::Le, lhs, rhs),
-                ast::CmpOp::Gt => ir::RValue::BinOp(ir::BinOp::Gt, lhs, rhs),
-                ast::CmpOp::GtEq => ir::RValue::BinOp(ir::BinOp::Ge, lhs, rhs),
+                ast::CmpOp::Eq => ir::RValue::BinOp(ir::BinOp::Eq, lhs, rhs, *span),
+                ast::CmpOp::NotEq => ir::RValue::BinOp(ir::BinOp::Ne, lhs, rhs, *span),
+                ast::CmpOp::Lt => ir::RValue::BinOp(ir::BinOp::Lt, lhs, rhs, *span),
+                ast::CmpOp::LtEq => ir::RValue::BinOp(ir::BinOp::Le, lhs, rhs, *span),
+                ast::CmpOp::Gt => ir::RValue::BinOp(ir::BinOp::Gt, lhs, rhs, *span),
+                ast::CmpOp::GtEq => ir::RValue::BinOp(ir::BinOp::Ge, lhs, rhs, *span),
             },
             TypeKind::Bool,
+            *span,
         ),
-        ast::BinaryOp::Bitwise(op, _) => (
+        ast::BinaryOp::Bitwise(op, span) => (
             match op {
-                ast::BitwiseOp::And => ir::RValue::BinOp(ir::BinOp::BitAnd, lhs, rhs),
-                ast::BitwiseOp::Or => ir::RValue::BinOp(ir::BinOp::BitOr, lhs, rhs),
-                ast::BitwiseOp::Xor => ir::RValue::BinOp(ir::BinOp::BitXor, lhs, rhs),
+                ast::BitwiseOp::And => ir::RValue::BinOp(ir::BinOp::BitAnd, lhs, rhs, *span),
+                ast::BitwiseOp::Or => ir::RValue::BinOp(ir::BinOp::BitOr, lhs, rhs, *span),
+                ast::BitwiseOp::Xor => ir::RValue::BinOp(ir::BinOp::BitXor, lhs, rhs, *span),
             },
             lhs_ty,
+            *span,
         ),
     }
 }
 
-fn lower_fn_call(builder: &mut BodyBuilder, info: &ast::FnCallExpr) -> (Operand, TypeKind) {
+fn lower_fn_call(builder: &mut BodyBuilder, info: &ast::FnCallExpr) -> (Operand, TypeKind, Span) {
     let fn_id = {
         let mod_body = builder.get_module_body();
 
@@ -765,7 +787,7 @@ fn lower_fn_call(builder: &mut BodyBuilder, info: &ast::FnCallExpr) -> (Operand,
     let mut args = Vec::new();
 
     for (arg, arg_ty) in info.params.iter().zip(args_ty) {
-        let (rvalue, _rvalue_ty) = lower_expr(builder, arg, Some(&arg_ty.kind));
+        let (rvalue, _rvalue_ty, _span) = lower_expr(builder, arg, Some(&arg_ty.kind));
         args.push(rvalue);
     }
 
@@ -793,14 +815,14 @@ fn lower_fn_call(builder: &mut BodyBuilder, info: &ast::FnCallExpr) -> (Operand,
         terminator_span: Some(info.span),
     });
 
-    (Operand::Move(dest_place), ret_ty.kind.clone())
+    (Operand::Move(dest_place), ret_ty.kind.clone(), info.span)
 }
 
 fn lower_value(
     builder: &mut BodyBuilder,
     info: &ast::ValueExpr,
     type_hint: Option<&TypeKind>,
-) -> (Operand, TypeKind) {
+) -> (Operand, TypeKind, Span) {
     match info {
         ast::ValueExpr::Bool { value, span } => (
             ir::Operand::Constant(ir::ConstData {
@@ -812,6 +834,7 @@ fn lower_value(
                 kind: ir::ConstKind::Value(ir::ValueTree::Leaf(ir::ConstValue::Bool(*value))),
             }),
             TypeKind::Bool,
+            *span,
         ),
         ast::ValueExpr::Char { value, span } => (
             ir::Operand::Constant(ir::ConstData {
@@ -825,6 +848,7 @@ fn lower_value(
                 ))),
             }),
             TypeKind::Char,
+            *span,
         ),
         ast::ValueExpr::Int { value, span } => {
             let (ty, val) = match type_hint {
@@ -875,6 +899,10 @@ fn lower_value(
                         ),
                         _ => todo!(),
                     },
+                    ir::TypeKind::Ptr(_, _) => (
+                        ir::TypeKind::Int(ir::IntTy::Isize),
+                        ir::ConstValue::Isize((*value) as isize),
+                    ),
                     _ => unreachable!(),
                 },
                 None => todo!(),
@@ -890,6 +918,7 @@ fn lower_value(
                     kind: ir::ConstKind::Value(ir::ValueTree::Leaf(val)),
                 }),
                 ty,
+                *span,
             )
         }
         ast::ValueExpr::Float { value, span } => match type_hint {
@@ -907,6 +936,7 @@ fn lower_value(
                             ))),
                         }),
                         type_hint.clone(),
+                        *span,
                     ),
                     ir::FloatTy::F64 => (
                         ir::Operand::Constant(ir::ConstData {
@@ -920,6 +950,7 @@ fn lower_value(
                             ))),
                         }),
                         type_hint.clone(),
+                        *span,
                     ),
                 },
                 _ => unreachable!(),
@@ -928,17 +959,17 @@ fn lower_value(
         },
         ast::ValueExpr::Str { value: _, span: _ } => todo!(),
         ast::ValueExpr::Path(info) => {
-            let (place, ty) = lower_path(builder, info);
-            (Operand::Move(place), ty)
+            let (place, ty, span) = lower_path(builder, info);
+            (Operand::Move(place), ty, span)
         }
     }
 }
 
 fn lower_return(builder: &mut BodyBuilder, info: &ast::ReturnStmt, return_type: &TypeKind) {
     if let Some(value_expr) = &info.value {
-        let (value, _ty) = lower_expr(builder, value_expr, Some(return_type));
+        let (value, _ty, span) = lower_expr(builder, value_expr, Some(return_type));
         builder.statements.push(Statement {
-            span: Some(info.span),
+            span: Some(span),
             kind: StatementKind::Assign(
                 Place {
                     local: builder.ret_local,
@@ -957,7 +988,7 @@ fn lower_return(builder: &mut BodyBuilder, info: &ast::ReturnStmt, return_type: 
     });
 }
 
-fn lower_path(builder: &mut BodyBuilder, info: &ast::PathExpr) -> (ir::Place, TypeKind) {
+fn lower_path(builder: &mut BodyBuilder, info: &ast::PathExpr) -> (ir::Place, TypeKind, Span) {
     let local = *builder
         .name_to_local
         .get(&info.first.name)
@@ -992,12 +1023,13 @@ fn lower_path(builder: &mut BodyBuilder, info: &ast::PathExpr) -> (ir::Place, Ty
             projection: projection.into(), // todo, array
         },
         ty,
+        info.span,
     )
 }
 
 #[allow(clippy::only_used_in_recursion)]
 pub fn lower_type(ctx: &BuildCtx, t: &ast::Type, module_id: DefId) -> ir::TypeInfo {
-    let inner_ty = match t.name.name.as_str() {
+    let mut ty = match t.name.name.as_str() {
         "()" => ir::TypeInfo {
             span: Some(t.span),
             kind: ir::TypeKind::Unit,
@@ -1050,13 +1082,9 @@ pub fn lower_type(ctx: &BuildCtx, t: &ast::Type, module_id: DefId) -> ir::TypeIn
             span: Some(t.span),
             kind: ir::TypeKind::Bool,
         },
-        "ptr" => ir::TypeInfo {
+        "str" => ir::TypeInfo {
             span: Some(t.span),
-            kind: ir::TypeKind::Ptr(Box::new(lower_type(
-                ctx,
-                t.generics.first().unwrap(),
-                module_id,
-            ))),
+            kind: ir::TypeKind::Str,
         },
         other => {
             let module = ctx.body.modules.get(&module_id).expect("module not found");
@@ -1072,17 +1100,19 @@ pub fn lower_type(ctx: &BuildCtx, t: &ast::Type, module_id: DefId) -> ir::TypeIn
         }
     };
 
-    match t.is_ref {
-        Some(x) => ir::TypeInfo {
+    for qualifier in &t.qualifiers {
+        let kind = match qualifier {
+            ast::TypeQualifier::Ref => TypeKind::Ref(false, Box::new(ty)),
+            ast::TypeQualifier::RefMut => TypeKind::Ref(true, Box::new(ty)),
+            ast::TypeQualifier::Ptr => TypeKind::Ptr(false, Box::new(ty)),
+            ast::TypeQualifier::PtrMut => TypeKind::Ptr(true, Box::new(ty)),
+        };
+
+        ty = TypeInfo {
             span: Some(t.span),
-            kind: TypeKind::Ref(
-                match x {
-                    ast::RefType::Not => false,
-                    ast::RefType::Mut => true,
-                },
-                Box::new(inner_ty),
-            ),
-        },
-        None => inner_ty,
+            kind,
+        };
     }
+
+    ty
 }

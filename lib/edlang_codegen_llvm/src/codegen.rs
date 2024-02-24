@@ -398,7 +398,7 @@ fn compile_fn(ctx: &ModuleCompileCtx, fn_id: DefId) -> Result<(), BuilderError> 
                                     .build_load(compile_basic_type(ctx, &local_ty), ptr, "deref")?
                                     .into_pointer_value();
                                 local_ty = match local_ty.kind {
-                                    ir::TypeKind::Ptr(inner) => *inner,
+                                    ir::TypeKind::Ptr(_, inner) => *inner,
                                     ir::TypeKind::Ref(_, inner) => *inner,
                                     _ => unreachable!(),
                                 }
@@ -606,7 +606,7 @@ fn compile_bin_op<'ctx>(
     let is_float = matches!(lhs_ty.kind, ir::TypeKind::Float(_));
     let is_signed = matches!(lhs_ty.kind, ir::TypeKind::Int(_));
 
-    Ok(match op {
+    let (result, ty) = match op {
         ir::BinOp::Add => {
             let value = if is_float {
                 ctx.builder
@@ -931,7 +931,9 @@ fn compile_bin_op<'ctx>(
             )
         }
         ir::BinOp::Offset => todo!(),
-    })
+    };
+
+    Ok((result, ty))
 }
 
 fn compile_rvalue<'ctx>(
@@ -941,41 +943,77 @@ fn compile_rvalue<'ctx>(
     rvalue: &ir::RValue,
 ) -> Result<(BasicValueEnum<'ctx>, TypeInfo), BuilderError> {
     Ok(match rvalue {
-        ir::RValue::Use(op) => compile_load_operand(ctx, fn_id, locals, op)?,
-        ir::RValue::Ref(_mutable, op) => match op {
-            ir::Operand::Copy(_) => todo!(),
-            ir::Operand::Move(place) => {
-                let mut ptr = *locals.get(&place.local).unwrap();
-                let mut local_ty = {
-                    let body = ctx.ctx.program.functions.get(&fn_id).unwrap();
-                    body.locals[place.local].ty.clone()
-                };
+        ir::RValue::Use(op, span) => {
+            ctx.set_debug_loc(
+                ctx.builder
+                    .get_current_debug_location()
+                    .unwrap()
+                    .get_scope(),
+                *span,
+            );
+            compile_load_operand(ctx, fn_id, locals, op)?
+        }
+        ir::RValue::Ref(_mutable, op, span) => {
+            ctx.set_debug_loc(
+                ctx.builder
+                    .get_current_debug_location()
+                    .unwrap()
+                    .get_scope(),
+                *span,
+            );
+            match op {
+                ir::Operand::Copy(_) => todo!(),
+                ir::Operand::Move(place) => {
+                    let mut ptr = *locals.get(&place.local).unwrap();
+                    let mut local_ty = {
+                        let body = ctx.ctx.program.functions.get(&fn_id).unwrap();
+                        body.locals[place.local].ty.clone()
+                    };
 
-                for proj in &place.projection {
-                    match proj {
-                        ir::PlaceElem::Deref => {
-                            ptr = ctx
-                                .builder
-                                .build_load(compile_basic_type(ctx, &local_ty), ptr, "deref")?
-                                .into_pointer_value();
-                            local_ty = match local_ty.kind {
-                                ir::TypeKind::Ptr(inner) => *inner,
-                                ir::TypeKind::Ref(_, inner) => *inner,
-                                _ => unreachable!(),
+                    for proj in &place.projection {
+                        match proj {
+                            ir::PlaceElem::Deref => {
+                                ptr = ctx
+                                    .builder
+                                    .build_load(compile_basic_type(ctx, &local_ty), ptr, "deref")?
+                                    .into_pointer_value();
+                                local_ty = match local_ty.kind {
+                                    ir::TypeKind::Ptr(_, inner) => *inner,
+                                    ir::TypeKind::Ref(_, inner) => *inner,
+                                    _ => unreachable!(),
+                                }
                             }
+                            ir::PlaceElem::Field { .. } => todo!(),
+                            ir::PlaceElem::Index { .. } => todo!(),
                         }
-                        ir::PlaceElem::Field { .. } => todo!(),
-                        ir::PlaceElem::Index { .. } => todo!(),
                     }
-                }
 
-                (ptr.as_basic_value_enum(), local_ty)
+                    (ptr.as_basic_value_enum(), local_ty)
+                }
+                ir::Operand::Constant(_) => todo!("references to constants not yet implemented"),
             }
-            ir::Operand::Constant(_) => todo!("references to constants not yet implemented"),
-        },
-        ir::RValue::BinOp(op, lhs, rhs) => compile_bin_op(ctx, fn_id, locals, *op, lhs, rhs)?,
-        ir::RValue::LogicOp(_, _, _) => todo!(),
-        ir::RValue::UnOp(op, value) => compile_unary_op(ctx, fn_id, locals, *op, value)?,
+        }
+        ir::RValue::BinOp(op, lhs, rhs, span) => {
+            ctx.set_debug_loc(
+                ctx.builder
+                    .get_current_debug_location()
+                    .unwrap()
+                    .get_scope(),
+                *span,
+            );
+            compile_bin_op(ctx, fn_id, locals, *op, lhs, rhs)?
+        }
+        ir::RValue::LogicOp(_, _, _, _span) => todo!(),
+        ir::RValue::UnOp(op, value, span) => {
+            ctx.set_debug_loc(
+                ctx.builder
+                    .get_current_debug_location()
+                    .unwrap()
+                    .get_scope(),
+                *span,
+            );
+            compile_unary_op(ctx, fn_id, locals, *op, value)?
+        }
     })
 }
 
@@ -1017,7 +1055,7 @@ fn compile_load_place<'ctx>(
                     .build_load(compile_basic_type(ctx, &local_ty), ptr, "deref")?
                     .into_pointer_value();
                 local_ty = match local_ty.kind {
-                    ir::TypeKind::Ptr(inner) => *inner,
+                    ir::TypeKind::Ptr(_, inner) => *inner,
                     ir::TypeKind::Ref(_, inner) => *inner,
                     _ => unreachable!(),
                 }
@@ -1110,6 +1148,10 @@ fn compile_value<'ctx>(
                 .into_int_type()
                 .const_int((*x) as u64, false)
                 .as_basic_value_enum(),
+            ir::ConstValue::Isize(x) => ty
+                .into_int_type()
+                .const_int((*x) as u64, true)
+                .as_basic_value_enum(),
         },
         ValueTree::Branch(_) => todo!(),
     })
@@ -1178,7 +1220,7 @@ fn compile_basic_type<'ctx>(
         ir::TypeKind::FnDef(_def_id, _generic_args) => {
             panic!()
         }
-        ir::TypeKind::Ptr(_pointee) => ctx
+        ir::TypeKind::Ptr(_is_mut, _pointee) => ctx
             .ctx
             .context
             .ptr_sized_int_type(&ctx.target_data, None)
@@ -1205,6 +1247,7 @@ fn compile_basic_type<'ctx>(
                 .struct_type(&fields, false)
                 .as_basic_type_enum()
         }
+        ir::TypeKind::Str => todo!(),
     }
 }
 
@@ -1308,10 +1351,10 @@ fn compile_debug_type<'ctx>(ctx: &ModuleCompileCtx<'ctx, '_>, ty: &ir::TypeInfo)
         ir::TypeKind::FnDef(_def_id, _generic_args) => {
             panic!()
         }
-        ir::TypeKind::Ptr(pointee) => ctx
+        ir::TypeKind::Ptr(_is_mut, pointee) => ctx
             .di_builder
             .create_pointer_type(
-                &format!("ptr<{:?}>", pointee.kind),
+                &format!("*{:?}", pointee.kind),
                 compile_debug_type(ctx, pointee),
                 (ctx.target_data.get_pointer_byte_size(None) * 8).into(),
                 ctx.target_data.get_pointer_byte_size(None),
@@ -1357,5 +1400,6 @@ fn compile_debug_type<'ctx>(ctx: &ModuleCompileCtx<'ctx, '_>, ty: &ir::TypeInfo)
                 )
                 .as_type()
         }
+        ir::TypeKind::Str => todo!(),
     }
 }

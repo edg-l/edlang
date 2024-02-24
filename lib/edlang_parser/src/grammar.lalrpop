@@ -140,17 +140,24 @@ pub(crate) Ident: ast::Ident = {
   }
 }
 
+pub(crate) TypeQualifier: ast::TypeQualifier = {
+  "&" => ast::TypeQualifier::Ref,
+  "&" "mut" => ast::TypeQualifier::RefMut,
+  "*" "const" => ast::TypeQualifier::Ptr,
+  "*" "mut" => ast::TypeQualifier::PtrMut,
+}
+
 pub(crate) Type: ast::Type = {
-    <lo:@L> <is_ref:RefType?> <name:Ident> <hi:@R> => ast::Type {
+  <lo:@L> <qualifiers:TypeQualifier*> <name:Ident> <hi:@R> => ast::Type {
         name,
         generics: vec![],
-        is_ref,
+        qualifiers,
         span: ast::Span::new(lo, hi),
     },
-    <lo:@L> <is_ref:RefType?> <name:Ident> "<" <generics:Comma<Type>> ">" <hi:@R> => ast::Type {
+    <lo:@L> <qualifiers:TypeQualifier*> <name:Ident> "<" <generics:Comma<Type>> ">" <hi:@R> => ast::Type {
         name,
         generics,
-        is_ref,
+        qualifiers,
         span: ast::Span::new(lo, hi),
     },
 }
@@ -160,13 +167,13 @@ pub(crate) IdentWithOptionalType: ast::Type = {
     <lo:@L> <name:Ident> <hi:@R> => ast::Type {
         name,
         generics: vec![],
-        is_ref: None,
+        qualifiers: vec![],
         span: ast::Span::new(lo, hi),
     },
     <lo:@L> <name:Ident> "::" "<" <generics:Comma<Type>> ">" <hi:@R> => ast::Type {
         name,
         generics,
-        is_ref: None,
+        qualifiers: vec![],
         span: ast::Span::new(lo, hi),
     },
 }
@@ -402,11 +409,6 @@ pub(crate) StructInitExpr: ast::StructInitExpr = {
     fields: fields.into_iter().collect(),
     span: ast::Span::new(lo, hi),
   }
-}
-
-pub(crate) RefType: ast::RefType = {
-    "&" => ast::RefType::Not,
-    "&" "mut" => ast::RefType::Mut,
 }
 
 pub(crate) FnParam: ast::FnParam = {

@@ -222,7 +222,8 @@ pub enum TypeKind {
     Uint(UintTy),
     Float(FloatTy),
     FnDef(DefId, Vec<TypeInfo>), // The vec are generic types, not arg types
-    Ptr(Box<TypeInfo>),
+    Str,
+    Ptr(bool, Box<TypeInfo>),
     Ref(bool, Box<TypeInfo>),
     Struct(DefId), // todo, add generics
 }
@@ -259,9 +260,10 @@ impl TypeKind {
             Self::Float(_) => todo!(),
             TypeKind::Unit => unreachable!(),
             TypeKind::FnDef(_, _) => unreachable!(),
-            TypeKind::Ptr(_pointee) => todo!(),
+            TypeKind::Ptr(_, _pointee) => todo!(),
             TypeKind::Ref(_, inner) => inner.kind.get_falsy_value(),
             TypeKind::Struct(_) => todo!(),
+            TypeKind::Str => todo!(),
         }
     }
 }
@@ -329,6 +331,7 @@ impl ValueTree {
                 ConstValue::F32(_) => TypeKind::Float(FloatTy::F32),
                 ConstValue::F64(_) => TypeKind::Float(FloatTy::F64),
                 ConstValue::Char(_) => TypeKind::Char,
+                ConstValue::Isize(_) => TypeKind::Int(IntTy::Isize),
             },
             ValueTree::Branch(_) => todo!(),
         }
@@ -337,11 +340,11 @@ impl ValueTree {
 
 #[derive(Debug, Clone)]
 pub enum RValue {
-    Use(Operand),
-    Ref(bool, Operand),
-    BinOp(BinOp, Operand, Operand),
-    LogicOp(LogicalOp, Operand, Operand),
-    UnOp(UnOp, Operand),
+    Use(Operand, Span),
+    Ref(bool, Operand, Span),
+    BinOp(BinOp, Operand, Operand, Span),
+    LogicOp(LogicalOp, Operand, Operand, Span),
+    UnOp(UnOp, Operand, Span),
 }
 
 #[derive(Debug, Clone)]
@@ -465,6 +468,7 @@ pub enum ConstValue {
     I32(i32),
     I64(i64),
     I128(i128),
+    Isize(isize),
     U8(u8),
     U16(u16),
     U32(u32),

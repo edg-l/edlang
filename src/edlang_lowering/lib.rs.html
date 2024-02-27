@@ -1173,6 +1173,93 @@
 <a href="#1172" id="1172">1172</a>
 <a href="#1173" id="1173">1173</a>
 <a href="#1174" id="1174">1174</a>
+<a href="#1175" id="1175">1175</a>
+<a href="#1176" id="1176">1176</a>
+<a href="#1177" id="1177">1177</a>
+<a href="#1178" id="1178">1178</a>
+<a href="#1179" id="1179">1179</a>
+<a href="#1180" id="1180">1180</a>
+<a href="#1181" id="1181">1181</a>
+<a href="#1182" id="1182">1182</a>
+<a href="#1183" id="1183">1183</a>
+<a href="#1184" id="1184">1184</a>
+<a href="#1185" id="1185">1185</a>
+<a href="#1186" id="1186">1186</a>
+<a href="#1187" id="1187">1187</a>
+<a href="#1188" id="1188">1188</a>
+<a href="#1189" id="1189">1189</a>
+<a href="#1190" id="1190">1190</a>
+<a href="#1191" id="1191">1191</a>
+<a href="#1192" id="1192">1192</a>
+<a href="#1193" id="1193">1193</a>
+<a href="#1194" id="1194">1194</a>
+<a href="#1195" id="1195">1195</a>
+<a href="#1196" id="1196">1196</a>
+<a href="#1197" id="1197">1197</a>
+<a href="#1198" id="1198">1198</a>
+<a href="#1199" id="1199">1199</a>
+<a href="#1200" id="1200">1200</a>
+<a href="#1201" id="1201">1201</a>
+<a href="#1202" id="1202">1202</a>
+<a href="#1203" id="1203">1203</a>
+<a href="#1204" id="1204">1204</a>
+<a href="#1205" id="1205">1205</a>
+<a href="#1206" id="1206">1206</a>
+<a href="#1207" id="1207">1207</a>
+<a href="#1208" id="1208">1208</a>
+<a href="#1209" id="1209">1209</a>
+<a href="#1210" id="1210">1210</a>
+<a href="#1211" id="1211">1211</a>
+<a href="#1212" id="1212">1212</a>
+<a href="#1213" id="1213">1213</a>
+<a href="#1214" id="1214">1214</a>
+<a href="#1215" id="1215">1215</a>
+<a href="#1216" id="1216">1216</a>
+<a href="#1217" id="1217">1217</a>
+<a href="#1218" id="1218">1218</a>
+<a href="#1219" id="1219">1219</a>
+<a href="#1220" id="1220">1220</a>
+<a href="#1221" id="1221">1221</a>
+<a href="#1222" id="1222">1222</a>
+<a href="#1223" id="1223">1223</a>
+<a href="#1224" id="1224">1224</a>
+<a href="#1225" id="1225">1225</a>
+<a href="#1226" id="1226">1226</a>
+<a href="#1227" id="1227">1227</a>
+<a href="#1228" id="1228">1228</a>
+<a href="#1229" id="1229">1229</a>
+<a href="#1230" id="1230">1230</a>
+<a href="#1231" id="1231">1231</a>
+<a href="#1232" id="1232">1232</a>
+<a href="#1233" id="1233">1233</a>
+<a href="#1234" id="1234">1234</a>
+<a href="#1235" id="1235">1235</a>
+<a href="#1236" id="1236">1236</a>
+<a href="#1237" id="1237">1237</a>
+<a href="#1238" id="1238">1238</a>
+<a href="#1239" id="1239">1239</a>
+<a href="#1240" id="1240">1240</a>
+<a href="#1241" id="1241">1241</a>
+<a href="#1242" id="1242">1242</a>
+<a href="#1243" id="1243">1243</a>
+<a href="#1244" id="1244">1244</a>
+<a href="#1245" id="1245">1245</a>
+<a href="#1246" id="1246">1246</a>
+<a href="#1247" id="1247">1247</a>
+<a href="#1248" id="1248">1248</a>
+<a href="#1249" id="1249">1249</a>
+<a href="#1250" id="1250">1250</a>
+<a href="#1251" id="1251">1251</a>
+<a href="#1252" id="1252">1252</a>
+<a href="#1253" id="1253">1253</a>
+<a href="#1254" id="1254">1254</a>
+<a href="#1255" id="1255">1255</a>
+<a href="#1256" id="1256">1256</a>
+<a href="#1257" id="1257">1257</a>
+<a href="#1258" id="1258">1258</a>
+<a href="#1259" id="1259">1259</a>
+<a href="#1260" id="1260">1260</a>
+<a href="#1261" id="1261">1261</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::HashMap;
 
 <span class="kw">use </span>ast::{BinaryOp, ModuleStatement, Span, WhileStmt};
@@ -1384,7 +1471,7 @@
     }
 
     <span class="kw">for </span>stmt <span class="kw">in </span><span class="kw-2">&amp;</span>func.body.body {
-        lower_statement(<span class="kw-2">&amp;mut </span>builder, stmt, <span class="kw-2">&amp;</span>ret_ty.kind)<span class="question-mark">?</span>;
+        lower_statement(<span class="kw-2">&amp;mut </span>builder, stmt, <span class="kw-2">&amp;</span>ret_ty)<span class="question-mark">?</span>;
     }
 
     <span class="kw">if </span>!builder.statements.is_empty() {
@@ -1405,7 +1492,7 @@
 <span class="kw">fn </span>lower_statement(
     builder: <span class="kw-2">&amp;mut </span>BodyBuilder,
     info: <span class="kw-2">&amp;</span>ast::Statement,
-    ret_type: <span class="kw-2">&amp;</span>TypeKind,
+    ret_type: <span class="kw-2">&amp;</span>TypeInfo,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(), LoweringError&gt; {
     <span class="kw">match </span>info {
         ast::Statement::Let(info) =&gt; lower_let(builder, info),
@@ -1424,7 +1511,7 @@
 <span class="kw">fn </span>lower_while(
     builder: <span class="kw-2">&amp;mut </span>BodyBuilder,
     info: <span class="kw-2">&amp;</span>WhileStmt,
-    ret_type: <span class="kw-2">&amp;</span>TypeKind,
+    ret_type: <span class="kw-2">&amp;</span>TypeInfo,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(), LoweringError&gt; {
     <span class="kw">let </span>statements = std::mem::take(<span class="kw-2">&amp;mut </span>builder.statements);
     builder.body.blocks.push(BasicBlock {
@@ -1505,11 +1592,17 @@
 <span class="kw">fn </span>lower_if_stmt(
     builder: <span class="kw-2">&amp;mut </span>BodyBuilder,
     info: <span class="kw-2">&amp;</span>ast::IfStmt,
-    ret_type: <span class="kw-2">&amp;</span>TypeKind,
+    ret_type: <span class="kw-2">&amp;</span>TypeInfo,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(), LoweringError&gt; {
     <span class="kw">let </span>cond_ty = find_expr_type(builder, <span class="kw-2">&amp;</span>info.condition).expect(<span class="string">"couldnt find cond type"</span>);
-    <span class="kw">let </span>(condition, condition_ty, cond_span) =
-        lower_expr(builder, <span class="kw-2">&amp;</span>info.condition, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>cond_ty))<span class="question-mark">?</span>;
+    <span class="kw">let </span>(condition, condition_ty, cond_span) = lower_expr(
+        builder,
+        <span class="kw-2">&amp;</span>info.condition,
+        <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>TypeInfo {
+            span: <span class="prelude-val">None</span>,
+            kind: cond_ty,
+        }),
+    )<span class="question-mark">?</span>;
 
     <span class="kw">let </span>local = builder.add_temp_local(TypeKind::Bool);
     <span class="kw">let </span>place = Place {
@@ -1608,7 +1701,16 @@
 
 <span class="kw">fn </span>lower_let(builder: <span class="kw-2">&amp;mut </span>BodyBuilder, info: <span class="kw-2">&amp;</span>ast::LetStmt) -&gt; <span class="prelude-ty">Result</span>&lt;(), LoweringError&gt; {
     <span class="kw">let </span>ty = lower_type(<span class="kw-2">&amp;</span>builder.ctx, <span class="kw-2">&amp;</span>info.r#type, builder.local_module)<span class="question-mark">?</span>;
-    <span class="kw">let </span>(rvalue, _ty, _span) = lower_expr(builder, <span class="kw-2">&amp;</span>info.value, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>ty.kind))<span class="question-mark">?</span>;
+    <span class="kw">let </span>(rvalue, found_ty, _span) = lower_expr(builder, <span class="kw-2">&amp;</span>info.value, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>ty))<span class="question-mark">?</span>;
+
+    <span class="kw">if </span>ty.kind != found_ty {
+        <span class="kw">return </span><span class="prelude-val">Err</span>(LoweringError::UnexpectedType {
+            span: info.span,
+            found: found_ty,
+            expected: ty.clone(),
+        });
+    }
+
     <span class="kw">let </span>local_idx = builder.name_to_local.get(<span class="kw-2">&amp;</span>info.name.name).copied().unwrap();
     builder.statements.push(Statement {
         span: <span class="prelude-val">Some</span>(info.name.span),
@@ -1629,21 +1731,25 @@
 }
 
 <span class="kw">fn </span>lower_assign(builder: <span class="kw-2">&amp;mut </span>BodyBuilder, info: <span class="kw-2">&amp;</span>ast::AssignStmt) -&gt; <span class="prelude-ty">Result</span>&lt;(), LoweringError&gt; {
-    <span class="kw">let </span>(<span class="kw-2">mut </span>place, <span class="kw-2">mut </span>ty, _span) = lower_path(builder, <span class="kw-2">&amp;</span>info.name)<span class="question-mark">?</span>;
+    <span class="kw">let </span>(<span class="kw-2">mut </span>place, ty, _span) = lower_path(builder, <span class="kw-2">&amp;</span>info.name)<span class="question-mark">?</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>ty = TypeInfo {
+        span: <span class="prelude-val">None</span>,
+        kind: ty,
+    };
 
     <span class="kw">for _ in </span><span class="number">0</span>..info.deref_times {
-        <span class="kw">match </span><span class="kw-2">&amp;</span>ty {
+        <span class="kw">match </span><span class="kw-2">&amp;</span>ty.kind {
             TypeKind::Ptr(is_mut, inner) =&gt; {
                 <span class="kw">if </span>!is_mut {
                     <span class="macro">panic!</span>(<span class="string">"trying to mutate non mut ptr"</span>);
                 }
-                ty = inner.kind.clone();
+                ty = <span class="kw-2">*</span>inner.clone();
             }
             TypeKind::Ref(is_mut, inner) =&gt; {
                 <span class="kw">if </span>!is_mut {
                     <span class="macro">panic!</span>(<span class="string">"trying to mutate non mut ref"</span>);
                 }
-                ty = inner.kind.clone();
+                ty = <span class="kw-2">*</span>inner.clone();
             }
             <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
         }
@@ -1721,23 +1827,67 @@
 <span class="kw">fn </span>lower_expr(
     builder: <span class="kw-2">&amp;mut </span>BodyBuilder,
     info: <span class="kw-2">&amp;</span>ast::Expression,
-    type_hint: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>TypeKind&gt;,
+    type_hint: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>TypeInfo&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(ir::RValue, TypeKind, Span), LoweringError&gt; {
     <span class="prelude-val">Ok</span>(<span class="kw">match </span>info {
         ast::Expression::Value(info) =&gt; {
             <span class="kw">let </span>(value, ty, span) = lower_value(builder, info, type_hint)<span class="question-mark">?</span>;
+
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(expected_ty) = type_hint {
+                <span class="kw">if </span>expected_ty.kind != ty {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(LoweringError::UnexpectedType {
+                        span,
+                        found: ty,
+                        expected: expected_ty.clone(),
+                    });
+                }
+            }
+
             (ir::RValue::Use(value, span), ty, span)
         }
         ast::Expression::FnCall(info) =&gt; {
             <span class="kw">let </span>(value, ty, span) = lower_fn_call(builder, info)<span class="question-mark">?</span>;
+
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(expected_ty) = type_hint {
+                <span class="kw">if </span>expected_ty.kind != ty {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(LoweringError::UnexpectedType {
+                        span,
+                        found: ty,
+                        expected: expected_ty.clone(),
+                    });
+                }
+            }
+
             (ir::RValue::Use(value, span), ty, span)
         }
         ast::Expression::Unary(<span class="kw">_</span>, <span class="kw">_</span>) =&gt; <span class="macro">todo!</span>(),
         ast::Expression::Binary(lhs, op, rhs) =&gt; {
-            lower_binary_expr(builder, lhs, op, rhs, type_hint)<span class="question-mark">?
-        </span>}
+            <span class="kw">let </span>result = lower_binary_expr(builder, lhs, op, rhs, type_hint)<span class="question-mark">?</span>;
+
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(expected_ty) = type_hint {
+                <span class="kw">if </span>expected_ty.kind != result.<span class="number">1 </span>{
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(LoweringError::UnexpectedType {
+                        span: result.<span class="number">2</span>,
+                        found: result.<span class="number">1</span>,
+                        expected: expected_ty.clone(),
+                    });
+                }
+            }
+
+            result
+        }
         ast::Expression::Deref(inner) =&gt; {
             <span class="kw">let </span>(value, ty, span) = lower_expr(builder, inner, type_hint)<span class="question-mark">?</span>;
+
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(expected_ty) = type_hint {
+                <span class="kw">if </span>expected_ty.kind != ty {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(LoweringError::UnexpectedType {
+                        span,
+                        found: ty,
+                        expected: expected_ty.clone(),
+                    });
+                }
+            }
 
             <span class="comment">// check if its a use directly, to avoid a temporary.
             </span><span class="kw">let </span><span class="kw-2">mut </span>value = <span class="kw">match </span>value {
@@ -1755,13 +1905,23 @@
         }
         ast::Expression::AsRef(inner, mutable) =&gt; {
             <span class="kw">let </span>type_hint = <span class="kw">match </span>type_hint {
-                <span class="prelude-val">Some</span>(inner) =&gt; <span class="kw">match </span>inner {
-                    TypeKind::Ref(<span class="kw">_</span>, inner) =&gt; <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>inner.kind),
+                <span class="prelude-val">Some</span>(inner) =&gt; <span class="kw">match </span><span class="kw-2">&amp;</span>inner.kind {
+                    TypeKind::Ref(<span class="kw">_</span>, inner) =&gt; <span class="prelude-val">Some</span>(inner.as_ref()),
                     <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
                 },
                 <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
             };
             <span class="kw">let </span>(<span class="kw-2">mut </span>value, ty, span) = lower_expr(builder, inner, type_hint)<span class="question-mark">?</span>;
+
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(expected_ty) = type_hint {
+                <span class="kw">if </span>expected_ty.kind != ty {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(LoweringError::UnexpectedType {
+                        span,
+                        found: ty,
+                        expected: expected_ty.clone(),
+                    });
+                }
+            }
 
             <span class="comment">// check if its a use directly, to avoid a temporary.
             </span>value = <span class="kw">match </span>value {
@@ -1827,7 +1987,7 @@
                     .projection
                     .push(PlaceElem::Field { field_idx: idx });
 
-                <span class="kw">let </span>variant = <span class="kw-2">&amp;</span>struct_body.variants[idx].ty.kind;
+                <span class="kw">let </span>variant = <span class="kw-2">&amp;</span>struct_body.variants[idx].ty;
 
                 <span class="kw">let </span>(value, _value_ty, span) = lower_expr(builder, <span class="kw-2">&amp;</span>value.value, <span class="prelude-val">Some</span>(variant))<span class="question-mark">?</span>;
 
@@ -1847,20 +2007,34 @@
     lhs: <span class="kw-2">&amp;</span>ast::Expression,
     op: <span class="kw-2">&amp;</span>ast::BinaryOp,
     rhs: <span class="kw-2">&amp;</span>ast::Expression,
-    type_hint: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>TypeKind&gt;,
+    type_hint: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>TypeInfo&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(ir::RValue, TypeKind, Span), LoweringError&gt; {
     <span class="macro">trace!</span>(<span class="string">"lowering binary op: {:?}"</span>, op);
 
     <span class="kw">let </span>(lhs, lhs_ty, <span class="kw">_</span>) = <span class="kw">if </span>type_hint.is_none() {
         <span class="kw">let </span>ty = find_expr_type(builder, lhs)
             .unwrap_or_else(|| find_expr_type(builder, rhs).expect(<span class="string">"cant find type"</span>));
-        lower_expr(builder, lhs, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>ty))<span class="question-mark">?
+        lower_expr(
+            builder,
+            lhs,
+            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>TypeInfo {
+                span: <span class="prelude-val">None</span>,
+                kind: ty,
+            }),
+        )<span class="question-mark">?
     </span>} <span class="kw">else </span>{
         lower_expr(builder, lhs, type_hint)<span class="question-mark">?
     </span>};
     <span class="kw">let </span>(rhs, rhs_ty, <span class="kw">_</span>) = <span class="kw">if </span>type_hint.is_none() {
         <span class="kw">let </span>ty = find_expr_type(builder, rhs).unwrap_or(lhs_ty.clone());
-        lower_expr(builder, rhs, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>ty))<span class="question-mark">?
+        lower_expr(
+            builder,
+            rhs,
+            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>TypeInfo {
+                span: <span class="prelude-val">None</span>,
+                kind: ty,
+            }),
+        )<span class="question-mark">?
     </span>} <span class="kw">else </span>{
         lower_expr(builder, rhs, type_hint)<span class="question-mark">?
     </span>};
@@ -2002,7 +2176,7 @@
     <span class="kw">let </span><span class="kw-2">mut </span>args = Vec::new();
 
     <span class="kw">for </span>(arg, arg_ty) <span class="kw">in </span>info.params.iter().zip(args_ty) {
-        <span class="kw">let </span>(rvalue, _rvalue_ty, _span) = lower_expr(builder, arg, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>arg_ty.kind))<span class="question-mark">?</span>;
+        <span class="kw">let </span>(rvalue, _rvalue_ty, _span) = lower_expr(builder, arg, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>arg_ty))<span class="question-mark">?</span>;
         args.push(rvalue);
     }
 
@@ -2036,7 +2210,7 @@
 <span class="kw">fn </span>lower_value(
     builder: <span class="kw-2">&amp;mut </span>BodyBuilder,
     info: <span class="kw-2">&amp;</span>ast::ValueExpr,
-    type_hint: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>TypeKind&gt;,
+    type_hint: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>TypeInfo&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(Operand, TypeKind, Span), LoweringError&gt; {
     <span class="prelude-val">Ok</span>(<span class="kw">match </span>info {
         ast::ValueExpr::Bool { value, span } =&gt; (
@@ -2067,7 +2241,7 @@
         ),
         ast::ValueExpr::Int { value, span } =&gt; {
             <span class="kw">let </span>(ty, val) = <span class="kw">match </span>type_hint {
-                <span class="prelude-val">Some</span>(type_hint) =&gt; <span class="kw">match </span><span class="kw-2">&amp;</span>type_hint {
+                <span class="prelude-val">Some</span>(type_hint) =&gt; <span class="kw">match </span><span class="kw-2">&amp;</span>type_hint.kind {
                     ir::TypeKind::Int(int_type) =&gt; <span class="kw">match </span>int_type {
                         ir::IntTy::I128 =&gt; (
                             ir::TypeKind::Int(ir::IntTy::I128),
@@ -2137,7 +2311,7 @@
             )
         }
         ast::ValueExpr::Float { value, span } =&gt; <span class="kw">match </span>type_hint {
-            <span class="prelude-val">Some</span>(type_hint) =&gt; <span class="kw">match </span><span class="kw-2">&amp;</span>type_hint {
+            <span class="prelude-val">Some</span>(type_hint) =&gt; <span class="kw">match </span><span class="kw-2">&amp;</span>type_hint.kind {
                 TypeKind::Float(float_ty) =&gt; <span class="kw">match </span>float_ty {
                     ir::FloatTy::F32 =&gt; (
                         ir::Operand::Constant(ir::ConstData {
@@ -2150,7 +2324,7 @@
                                 value.parse().unwrap(),
                             ))),
                         }),
-                        type_hint.clone(),
+                        type_hint.kind.clone(),
                         <span class="kw-2">*</span>span,
                     ),
                     ir::FloatTy::F64 =&gt; (
@@ -2164,7 +2338,7 @@
                                 value.parse().unwrap(),
                             ))),
                         }),
-                        type_hint.clone(),
+                        type_hint.kind.clone(),
                         <span class="kw-2">*</span>span,
                     ),
                 },
@@ -2183,7 +2357,7 @@
 <span class="kw">fn </span>lower_return(
     builder: <span class="kw-2">&amp;mut </span>BodyBuilder,
     info: <span class="kw-2">&amp;</span>ast::ReturnStmt,
-    return_type: <span class="kw-2">&amp;</span>TypeKind,
+    return_type: <span class="kw-2">&amp;</span>TypeInfo,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(), LoweringError&gt; {
     <span class="kw">if let </span><span class="prelude-val">Some</span>(value_expr) = <span class="kw-2">&amp;</span>info.value {
         <span class="kw">let </span>(value, _ty, span) = lower_expr(builder, value_expr, <span class="prelude-val">Some</span>(return_type))<span class="question-mark">?</span>;

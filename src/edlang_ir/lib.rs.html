@@ -478,9 +478,58 @@
 <a href="#477" id="477">477</a>
 <a href="#478" id="478">478</a>
 <a href="#479" id="479">479</a>
+<a href="#480" id="480">480</a>
+<a href="#481" id="481">481</a>
+<a href="#482" id="482">482</a>
+<a href="#483" id="483">483</a>
+<a href="#484" id="484">484</a>
+<a href="#485" id="485">485</a>
+<a href="#486" id="486">486</a>
+<a href="#487" id="487">487</a>
+<a href="#488" id="488">488</a>
+<a href="#489" id="489">489</a>
+<a href="#490" id="490">490</a>
+<a href="#491" id="491">491</a>
+<a href="#492" id="492">492</a>
+<a href="#493" id="493">493</a>
+<a href="#494" id="494">494</a>
+<a href="#495" id="495">495</a>
+<a href="#496" id="496">496</a>
+<a href="#497" id="497">497</a>
+<a href="#498" id="498">498</a>
+<a href="#499" id="499">499</a>
+<a href="#500" id="500">500</a>
+<a href="#501" id="501">501</a>
+<a href="#502" id="502">502</a>
+<a href="#503" id="503">503</a>
+<a href="#504" id="504">504</a>
+<a href="#505" id="505">505</a>
+<a href="#506" id="506">506</a>
+<a href="#507" id="507">507</a>
+<a href="#508" id="508">508</a>
+<a href="#509" id="509">509</a>
+<a href="#510" id="510">510</a>
+<a href="#511" id="511">511</a>
+<a href="#512" id="512">512</a>
+<a href="#513" id="513">513</a>
+<a href="#514" id="514">514</a>
+<a href="#515" id="515">515</a>
+<a href="#516" id="516">516</a>
+<a href="#517" id="517">517</a>
+<a href="#518" id="518">518</a>
+<a href="#519" id="519">519</a>
+<a href="#520" id="520">520</a>
+<a href="#521" id="521">521</a>
+<a href="#522" id="522">522</a>
+<a href="#523" id="523">523</a>
+<a href="#524" id="524">524</a>
+<a href="#525" id="525">525</a>
 </pre></div><pre class="rust"><code><span class="comment">// Based on a cfg
 
-</span><span class="kw">use </span>std::collections::{BTreeMap, HashMap, HashSet};
+</span><span class="kw">use </span>std::{
+    collections::{BTreeMap, HashMap, HashSet},
+    fmt,
+};
 
 <span class="kw">use </span>edlang_span::Span;
 <span class="kw">use </span>smallvec::SmallVec;
@@ -687,13 +736,13 @@
     <span class="kw">pub </span>targets: Vec&lt;usize&gt;,
 }
 
-<span class="attr">#[derive(Debug, Clone)]
+<span class="attr">#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 </span><span class="kw">pub struct </span>TypeInfo {
     <span class="kw">pub </span>span: <span class="prelude-ty">Option</span>&lt;Span&gt;,
     <span class="kw">pub </span>kind: TypeKind,
 }
 
-<span class="attr">#[derive(Debug, Clone)]
+<span class="attr">#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 </span><span class="kw">pub enum </span>TypeKind {
     Unit,
     Bool,
@@ -748,7 +797,50 @@
     }
 }
 
-<span class="attr">#[derive(Debug, Clone)]
+<span class="kw">impl </span>fmt::Display <span class="kw">for </span>TypeKind {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">'_</span>&gt;) -&gt; fmt::Result {
+        <span class="kw">match </span><span class="self">self </span>{
+            TypeKind::Unit =&gt; <span class="macro">write!</span>(f, <span class="string">"()"</span>),
+            TypeKind::Bool =&gt; <span class="macro">write!</span>(f, <span class="string">"bool"</span>),
+            TypeKind::Char =&gt; <span class="macro">write!</span>(f, <span class="string">"char"</span>),
+            TypeKind::Int(ty) =&gt; <span class="kw">match </span>ty {
+                IntTy::I128 =&gt; <span class="macro">write!</span>(f, <span class="string">"i128"</span>),
+                IntTy::I64 =&gt; <span class="macro">write!</span>(f, <span class="string">"i64"</span>),
+                IntTy::I32 =&gt; <span class="macro">write!</span>(f, <span class="string">"i32"</span>),
+                IntTy::I16 =&gt; <span class="macro">write!</span>(f, <span class="string">"i16"</span>),
+                IntTy::I8 =&gt; <span class="macro">write!</span>(f, <span class="string">"i8"</span>),
+                IntTy::Isize =&gt; <span class="macro">write!</span>(f, <span class="string">"isize"</span>),
+            },
+            TypeKind::Uint(ty) =&gt; <span class="kw">match </span>ty {
+                UintTy::U128 =&gt; <span class="macro">write!</span>(f, <span class="string">"u128"</span>),
+                UintTy::U64 =&gt; <span class="macro">write!</span>(f, <span class="string">"u64"</span>),
+                UintTy::U32 =&gt; <span class="macro">write!</span>(f, <span class="string">"u32"</span>),
+                UintTy::U16 =&gt; <span class="macro">write!</span>(f, <span class="string">"u16"</span>),
+                UintTy::U8 =&gt; <span class="macro">write!</span>(f, <span class="string">"u8"</span>),
+                UintTy::Usize =&gt; <span class="macro">write!</span>(f, <span class="string">"usize"</span>),
+            },
+            TypeKind::Float(ty) =&gt; <span class="kw">match </span>ty {
+                FloatTy::F32 =&gt; <span class="macro">write!</span>(f, <span class="string">"f64"</span>),
+                FloatTy::F64 =&gt; <span class="macro">write!</span>(f, <span class="string">"f32"</span>),
+            },
+            TypeKind::FnDef(<span class="kw">_</span>, <span class="kw">_</span>) =&gt; <span class="macro">todo!</span>(),
+            TypeKind::Str =&gt; <span class="macro">write!</span>(f, <span class="string">"str"</span>),
+            TypeKind::Ptr(is_mut, inner) =&gt; {
+                <span class="kw">let </span>word = <span class="kw">if </span><span class="kw-2">*</span>is_mut { <span class="string">"mut" </span>} <span class="kw">else </span>{ <span class="string">"const" </span>};
+
+                <span class="macro">write!</span>(f, <span class="string">"*{word} {}"</span>, inner.kind)
+            }
+            TypeKind::Ref(is_mut, inner) =&gt; {
+                <span class="kw">let </span>word = <span class="kw">if </span><span class="kw-2">*</span>is_mut { <span class="string">"mut" </span>} <span class="kw">else </span>{ <span class="string">"const" </span>};
+
+                <span class="macro">write!</span>(f, <span class="string">"&amp;{word} {}"</span>, inner.kind)
+            }
+            TypeKind::Struct(<span class="kw">_</span>) =&gt; <span class="macro">todo!</span>(),
+        }
+    }
+}
+
+<span class="attr">#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Copy)]
 </span><span class="kw">pub enum </span>IntTy {
     I128,
     I64,
@@ -758,7 +850,7 @@
     Isize,
 }
 
-<span class="attr">#[derive(Debug, Clone)]
+<span class="attr">#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Copy)]
 </span><span class="kw">pub enum </span>UintTy {
     U128,
     U64,
@@ -768,7 +860,7 @@
     Usize,
 }
 
-<span class="attr">#[derive(Debug, Clone)]
+<span class="attr">#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Copy)]
 </span><span class="kw">pub enum </span>FloatTy {
     F32,
     F64,

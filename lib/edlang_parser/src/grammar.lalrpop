@@ -317,9 +317,9 @@ pub(crate) Expression: ast::Expression = {
   #[precedence(level="0")]
   <Term>,
   #[precedence(level="1")] #[assoc(side="left")]
-  "&" "mut" <Expression> => ast::Expression::AsRef(Box::new(<>), true),
-  "&" <Expression> => ast::Expression::AsRef(Box::new(<>), false),
-  "*" <Expression> => ast::Expression::Deref(Box::new(<>)),
+  <lo:@L> "&" "mut" <e:Expression> <hi:@R> => ast::Expression::AsRef(Box::new(e), true, ast::Span::new(lo, hi)),
+  <lo:@L> "&" <e:Expression> <hi:@R> => ast::Expression::AsRef(Box::new(e), false, ast::Span::new(lo, hi)),
+  <lo:@L> "*" <e:Expression> <hi:@R> => ast::Expression::Deref(Box::new(e), ast::Span::new(lo, hi)),
   <op:UnaryOp> <rhs:Expression> => ast::Expression::Unary(
     op,
     Box::new(rhs)

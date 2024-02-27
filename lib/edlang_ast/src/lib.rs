@@ -174,8 +174,8 @@ pub enum Expression {
     StructInit(StructInitExpr),
     Unary(UnaryOp, Box<Self>),
     Binary(Box<Self>, BinaryOp, Box<Self>),
-    Deref(Box<Self>),
-    AsRef(Box<Self>, bool),
+    Deref(Box<Self>, Span),
+    AsRef(Box<Self>, bool, Span),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]

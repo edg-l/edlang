@@ -548,8 +548,8 @@ fn find_expr_type(builder: &mut BodyBuilder, info: &ast::Expression) -> Option<T
                 find_expr_type(builder, lhs).or(find_expr_type(builder, rhs))?
             }
         }
-        ast::Expression::Deref(_) => todo!(),
-        ast::Expression::AsRef(_, _) => todo!(),
+        ast::Expression::Deref(_, _) => todo!(),
+        ast::Expression::AsRef(_, _, _) => todo!(),
         ast::Expression::StructInit(info) => {
             let id = *builder
                 .get_module_body()
@@ -571,61 +571,19 @@ fn lower_expr(
         ast::Expression::Value(info) => {
             let (value, ty, span) = lower_value(builder, info, type_hint)?;
 
-            if let Some(expected_ty) = type_hint {
-                if expected_ty.kind != ty {
-                    return Err(LoweringError::UnexpectedType {
-                        span,
-                        found: ty,
-                        expected: expected_ty.clone(),
-                    });
-                }
-            }
-
             (ir::RValue::Use(value, span), ty, span)
         }
         ast::Expression::FnCall(info) => {
             let (value, ty, span) = lower_fn_call(builder, info)?;
 
-            if let Some(expected_ty) = type_hint {
-                if expected_ty.kind != ty {
-                    return Err(LoweringError::UnexpectedType {
-                        span,
-                        found: ty,
-                        expected: expected_ty.clone(),
-                    });
-                }
-            }
-
             (ir::RValue::Use(value, span), ty, span)
         }
         ast::Expression::Unary(_, _) => todo!(),
         ast::Expression::Binary(lhs, op, rhs) => {
-            let result = lower_binary_expr(builder, lhs, op, rhs, type_hint)?;
-
-            if let Some(expected_ty) = type_hint {
-                if expected_ty.kind != result.1 {
-                    return Err(LoweringError::UnexpectedType {
-                        span: result.2,
-                        found: result.1,
-                        expected: expected_ty.clone(),
-                    });
-                }
-            }
-
-            result
+            lower_binary_expr(builder, lhs, op, rhs, type_hint)?
         }
-        ast::Expression::Deref(inner) => {
-            let (value, ty, span) = lower_expr(builder, inner, type_hint)?;
-
-            if let Some(expected_ty) = type_hint {
-                if expected_ty.kind != ty {
-                    return Err(LoweringError::UnexpectedType {
-                        span,
-                        found: ty,
-                        expected: expected_ty.clone(),
-                    });
-                }
-            }
+        ast::Expression::Deref(inner, deref_span) => {
+            let (value, ty, _span) = lower_expr(builder, inner, type_hint)?;
 
             // check if its a use directly, to avoid a temporary.
             let mut value = match value {
@@ -639,9 +597,19 @@ fn lower_expr(
 
             value.projection.push(PlaceElem::Deref);
 
-            (RValue::Use(Operand::Move(value), span), ty, span)
+            let ty = match ty {
+                TypeKind::Ptr(_, inner) => *inner,
+                TypeKind::Ref(_, inner) => *inner,
+                _ => todo!("proepr error here"),
+            };
+
+            (
+                RValue::Use(Operand::Move(value), *deref_span),
+                ty.kind,
+                *deref_span,
+            )
         }
-        ast::Expression::AsRef(inner, mutable) => {
+        ast::Expression::AsRef(inner, mutable, as_ref_span) => {
             let type_hint = match type_hint {
                 Some(inner) => match &inner.kind {
                     TypeKind::Ref(_, inner) => Some(inner.as_ref()),
@@ -649,21 +617,11 @@ fn lower_expr(
                 },
                 None => None,
             };
-            let (mut value, ty, span) = lower_expr(builder, inner, type_hint)?;
-
-            if let Some(expected_ty) = type_hint {
-                if expected_ty.kind != ty {
-                    return Err(LoweringError::UnexpectedType {
-                        span,
-                        found: ty,
-                        expected: expected_ty.clone(),
-                    });
-                }
-            }
+            let (mut value, ty, _span) = lower_expr(builder, inner, type_hint)?;
 
             // check if its a use directly, to avoid a temporary.
             value = match value {
-                RValue::Use(op, _span) => RValue::Ref(*mutable, op, span),
+                RValue::Use(op, _span) => RValue::Ref(*mutable, op, *as_ref_span),
                 value => {
                     let inner_local = builder.add_local(Local::temp(ty.clone()));
                     let inner_place = Place {
@@ -680,19 +638,19 @@ fn lower_expr(
                         span: None,
                         kind: StatementKind::Assign(inner_place.clone(), value),
                     });
-                    RValue::Ref(*mutable, Operand::Move(inner_place), span)
+                    RValue::Ref(*mutable, Operand::Move(inner_place), *as_ref_span)
                 }
             };
 
             let ty = TypeKind::Ref(
                 *mutable,
                 Box::new(TypeInfo {
-                    span: Some(span),
+                    span: Some(*as_ref_span),
                     kind: ty,
                 }),
             );
 
-            (value, ty, span)
+            (value, ty, *as_ref_span)
         }
         ast::Expression::StructInit(info) => {
             let id = *builder
@@ -1098,7 +1056,18 @@ fn lower_return(
     return_type: &TypeInfo,
 ) -> Result<(), LoweringError> {
     if let Some(value_expr) = &info.value {
-        let (value, _ty, span) = lower_expr(builder, value_expr, Some(return_type))?;
+        let (value, ty, span) = lower_expr(builder, value_expr, Some(return_type))?;
+
+        if return_type.kind != ty {
+            dbg!("here");
+            dbg!(value);
+            return Err(LoweringError::UnexpectedType {
+                span,
+                found: ty,
+                expected: return_type.clone(),
+            });
+        }
+
         builder.statements.push(Statement {
             span: Some(span),
             kind: StatementKind::Assign(

@@ -431,8 +431,8 @@
     StructInit(StructInitExpr),
     Unary(UnaryOp, Box&lt;<span class="self">Self</span>&gt;),
     Binary(Box&lt;<span class="self">Self</span>&gt;, BinaryOp, Box&lt;<span class="self">Self</span>&gt;),
-    Deref(Box&lt;<span class="self">Self</span>&gt;),
-    AsRef(Box&lt;<span class="self">Self</span>&gt;, bool),
+    Deref(Box&lt;<span class="self">Self</span>&gt;, Span),
+    AsRef(Box&lt;<span class="self">Self</span>&gt;, bool, Span),
 }
 
 <span class="attr">#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]

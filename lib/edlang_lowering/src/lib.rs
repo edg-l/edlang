@@ -209,7 +209,7 @@ fn lower_function(
     }
 
     for stmt in &func.body.body {
-        lower_statement(&mut builder, stmt, &ret_ty.kind)?;
+        lower_statement(&mut builder, stmt, &ret_ty)?;
     }
 
     if !builder.statements.is_empty() {
@@ -230,7 +230,7 @@ fn lower_function(
 fn lower_statement(
     builder: &mut BodyBuilder,
     info: &ast::Statement,
-    ret_type: &TypeKind,
+    ret_type: &TypeInfo,
 ) -> Result<(), LoweringError> {
     match info {
         ast::Statement::Let(info) => lower_let(builder, info),
@@ -249,7 +249,7 @@ fn lower_statement(
 fn lower_while(
     builder: &mut BodyBuilder,
     info: &WhileStmt,
-    ret_type: &TypeKind,
+    ret_type: &TypeInfo,
 ) -> Result<(), LoweringError> {
     let statements = std::mem::take(&mut builder.statements);
     builder.body.blocks.push(BasicBlock {
@@ -330,11 +330,17 @@ fn lower_while(
 fn lower_if_stmt(
     builder: &mut BodyBuilder,
     info: &ast::IfStmt,
-    ret_type: &TypeKind,
+    ret_type: &TypeInfo,
 ) -> Result<(), LoweringError> {
     let cond_ty = find_expr_type(builder, &info.condition).expect("couldnt find cond type");
-    let (condition, condition_ty, cond_span) =
-        lower_expr(builder, &info.condition, Some(&cond_ty))?;
+    let (condition, condition_ty, cond_span) = lower_expr(
+        builder,
+        &info.condition,
+        Some(&TypeInfo {
+            span: None,
+            kind: cond_ty,
+        }),
+    )?;
 
     let local = builder.add_temp_local(TypeKind::Bool);
     let place = Place {
@@ -433,7 +439,16 @@ fn lower_if_stmt(
 
 fn lower_let(builder: &mut BodyBuilder, info: &ast::LetStmt) -> Result<(), LoweringError> {
     let ty = lower_type(&builder.ctx, &info.r#type, builder.local_module)?;
-    let (rvalue, _ty, _span) = lower_expr(builder, &info.value, Some(&ty.kind))?;
+    let (rvalue, found_ty, _span) = lower_expr(builder, &info.value, Some(&ty))?;
+
+    if ty.kind != found_ty {
+        return Err(LoweringError::UnexpectedType {
+            span: info.span,
+            found: found_ty,
+            expected: ty.clone(),
+        });
+    }
+
     let local_idx = builder.name_to_local.get(&info.name.name).copied().unwrap();
     builder.statements.push(Statement {
         span: Some(info.name.span),
@@ -454,21 +469,25 @@ fn lower_let(builder: &mut BodyBuilder, info: &ast::LetStmt) -> Result<(), Lower
 }
 
 fn lower_assign(builder: &mut BodyBuilder, info: &ast::AssignStmt) -> Result<(), LoweringError> {
-    let (mut place, mut ty, _span) = lower_path(builder, &info.name)?;
+    let (mut place, ty, _span) = lower_path(builder, &info.name)?;
+    let mut ty = TypeInfo {
+        span: None,
+        kind: ty,
+    };
 
     for _ in 0..info.deref_times {
-        match &ty {
+        match &ty.kind {
             TypeKind::Ptr(is_mut, inner) => {
                 if !is_mut {
                     panic!("trying to mutate non mut ptr");
                 }
-                ty = inner.kind.clone();
+                ty = *inner.clone();
             }
             TypeKind::Ref(is_mut, inner) => {
                 if !is_mut {
                     panic!("trying to mutate non mut ref");
                 }
-                ty = inner.kind.clone();
+                ty = *inner.clone();
             }
             _ => unreachable!(),
         }
@@ -546,23 +565,67 @@ fn find_expr_type(builder: &mut BodyBuilder, info: &ast::Expression) -> Option<T
 fn lower_expr(
     builder: &mut BodyBuilder,
     info: &ast::Expression,
-    type_hint: Option<&TypeKind>,
+    type_hint: Option<&TypeInfo>,
 ) -> Result<(ir::RValue, TypeKind, Span), LoweringError> {
     Ok(match info {
         ast::Expression::Value(info) => {
             let (value, ty, span) = lower_value(builder, info, type_hint)?;
+
+            if let Some(expected_ty) = type_hint {
+                if expected_ty.kind != ty {
+                    return Err(LoweringError::UnexpectedType {
+                        span,
+                        found: ty,
+                        expected: expected_ty.clone(),
+                    });
+                }
+            }
+
             (ir::RValue::Use(value, span), ty, span)
         }
         ast::Expression::FnCall(info) => {
             let (value, ty, span) = lower_fn_call(builder, info)?;
+
+            if let Some(expected_ty) = type_hint {
+                if expected_ty.kind != ty {
+                    return Err(LoweringError::UnexpectedType {
+                        span,
+                        found: ty,
+                        expected: expected_ty.clone(),
+                    });
+                }
+            }
+
             (ir::RValue::Use(value, span), ty, span)
         }
         ast::Expression::Unary(_, _) => todo!(),
         ast::Expression::Binary(lhs, op, rhs) => {
-            lower_binary_expr(builder, lhs, op, rhs, type_hint)?
+            let result = lower_binary_expr(builder, lhs, op, rhs, type_hint)?;
+
+            if let Some(expected_ty) = type_hint {
+                if expected_ty.kind != result.1 {
+                    return Err(LoweringError::UnexpectedType {
+                        span: result.2,
+                        found: result.1,
+                        expected: expected_ty.clone(),
+                    });
+                }
+            }
+
+            result
         }
         ast::Expression::Deref(inner) => {
             let (value, ty, span) = lower_expr(builder, inner, type_hint)?;
+
+            if let Some(expected_ty) = type_hint {
+                if expected_ty.kind != ty {
+                    return Err(LoweringError::UnexpectedType {
+                        span,
+                        found: ty,
+                        expected: expected_ty.clone(),
+                    });
+                }
+            }
 
             // check if its a use directly, to avoid a temporary.
             let mut value = match value {
@@ -580,13 +643,23 @@ fn lower_expr(
         }
         ast::Expression::AsRef(inner, mutable) => {
             let type_hint = match type_hint {
-                Some(inner) => match inner {
-                    TypeKind::Ref(_, inner) => Some(&inner.kind),
+                Some(inner) => match &inner.kind {
+                    TypeKind::Ref(_, inner) => Some(inner.as_ref()),
                     _ => unreachable!(),
                 },
                 None => None,
             };
             let (mut value, ty, span) = lower_expr(builder, inner, type_hint)?;
+
+            if let Some(expected_ty) = type_hint {
+                if expected_ty.kind != ty {
+                    return Err(LoweringError::UnexpectedType {
+                        span,
+                        found: ty,
+                        expected: expected_ty.clone(),
+                    });
+                }
+            }
 
             // check if its a use directly, to avoid a temporary.
             value = match value {
@@ -652,7 +725,7 @@ fn lower_expr(
                     .projection
                     .push(PlaceElem::Field { field_idx: idx });
 
-                let variant = &struct_body.variants[idx].ty.kind;
+                let variant = &struct_body.variants[idx].ty;
 
                 let (value, _value_ty, span) = lower_expr(builder, &value.value, Some(variant))?;
 
@@ -672,20 +745,34 @@ fn lower_binary_expr(
     lhs: &ast::Expression,
     op: &ast::BinaryOp,
     rhs: &ast::Expression,
-    type_hint: Option<&TypeKind>,
+    type_hint: Option<&TypeInfo>,
 ) -> Result<(ir::RValue, TypeKind, Span), LoweringError> {
     trace!("lowering binary op: {:?}", op);
 
     let (lhs, lhs_ty, _) = if type_hint.is_none() {
         let ty = find_expr_type(builder, lhs)
             .unwrap_or_else(|| find_expr_type(builder, rhs).expect("cant find type"));
-        lower_expr(builder, lhs, Some(&ty))?
+        lower_expr(
+            builder,
+            lhs,
+            Some(&TypeInfo {
+                span: None,
+                kind: ty,
+            }),
+        )?
     } else {
         lower_expr(builder, lhs, type_hint)?
     };
     let (rhs, rhs_ty, _) = if type_hint.is_none() {
         let ty = find_expr_type(builder, rhs).unwrap_or(lhs_ty.clone());
-        lower_expr(builder, rhs, Some(&ty))?
+        lower_expr(
+            builder,
+            rhs,
+            Some(&TypeInfo {
+                span: None,
+                kind: ty,
+            }),
+        )?
     } else {
         lower_expr(builder, rhs, type_hint)?
     };
@@ -827,7 +914,7 @@ fn lower_fn_call(
     let mut args = Vec::new();
 
     for (arg, arg_ty) in info.params.iter().zip(args_ty) {
-        let (rvalue, _rvalue_ty, _span) = lower_expr(builder, arg, Some(&arg_ty.kind))?;
+        let (rvalue, _rvalue_ty, _span) = lower_expr(builder, arg, Some(&arg_ty))?;
         args.push(rvalue);
     }
 
@@ -861,7 +948,7 @@ fn lower_fn_call(
 fn lower_value(
     builder: &mut BodyBuilder,
     info: &ast::ValueExpr,
-    type_hint: Option<&TypeKind>,
+    type_hint: Option<&TypeInfo>,
 ) -> Result<(Operand, TypeKind, Span), LoweringError> {
     Ok(match info {
         ast::ValueExpr::Bool { value, span } => (
@@ -892,7 +979,7 @@ fn lower_value(
         ),
         ast::ValueExpr::Int { value, span } => {
             let (ty, val) = match type_hint {
-                Some(type_hint) => match &type_hint {
+                Some(type_hint) => match &type_hint.kind {
                     ir::TypeKind::Int(int_type) => match int_type {
                         ir::IntTy::I128 => (
                             ir::TypeKind::Int(ir::IntTy::I128),
@@ -962,7 +1049,7 @@ fn lower_value(
             )
         }
         ast::ValueExpr::Float { value, span } => match type_hint {
-            Some(type_hint) => match &type_hint {
+            Some(type_hint) => match &type_hint.kind {
                 TypeKind::Float(float_ty) => match float_ty {
                     ir::FloatTy::F32 => (
                         ir::Operand::Constant(ir::ConstData {
@@ -975,7 +1062,7 @@ fn lower_value(
                                 value.parse().unwrap(),
                             ))),
                         }),
-                        type_hint.clone(),
+                        type_hint.kind.clone(),
                         *span,
                     ),
                     ir::FloatTy::F64 => (
@@ -989,7 +1076,7 @@ fn lower_value(
                                 value.parse().unwrap(),
                             ))),
                         }),
-                        type_hint.clone(),
+                        type_hint.kind.clone(),
                         *span,
                     ),
                 },
@@ -1008,7 +1095,7 @@ fn lower_value(
 fn lower_return(
     builder: &mut BodyBuilder,
     info: &ast::ReturnStmt,
-    return_type: &TypeKind,
+    return_type: &TypeInfo,
 ) -> Result<(), LoweringError> {
     if let Some(value_expr) = &info.value {
         let (value, _ty, span) = lower_expr(builder, value_expr, Some(return_type))?;

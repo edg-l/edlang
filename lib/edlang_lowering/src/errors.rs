@@ -1,4 +1,5 @@
 use edlang_ast::{Ident, Span};
+use edlang_ir::{TypeInfo, TypeKind};
 use thiserror::Error;
 
 use crate::DefId;
@@ -27,4 +28,10 @@ pub enum LoweringError {
     IdNotFound { span: Span, id: DefId },
     #[error("feature not yet implemented: {message}")]
     NotYetImplemented { span: Span, message: &'static str },
+    #[error("unexpected type")]
+    UnexpectedType {
+        span: Span,
+        found: TypeKind,
+        expected: TypeInfo,
+    },
 }

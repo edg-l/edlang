@@ -1,6 +1,9 @@
 // Based on a cfg
 
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::{
+    collections::{BTreeMap, HashMap, HashSet},
+    fmt,
+};
 
 use edlang_span::Span;
 use smallvec::SmallVec;
@@ -207,13 +210,13 @@ pub struct SwitchTarget {
     pub targets: Vec<usize>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct TypeInfo {
     pub span: Option<Span>,
     pub kind: TypeKind,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum TypeKind {
     Unit,
     Bool,
@@ -268,7 +271,50 @@ impl TypeKind {
     }
 }
 
-#[derive(Debug, Clone)]
+impl fmt::Display for TypeKind {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            TypeKind::Unit => write!(f, "()"),
+            TypeKind::Bool => write!(f, "bool"),
+            TypeKind::Char => write!(f, "char"),
+            TypeKind::Int(ty) => match ty {
+                IntTy::I128 => write!(f, "i128"),
+                IntTy::I64 => write!(f, "i64"),
+                IntTy::I32 => write!(f, "i32"),
+                IntTy::I16 => write!(f, "i16"),
+                IntTy::I8 => write!(f, "i8"),
+                IntTy::Isize => write!(f, "isize"),
+            },
+            TypeKind::Uint(ty) => match ty {
+                UintTy::U128 => write!(f, "u128"),
+                UintTy::U64 => write!(f, "u64"),
+                UintTy::U32 => write!(f, "u32"),
+                UintTy::U16 => write!(f, "u16"),
+                UintTy::U8 => write!(f, "u8"),
+                UintTy::Usize => write!(f, "usize"),
+            },
+            TypeKind::Float(ty) => match ty {
+                FloatTy::F32 => write!(f, "f64"),
+                FloatTy::F64 => write!(f, "f32"),
+            },
+            TypeKind::FnDef(_, _) => todo!(),
+            TypeKind::Str => write!(f, "str"),
+            TypeKind::Ptr(is_mut, inner) => {
+                let word = if *is_mut { "mut" } else { "const" };
+
+                write!(f, "*{word} {}", inner.kind)
+            }
+            TypeKind::Ref(is_mut, inner) => {
+                let word = if *is_mut { "mut" } else { "const" };
+
+                write!(f, "&{word} {}", inner.kind)
+            }
+            TypeKind::Struct(_) => todo!(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Copy)]
 pub enum IntTy {
     I128,
     I64,
@@ -278,7 +324,7 @@ pub enum IntTy {
     Isize,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Copy)]
 pub enum UintTy {
     U128,
     U64,
@@ -288,7 +334,7 @@ pub enum UintTy {
     Usize,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Copy)]
 pub enum FloatTy {
     F32,
     F64,

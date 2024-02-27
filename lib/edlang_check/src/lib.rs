@@ -84,6 +84,27 @@ pub fn lowering_error_to_report(
                 .with_message(format!("Unresolved type {:?}.", name))
                 .finish()
         },
+        LoweringError::UnexpectedType { span, found, expected } => {
+            let mut labels = vec![
+                Label::new((path.clone(), span.into()))
+                        .with_message(format!("Unexpected type '{}', expected '{}'", found, expected.kind))
+                        .with_color(colors.next())
+            ];
+
+            if let Some(span) = expected.span {
+                labels.push(
+                    Label::new((path.clone(), span.into()))
+                        .with_message(format!("expected '{}' due to this type", expected.kind))
+                        .with_color(colors.next())
+                );
+            }
+
+            Report::build(ReportKind::Error, path.clone(), span.lo)
+                .with_code("E3")
+                .with_labels(labels)
+                .with_message(format!("expected type {}.", expected.kind))
+                .finish()
+        },
         LoweringError::IdNotFound { span, id } => {
             Report::build(ReportKind::Error, path.clone(), span.lo)
                 .with_code("E_ID")

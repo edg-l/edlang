@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/syn-2.0.48/src/gen/hash.rs`."><title>hash.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="syn" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/syn-2.0.51/src/gen/hash.rs`."><title>hash.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="syn" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../../../static.files/src-script-39ed315d46fb705f.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><div class="sidebar-resizer"></div>
     <main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
@@ -2802,17 +2802,15 @@
 <a href="#2801" id="2801">2801</a>
 <a href="#2802" id="2802">2802</a>
 <a href="#2803" id="2803">2803</a>
-<a href="#2804" id="2804">2804</a>
 </pre></div><pre class="rust"><code><span class="comment">// This file is @generated by syn-internal-codegen.
 // It is not intended for manual editing.
 
 </span><span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 </span><span class="kw">use </span><span class="kw">crate</span>::tt::TokenStreamHelper;
-<span class="kw">use crate</span>::<span class="kw-2">*</span>;
 <span class="kw">use </span>std::hash::{Hash, Hasher};
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>Abi {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::Abi {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -2822,7 +2820,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>AngleBracketedGenericArguments {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::AngleBracketedGenericArguments {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -2833,7 +2831,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>Arm {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::Arm {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -2847,7 +2845,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>AssocConst {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::AssocConst {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -2859,7 +2857,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>AssocType {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::AssocType {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -2871,16 +2869,16 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>AttrStyle {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::AttrStyle {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
     {
         <span class="kw">match </span><span class="self">self </span>{
-            AttrStyle::Outer =&gt; {
+            <span class="kw">crate</span>::AttrStyle::Outer =&gt; {
                 state.write_u8(<span class="number">0u8</span>);
             }
-            AttrStyle::Inner(<span class="kw">_</span>) =&gt; {
+            <span class="kw">crate</span>::AttrStyle::Inner(<span class="kw">_</span>) =&gt; {
                 state.write_u8(<span class="number">1u8</span>);
             }
         }
@@ -2888,7 +2886,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>Attribute {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::Attribute {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -2899,7 +2897,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>BareFnArg {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::BareFnArg {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -2911,7 +2909,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>BareVariadic {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::BareVariadic {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -2923,94 +2921,94 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>BinOp {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::BinOp {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
     {
         <span class="kw">match </span><span class="self">self </span>{
-            BinOp::Add(<span class="kw">_</span>) =&gt; {
+            <span class="kw">crate</span>::BinOp::Add(<span class="kw">_</span>) =&gt; {
                 state.write_u8(<span class="number">0u8</span>);
             }
-            BinOp::Sub(<span class="kw">_</span>) =&gt; {
+            <span class="kw">crate</span>::BinOp::Sub(<span class="kw">_</span>) =&gt; {
                 state.write_u8(<span class="number">1u8</span>);
             }
-            BinOp::Mul(<span class="kw">_</span>) =&gt; {
+            <span class="kw">crate</span>::BinOp::Mul(<span class="kw">_</span>) =&gt; {
                 state.write_u8(<span class="number">2u8</span>);
             }
-            BinOp::Div(<span class="kw">_</span>) =&gt; {
+            <span class="kw">crate</span>::BinOp::Div(<span class="kw">_</span>) =&gt; {
                 state.write_u8(<span class="number">3u8</span>);
             }
-            BinOp::Rem(<span class="kw">_</span>) =&gt; {
+            <span class="kw">crate</span>::BinOp::Rem(<span class="kw">_</span>) =&gt; {
                 state.write_u8(<span class="number">4u8</span>);
             }
-            BinOp::And(<span class="kw">_</span>) =&gt; {
+            <span class="kw">crate</span>::BinOp::And(<span class="kw">_</span>) =&gt; {
                 state.write_u8(<span class="number">5u8</span>);
             }
-            BinOp::Or(<span class="kw">_</span>) =&gt; {
+            <span class="kw">crate</span>::BinOp::Or(<span class="kw">_</span>) =&gt; {
                 state.write_u8(<span class="number">6u8</span>);
             }
-            BinOp::BitXor(<span class="kw">_</span>) =&gt; {
+            <span class="kw">crate</span>::BinOp::BitXor(<span class="kw">_</span>) =&gt; {
                 state.write_u8(<span class="number">7u8</span>);
             }
-            BinOp::BitAnd(<span class="kw">_</span>) =&gt; {
+            <span class="kw">crate</span>::BinOp::BitAnd(<span class="kw">_</span>) =&gt; {
                 state.write_u8(<span class="number">8u8</span>);
             }
-            BinOp::BitOr(<span class="kw">_</span>) =&gt; {
+            <span class="kw">crate</span>::BinOp::BitOr(<span class="kw">_</span>) =&gt; {
                 state.write_u8(<span class="number">9u8</span>);
             }
-            BinOp::Shl(<span class="kw">_</span>) =&gt; {
+            <span class="kw">crate</span>::BinOp::Shl(<span class="kw">_</span>) =&gt; {
                 state.write_u8(<span class="number">10u8</span>);
             }
-            BinOp::Shr(<span class="kw">_</span>) =&gt; {
+            <span class="kw">crate</span>::BinOp::Shr(<span class="kw">_</span>) =&gt; {
                 state.write_u8(<span class="number">11u8</span>);
             }
-            BinOp::Eq(<span class="kw">_</span>) =&gt; {
+            <span class="kw">crate</span>::BinOp::Eq(<span class="kw">_</span>) =&gt; {
                 state.write_u8(<span class="number">12u8</span>);
             }
-            BinOp::Lt(<span class="kw">_</span>) =&gt; {
+            <span class="kw">crate</span>::BinOp::Lt(<span class="kw">_</span>) =&gt; {
                 state.write_u8(<span class="number">13u8</span>);
             }
-            BinOp::Le(<span class="kw">_</span>) =&gt; {
+            <span class="kw">crate</span>::BinOp::Le(<span class="kw">_</span>) =&gt; {
                 state.write_u8(<span class="number">14u8</span>);
             }
-            BinOp::Ne(<span class="kw">_</span>) =&gt; {
+            <span class="kw">crate</span>::BinOp::Ne(<span class="kw">_</span>) =&gt; {
                 state.write_u8(<span class="number">15u8</span>);
             }
-            BinOp::Ge(<span class="kw">_</span>) =&gt; {
+            <span class="kw">crate</span>::BinOp::Ge(<span class="kw">_</span>) =&gt; {
                 state.write_u8(<span class="number">16u8</span>);
             }
-            BinOp::Gt(<span class="kw">_</span>) =&gt; {
+            <span class="kw">crate</span>::BinOp::Gt(<span class="kw">_</span>) =&gt; {
                 state.write_u8(<span class="number">17u8</span>);
             }
-            BinOp::AddAssign(<span class="kw">_</span>) =&gt; {
+            <span class="kw">crate</span>::BinOp::AddAssign(<span class="kw">_</span>) =&gt; {
                 state.write_u8(<span class="number">18u8</span>);
             }
-            BinOp::SubAssign(<span class="kw">_</span>) =&gt; {
+            <span class="kw">crate</span>::BinOp::SubAssign(<span class="kw">_</span>) =&gt; {
                 state.write_u8(<span class="number">19u8</span>);
             }
-            BinOp::MulAssign(<span class="kw">_</span>) =&gt; {
+            <span class="kw">crate</span>::BinOp::MulAssign(<span class="kw">_</span>) =&gt; {
                 state.write_u8(<span class="number">20u8</span>);
             }
-            BinOp::DivAssign(<span class="kw">_</span>) =&gt; {
+            <span class="kw">crate</span>::BinOp::DivAssign(<span class="kw">_</span>) =&gt; {
                 state.write_u8(<span class="number">21u8</span>);
             }
-            BinOp::RemAssign(<span class="kw">_</span>) =&gt; {
+            <span class="kw">crate</span>::BinOp::RemAssign(<span class="kw">_</span>) =&gt; {
                 state.write_u8(<span class="number">22u8</span>);
             }
-            BinOp::BitXorAssign(<span class="kw">_</span>) =&gt; {
+            <span class="kw">crate</span>::BinOp::BitXorAssign(<span class="kw">_</span>) =&gt; {
                 state.write_u8(<span class="number">23u8</span>);
             }
-            BinOp::BitAndAssign(<span class="kw">_</span>) =&gt; {
+            <span class="kw">crate</span>::BinOp::BitAndAssign(<span class="kw">_</span>) =&gt; {
                 state.write_u8(<span class="number">24u8</span>);
             }
-            BinOp::BitOrAssign(<span class="kw">_</span>) =&gt; {
+            <span class="kw">crate</span>::BinOp::BitOrAssign(<span class="kw">_</span>) =&gt; {
                 state.write_u8(<span class="number">25u8</span>);
             }
-            BinOp::ShlAssign(<span class="kw">_</span>) =&gt; {
+            <span class="kw">crate</span>::BinOp::ShlAssign(<span class="kw">_</span>) =&gt; {
                 state.write_u8(<span class="number">26u8</span>);
             }
-            BinOp::ShrAssign(<span class="kw">_</span>) =&gt; {
+            <span class="kw">crate</span>::BinOp::ShrAssign(<span class="kw">_</span>) =&gt; {
                 state.write_u8(<span class="number">27u8</span>);
             }
         }
@@ -3018,7 +3016,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>Block {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::Block {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3028,7 +3026,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>BoundLifetimes {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::BoundLifetimes {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3038,7 +3036,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ConstParam {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ConstParam {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3052,7 +3050,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>Constraint {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::Constraint {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3064,21 +3062,21 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"derive"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>Data {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::Data {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
     {
         <span class="kw">match </span><span class="self">self </span>{
-            Data::Struct(v0) =&gt; {
+            <span class="kw">crate</span>::Data::Struct(v0) =&gt; {
                 state.write_u8(<span class="number">0u8</span>);
                 v0.hash(state);
             }
-            Data::Enum(v0) =&gt; {
+            <span class="kw">crate</span>::Data::Enum(v0) =&gt; {
                 state.write_u8(<span class="number">1u8</span>);
                 v0.hash(state);
             }
-            Data::Union(v0) =&gt; {
+            <span class="kw">crate</span>::Data::Union(v0) =&gt; {
                 state.write_u8(<span class="number">2u8</span>);
                 v0.hash(state);
             }
@@ -3087,7 +3085,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"derive"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>DataEnum {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::DataEnum {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3097,7 +3095,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"derive"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>DataStruct {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::DataStruct {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3108,7 +3106,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"derive"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>DataUnion {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::DataUnion {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3118,7 +3116,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"derive"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>DeriveInput {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::DeriveInput {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3132,189 +3130,189 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>Expr {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::Expr {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
     {
         <span class="kw">match </span><span class="self">self </span>{
             <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
-            </span>Expr::Array(v0) =&gt; {
+            </span><span class="kw">crate</span>::Expr::Array(v0) =&gt; {
                 state.write_u8(<span class="number">0u8</span>);
                 v0.hash(state);
             }
             <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
-            </span>Expr::Assign(v0) =&gt; {
+            </span><span class="kw">crate</span>::Expr::Assign(v0) =&gt; {
                 state.write_u8(<span class="number">1u8</span>);
                 v0.hash(state);
             }
             <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
-            </span>Expr::Async(v0) =&gt; {
+            </span><span class="kw">crate</span>::Expr::Async(v0) =&gt; {
                 state.write_u8(<span class="number">2u8</span>);
                 v0.hash(state);
             }
             <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
-            </span>Expr::Await(v0) =&gt; {
+            </span><span class="kw">crate</span>::Expr::Await(v0) =&gt; {
                 state.write_u8(<span class="number">3u8</span>);
                 v0.hash(state);
             }
-            Expr::Binary(v0) =&gt; {
+            <span class="kw">crate</span>::Expr::Binary(v0) =&gt; {
                 state.write_u8(<span class="number">4u8</span>);
                 v0.hash(state);
             }
             <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
-            </span>Expr::Block(v0) =&gt; {
+            </span><span class="kw">crate</span>::Expr::Block(v0) =&gt; {
                 state.write_u8(<span class="number">5u8</span>);
                 v0.hash(state);
             }
             <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
-            </span>Expr::Break(v0) =&gt; {
+            </span><span class="kw">crate</span>::Expr::Break(v0) =&gt; {
                 state.write_u8(<span class="number">6u8</span>);
                 v0.hash(state);
             }
-            Expr::Call(v0) =&gt; {
+            <span class="kw">crate</span>::Expr::Call(v0) =&gt; {
                 state.write_u8(<span class="number">7u8</span>);
                 v0.hash(state);
             }
-            Expr::Cast(v0) =&gt; {
+            <span class="kw">crate</span>::Expr::Cast(v0) =&gt; {
                 state.write_u8(<span class="number">8u8</span>);
                 v0.hash(state);
             }
             <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
-            </span>Expr::Closure(v0) =&gt; {
+            </span><span class="kw">crate</span>::Expr::Closure(v0) =&gt; {
                 state.write_u8(<span class="number">9u8</span>);
                 v0.hash(state);
             }
             <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
-            </span>Expr::Const(v0) =&gt; {
+            </span><span class="kw">crate</span>::Expr::Const(v0) =&gt; {
                 state.write_u8(<span class="number">10u8</span>);
                 v0.hash(state);
             }
             <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
-            </span>Expr::Continue(v0) =&gt; {
+            </span><span class="kw">crate</span>::Expr::Continue(v0) =&gt; {
                 state.write_u8(<span class="number">11u8</span>);
                 v0.hash(state);
             }
-            Expr::Field(v0) =&gt; {
+            <span class="kw">crate</span>::Expr::Field(v0) =&gt; {
                 state.write_u8(<span class="number">12u8</span>);
                 v0.hash(state);
             }
             <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
-            </span>Expr::ForLoop(v0) =&gt; {
+            </span><span class="kw">crate</span>::Expr::ForLoop(v0) =&gt; {
                 state.write_u8(<span class="number">13u8</span>);
                 v0.hash(state);
             }
-            Expr::Group(v0) =&gt; {
+            <span class="kw">crate</span>::Expr::Group(v0) =&gt; {
                 state.write_u8(<span class="number">14u8</span>);
                 v0.hash(state);
             }
             <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
-            </span>Expr::If(v0) =&gt; {
+            </span><span class="kw">crate</span>::Expr::If(v0) =&gt; {
                 state.write_u8(<span class="number">15u8</span>);
                 v0.hash(state);
             }
-            Expr::Index(v0) =&gt; {
+            <span class="kw">crate</span>::Expr::Index(v0) =&gt; {
                 state.write_u8(<span class="number">16u8</span>);
                 v0.hash(state);
             }
             <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
-            </span>Expr::Infer(v0) =&gt; {
+            </span><span class="kw">crate</span>::Expr::Infer(v0) =&gt; {
                 state.write_u8(<span class="number">17u8</span>);
                 v0.hash(state);
             }
             <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
-            </span>Expr::Let(v0) =&gt; {
+            </span><span class="kw">crate</span>::Expr::Let(v0) =&gt; {
                 state.write_u8(<span class="number">18u8</span>);
                 v0.hash(state);
             }
-            Expr::Lit(v0) =&gt; {
+            <span class="kw">crate</span>::Expr::Lit(v0) =&gt; {
                 state.write_u8(<span class="number">19u8</span>);
                 v0.hash(state);
             }
             <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
-            </span>Expr::Loop(v0) =&gt; {
+            </span><span class="kw">crate</span>::Expr::Loop(v0) =&gt; {
                 state.write_u8(<span class="number">20u8</span>);
                 v0.hash(state);
             }
-            Expr::Macro(v0) =&gt; {
+            <span class="kw">crate</span>::Expr::Macro(v0) =&gt; {
                 state.write_u8(<span class="number">21u8</span>);
                 v0.hash(state);
             }
             <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
-            </span>Expr::Match(v0) =&gt; {
+            </span><span class="kw">crate</span>::Expr::Match(v0) =&gt; {
                 state.write_u8(<span class="number">22u8</span>);
                 v0.hash(state);
             }
-            Expr::MethodCall(v0) =&gt; {
+            <span class="kw">crate</span>::Expr::MethodCall(v0) =&gt; {
                 state.write_u8(<span class="number">23u8</span>);
                 v0.hash(state);
             }
-            Expr::Paren(v0) =&gt; {
+            <span class="kw">crate</span>::Expr::Paren(v0) =&gt; {
                 state.write_u8(<span class="number">24u8</span>);
                 v0.hash(state);
             }
-            Expr::Path(v0) =&gt; {
+            <span class="kw">crate</span>::Expr::Path(v0) =&gt; {
                 state.write_u8(<span class="number">25u8</span>);
                 v0.hash(state);
             }
             <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
-            </span>Expr::Range(v0) =&gt; {
+            </span><span class="kw">crate</span>::Expr::Range(v0) =&gt; {
                 state.write_u8(<span class="number">26u8</span>);
                 v0.hash(state);
             }
-            Expr::Reference(v0) =&gt; {
+            <span class="kw">crate</span>::Expr::Reference(v0) =&gt; {
                 state.write_u8(<span class="number">27u8</span>);
                 v0.hash(state);
             }
             <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
-            </span>Expr::Repeat(v0) =&gt; {
+            </span><span class="kw">crate</span>::Expr::Repeat(v0) =&gt; {
                 state.write_u8(<span class="number">28u8</span>);
                 v0.hash(state);
             }
             <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
-            </span>Expr::Return(v0) =&gt; {
+            </span><span class="kw">crate</span>::Expr::Return(v0) =&gt; {
                 state.write_u8(<span class="number">29u8</span>);
                 v0.hash(state);
             }
-            Expr::Struct(v0) =&gt; {
+            <span class="kw">crate</span>::Expr::Struct(v0) =&gt; {
                 state.write_u8(<span class="number">30u8</span>);
                 v0.hash(state);
             }
             <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
-            </span>Expr::Try(v0) =&gt; {
+            </span><span class="kw">crate</span>::Expr::Try(v0) =&gt; {
                 state.write_u8(<span class="number">31u8</span>);
                 v0.hash(state);
             }
             <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
-            </span>Expr::TryBlock(v0) =&gt; {
+            </span><span class="kw">crate</span>::Expr::TryBlock(v0) =&gt; {
                 state.write_u8(<span class="number">32u8</span>);
                 v0.hash(state);
             }
             <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
-            </span>Expr::Tuple(v0) =&gt; {
+            </span><span class="kw">crate</span>::Expr::Tuple(v0) =&gt; {
                 state.write_u8(<span class="number">33u8</span>);
                 v0.hash(state);
             }
-            Expr::Unary(v0) =&gt; {
+            <span class="kw">crate</span>::Expr::Unary(v0) =&gt; {
                 state.write_u8(<span class="number">34u8</span>);
                 v0.hash(state);
             }
             <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
-            </span>Expr::Unsafe(v0) =&gt; {
+            </span><span class="kw">crate</span>::Expr::Unsafe(v0) =&gt; {
                 state.write_u8(<span class="number">35u8</span>);
                 v0.hash(state);
             }
-            Expr::Verbatim(v0) =&gt; {
+            <span class="kw">crate</span>::Expr::Verbatim(v0) =&gt; {
                 state.write_u8(<span class="number">36u8</span>);
                 TokenStreamHelper(v0).hash(state);
             }
             <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
-            </span>Expr::While(v0) =&gt; {
+            </span><span class="kw">crate</span>::Expr::While(v0) =&gt; {
                 state.write_u8(<span class="number">37u8</span>);
                 v0.hash(state);
             }
             <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
-            </span>Expr::Yield(v0) =&gt; {
+            </span><span class="kw">crate</span>::Expr::Yield(v0) =&gt; {
                 state.write_u8(<span class="number">38u8</span>);
                 v0.hash(state);
             }
@@ -3325,7 +3323,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ExprArray {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ExprArray {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3336,7 +3334,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ExprAssign {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ExprAssign {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3348,7 +3346,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ExprAsync {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ExprAsync {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3360,7 +3358,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ExprAwait {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ExprAwait {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3371,7 +3369,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ExprBinary {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ExprBinary {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3384,7 +3382,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ExprBlock {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ExprBlock {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3396,7 +3394,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ExprBreak {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ExprBreak {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3408,7 +3406,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ExprCall {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ExprCall {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3420,7 +3418,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ExprCast {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ExprCast {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3432,7 +3430,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ExprClosure {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ExprClosure {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3450,7 +3448,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ExprConst {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ExprConst {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3461,7 +3459,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ExprContinue {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ExprContinue {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3472,7 +3470,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ExprField {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ExprField {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3484,7 +3482,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ExprForLoop {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ExprForLoop {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3498,7 +3496,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ExprGroup {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ExprGroup {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3509,7 +3507,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ExprIf {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ExprIf {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3522,7 +3520,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ExprIndex {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ExprIndex {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3534,7 +3532,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ExprInfer {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ExprInfer {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3544,7 +3542,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ExprLet {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ExprLet {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3556,7 +3554,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ExprLit {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ExprLit {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3567,7 +3565,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ExprLoop {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ExprLoop {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3579,7 +3577,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ExprMacro {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ExprMacro {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3590,7 +3588,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ExprMatch {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ExprMatch {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3602,7 +3600,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ExprMethodCall {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ExprMethodCall {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3616,7 +3614,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ExprParen {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ExprParen {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3627,7 +3625,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ExprPath {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ExprPath {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3639,7 +3637,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ExprRange {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ExprRange {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3652,7 +3650,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ExprReference {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ExprReference {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3664,7 +3662,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ExprRepeat {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ExprRepeat {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3676,7 +3674,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ExprReturn {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ExprReturn {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3687,7 +3685,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ExprStruct {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ExprStruct {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3702,7 +3700,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ExprTry {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ExprTry {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3713,7 +3711,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ExprTryBlock {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ExprTryBlock {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3724,7 +3722,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ExprTuple {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ExprTuple {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3735,7 +3733,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ExprUnary {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ExprUnary {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3747,7 +3745,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ExprUnsafe {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ExprUnsafe {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3758,7 +3756,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ExprWhile {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ExprWhile {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3771,7 +3769,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ExprYield {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ExprYield {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3782,7 +3780,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>Field {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::Field {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3797,13 +3795,13 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>FieldMutability {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::FieldMutability {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
     {
         <span class="kw">match </span><span class="self">self </span>{
-            FieldMutability::None =&gt; {
+            <span class="kw">crate</span>::FieldMutability::None =&gt; {
                 state.write_u8(<span class="number">0u8</span>);
             }
         }
@@ -3811,7 +3809,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>FieldPat {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::FieldPat {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3824,7 +3822,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>FieldValue {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::FieldValue {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3837,21 +3835,21 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>Fields {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::Fields {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
     {
         <span class="kw">match </span><span class="self">self </span>{
-            Fields::Named(v0) =&gt; {
+            <span class="kw">crate</span>::Fields::Named(v0) =&gt; {
                 state.write_u8(<span class="number">0u8</span>);
                 v0.hash(state);
             }
-            Fields::Unnamed(v0) =&gt; {
+            <span class="kw">crate</span>::Fields::Unnamed(v0) =&gt; {
                 state.write_u8(<span class="number">1u8</span>);
                 v0.hash(state);
             }
-            Fields::Unit =&gt; {
+            <span class="kw">crate</span>::Fields::Unit =&gt; {
                 state.write_u8(<span class="number">2u8</span>);
             }
         }
@@ -3859,7 +3857,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>FieldsNamed {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::FieldsNamed {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3869,7 +3867,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>FieldsUnnamed {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::FieldsUnnamed {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3879,7 +3877,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>File {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::File {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3891,17 +3889,17 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>FnArg {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::FnArg {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
     {
         <span class="kw">match </span><span class="self">self </span>{
-            FnArg::Receiver(v0) =&gt; {
+            <span class="kw">crate</span>::FnArg::Receiver(v0) =&gt; {
                 state.write_u8(<span class="number">0u8</span>);
                 v0.hash(state);
             }
-            FnArg::Typed(v0) =&gt; {
+            <span class="kw">crate</span>::FnArg::Typed(v0) =&gt; {
                 state.write_u8(<span class="number">1u8</span>);
                 v0.hash(state);
             }
@@ -3910,29 +3908,29 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ForeignItem {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ForeignItem {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
     {
         <span class="kw">match </span><span class="self">self </span>{
-            ForeignItem::Fn(v0) =&gt; {
+            <span class="kw">crate</span>::ForeignItem::Fn(v0) =&gt; {
                 state.write_u8(<span class="number">0u8</span>);
                 v0.hash(state);
             }
-            ForeignItem::Static(v0) =&gt; {
+            <span class="kw">crate</span>::ForeignItem::Static(v0) =&gt; {
                 state.write_u8(<span class="number">1u8</span>);
                 v0.hash(state);
             }
-            ForeignItem::Type(v0) =&gt; {
+            <span class="kw">crate</span>::ForeignItem::Type(v0) =&gt; {
                 state.write_u8(<span class="number">2u8</span>);
                 v0.hash(state);
             }
-            ForeignItem::Macro(v0) =&gt; {
+            <span class="kw">crate</span>::ForeignItem::Macro(v0) =&gt; {
                 state.write_u8(<span class="number">3u8</span>);
                 v0.hash(state);
             }
-            ForeignItem::Verbatim(v0) =&gt; {
+            <span class="kw">crate</span>::ForeignItem::Verbatim(v0) =&gt; {
                 state.write_u8(<span class="number">4u8</span>);
                 TokenStreamHelper(v0).hash(state);
             }
@@ -3941,7 +3939,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ForeignItemFn {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ForeignItemFn {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3953,7 +3951,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ForeignItemMacro {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ForeignItemMacro {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3965,7 +3963,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ForeignItemStatic {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ForeignItemStatic {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3979,7 +3977,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ForeignItemType {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ForeignItemType {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -3992,33 +3990,33 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>GenericArgument {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::GenericArgument {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
     {
         <span class="kw">match </span><span class="self">self </span>{
-            GenericArgument::Lifetime(v0) =&gt; {
+            <span class="kw">crate</span>::GenericArgument::Lifetime(v0) =&gt; {
                 state.write_u8(<span class="number">0u8</span>);
                 v0.hash(state);
             }
-            GenericArgument::Type(v0) =&gt; {
+            <span class="kw">crate</span>::GenericArgument::Type(v0) =&gt; {
                 state.write_u8(<span class="number">1u8</span>);
                 v0.hash(state);
             }
-            GenericArgument::Const(v0) =&gt; {
+            <span class="kw">crate</span>::GenericArgument::Const(v0) =&gt; {
                 state.write_u8(<span class="number">2u8</span>);
                 v0.hash(state);
             }
-            GenericArgument::AssocType(v0) =&gt; {
+            <span class="kw">crate</span>::GenericArgument::AssocType(v0) =&gt; {
                 state.write_u8(<span class="number">3u8</span>);
                 v0.hash(state);
             }
-            GenericArgument::AssocConst(v0) =&gt; {
+            <span class="kw">crate</span>::GenericArgument::AssocConst(v0) =&gt; {
                 state.write_u8(<span class="number">4u8</span>);
                 v0.hash(state);
             }
-            GenericArgument::Constraint(v0) =&gt; {
+            <span class="kw">crate</span>::GenericArgument::Constraint(v0) =&gt; {
                 state.write_u8(<span class="number">5u8</span>);
                 v0.hash(state);
             }
@@ -4027,21 +4025,21 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>GenericParam {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::GenericParam {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
     {
         <span class="kw">match </span><span class="self">self </span>{
-            GenericParam::Lifetime(v0) =&gt; {
+            <span class="kw">crate</span>::GenericParam::Lifetime(v0) =&gt; {
                 state.write_u8(<span class="number">0u8</span>);
                 v0.hash(state);
             }
-            GenericParam::Type(v0) =&gt; {
+            <span class="kw">crate</span>::GenericParam::Type(v0) =&gt; {
                 state.write_u8(<span class="number">1u8</span>);
                 v0.hash(state);
             }
-            GenericParam::Const(v0) =&gt; {
+            <span class="kw">crate</span>::GenericParam::Const(v0) =&gt; {
                 state.write_u8(<span class="number">2u8</span>);
                 v0.hash(state);
             }
@@ -4050,7 +4048,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>Generics {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::Generics {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -4063,29 +4061,29 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ImplItem {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ImplItem {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
     {
         <span class="kw">match </span><span class="self">self </span>{
-            ImplItem::Const(v0) =&gt; {
+            <span class="kw">crate</span>::ImplItem::Const(v0) =&gt; {
                 state.write_u8(<span class="number">0u8</span>);
                 v0.hash(state);
             }
-            ImplItem::Fn(v0) =&gt; {
+            <span class="kw">crate</span>::ImplItem::Fn(v0) =&gt; {
                 state.write_u8(<span class="number">1u8</span>);
                 v0.hash(state);
             }
-            ImplItem::Type(v0) =&gt; {
+            <span class="kw">crate</span>::ImplItem::Type(v0) =&gt; {
                 state.write_u8(<span class="number">2u8</span>);
                 v0.hash(state);
             }
-            ImplItem::Macro(v0) =&gt; {
+            <span class="kw">crate</span>::ImplItem::Macro(v0) =&gt; {
                 state.write_u8(<span class="number">3u8</span>);
                 v0.hash(state);
             }
-            ImplItem::Verbatim(v0) =&gt; {
+            <span class="kw">crate</span>::ImplItem::Verbatim(v0) =&gt; {
                 state.write_u8(<span class="number">4u8</span>);
                 TokenStreamHelper(v0).hash(state);
             }
@@ -4094,7 +4092,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ImplItemConst {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ImplItemConst {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -4110,7 +4108,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ImplItemFn {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ImplItemFn {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -4124,7 +4122,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ImplItemMacro {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ImplItemMacro {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -4136,7 +4134,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ImplItemType {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ImplItemType {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -4151,7 +4149,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ImplRestriction {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ImplRestriction {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, _state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -4161,73 +4159,73 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>Item {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::Item {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
     {
         <span class="kw">match </span><span class="self">self </span>{
-            Item::Const(v0) =&gt; {
+            <span class="kw">crate</span>::Item::Const(v0) =&gt; {
                 state.write_u8(<span class="number">0u8</span>);
                 v0.hash(state);
             }
-            Item::Enum(v0) =&gt; {
+            <span class="kw">crate</span>::Item::Enum(v0) =&gt; {
                 state.write_u8(<span class="number">1u8</span>);
                 v0.hash(state);
             }
-            Item::ExternCrate(v0) =&gt; {
+            <span class="kw">crate</span>::Item::ExternCrate(v0) =&gt; {
                 state.write_u8(<span class="number">2u8</span>);
                 v0.hash(state);
             }
-            Item::Fn(v0) =&gt; {
+            <span class="kw">crate</span>::Item::Fn(v0) =&gt; {
                 state.write_u8(<span class="number">3u8</span>);
                 v0.hash(state);
             }
-            Item::ForeignMod(v0) =&gt; {
+            <span class="kw">crate</span>::Item::ForeignMod(v0) =&gt; {
                 state.write_u8(<span class="number">4u8</span>);
                 v0.hash(state);
             }
-            Item::Impl(v0) =&gt; {
+            <span class="kw">crate</span>::Item::Impl(v0) =&gt; {
                 state.write_u8(<span class="number">5u8</span>);
                 v0.hash(state);
             }
-            Item::Macro(v0) =&gt; {
+            <span class="kw">crate</span>::Item::Macro(v0) =&gt; {
                 state.write_u8(<span class="number">6u8</span>);
                 v0.hash(state);
             }
-            Item::Mod(v0) =&gt; {
+            <span class="kw">crate</span>::Item::Mod(v0) =&gt; {
                 state.write_u8(<span class="number">7u8</span>);
                 v0.hash(state);
             }
-            Item::Static(v0) =&gt; {
+            <span class="kw">crate</span>::Item::Static(v0) =&gt; {
                 state.write_u8(<span class="number">8u8</span>);
                 v0.hash(state);
             }
-            Item::Struct(v0) =&gt; {
+            <span class="kw">crate</span>::Item::Struct(v0) =&gt; {
                 state.write_u8(<span class="number">9u8</span>);
                 v0.hash(state);
             }
-            Item::Trait(v0) =&gt; {
+            <span class="kw">crate</span>::Item::Trait(v0) =&gt; {
                 state.write_u8(<span class="number">10u8</span>);
                 v0.hash(state);
             }
-            Item::TraitAlias(v0) =&gt; {
+            <span class="kw">crate</span>::Item::TraitAlias(v0) =&gt; {
                 state.write_u8(<span class="number">11u8</span>);
                 v0.hash(state);
             }
-            Item::Type(v0) =&gt; {
+            <span class="kw">crate</span>::Item::Type(v0) =&gt; {
                 state.write_u8(<span class="number">12u8</span>);
                 v0.hash(state);
             }
-            Item::Union(v0) =&gt; {
+            <span class="kw">crate</span>::Item::Union(v0) =&gt; {
                 state.write_u8(<span class="number">13u8</span>);
                 v0.hash(state);
             }
-            Item::Use(v0) =&gt; {
+            <span class="kw">crate</span>::Item::Use(v0) =&gt; {
                 state.write_u8(<span class="number">14u8</span>);
                 v0.hash(state);
             }
-            Item::Verbatim(v0) =&gt; {
+            <span class="kw">crate</span>::Item::Verbatim(v0) =&gt; {
                 state.write_u8(<span class="number">15u8</span>);
                 TokenStreamHelper(v0).hash(state);
             }
@@ -4236,7 +4234,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ItemConst {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ItemConst {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -4251,7 +4249,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ItemEnum {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ItemEnum {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -4265,7 +4263,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ItemExternCrate {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ItemExternCrate {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -4278,7 +4276,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ItemFn {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ItemFn {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -4291,7 +4289,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ItemForeignMod {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ItemForeignMod {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -4304,7 +4302,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ItemImpl {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ItemImpl {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -4320,7 +4318,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ItemMacro {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ItemMacro {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -4333,7 +4331,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ItemMod {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ItemMod {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -4348,7 +4346,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ItemStatic {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ItemStatic {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -4363,7 +4361,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ItemStruct {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ItemStruct {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -4378,7 +4376,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ItemTrait {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ItemTrait {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -4397,7 +4395,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ItemTraitAlias {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ItemTraitAlias {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -4411,7 +4409,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ItemType {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ItemType {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -4425,7 +4423,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ItemUnion {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ItemUnion {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -4439,7 +4437,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ItemUse {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ItemUse {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -4452,7 +4450,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>Label {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::Label {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -4462,7 +4460,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>LifetimeParam {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::LifetimeParam {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -4474,41 +4472,41 @@
     }
 }
 <span class="attr">#[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>Lit {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::Lit {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
     {
         <span class="kw">match </span><span class="self">self </span>{
-            Lit::Str(v0) =&gt; {
+            <span class="kw">crate</span>::Lit::Str(v0) =&gt; {
                 state.write_u8(<span class="number">0u8</span>);
                 v0.hash(state);
             }
-            Lit::ByteStr(v0) =&gt; {
+            <span class="kw">crate</span>::Lit::ByteStr(v0) =&gt; {
                 state.write_u8(<span class="number">1u8</span>);
                 v0.hash(state);
             }
-            Lit::Byte(v0) =&gt; {
+            <span class="kw">crate</span>::Lit::Byte(v0) =&gt; {
                 state.write_u8(<span class="number">2u8</span>);
                 v0.hash(state);
             }
-            Lit::Char(v0) =&gt; {
+            <span class="kw">crate</span>::Lit::Char(v0) =&gt; {
                 state.write_u8(<span class="number">3u8</span>);
                 v0.hash(state);
             }
-            Lit::Int(v0) =&gt; {
+            <span class="kw">crate</span>::Lit::Int(v0) =&gt; {
                 state.write_u8(<span class="number">4u8</span>);
                 v0.hash(state);
             }
-            Lit::Float(v0) =&gt; {
+            <span class="kw">crate</span>::Lit::Float(v0) =&gt; {
                 state.write_u8(<span class="number">5u8</span>);
                 v0.hash(state);
             }
-            Lit::Bool(v0) =&gt; {
+            <span class="kw">crate</span>::Lit::Bool(v0) =&gt; {
                 state.write_u8(<span class="number">6u8</span>);
                 v0.hash(state);
             }
-            Lit::Verbatim(v0) =&gt; {
+            <span class="kw">crate</span>::Lit::Verbatim(v0) =&gt; {
                 state.write_u8(<span class="number">7u8</span>);
                 v0.to_string().hash(state);
             }
@@ -4516,7 +4514,7 @@
     }
 }
 <span class="attr">#[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>LitBool {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::LitBool {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -4526,7 +4524,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>Local {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::Local {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -4538,7 +4536,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>LocalInit {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::LocalInit {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -4549,7 +4547,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>Macro {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::Macro {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -4561,19 +4559,19 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>MacroDelimiter {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::MacroDelimiter {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
     {
         <span class="kw">match </span><span class="self">self </span>{
-            MacroDelimiter::Paren(<span class="kw">_</span>) =&gt; {
+            <span class="kw">crate</span>::MacroDelimiter::Paren(<span class="kw">_</span>) =&gt; {
                 state.write_u8(<span class="number">0u8</span>);
             }
-            MacroDelimiter::Brace(<span class="kw">_</span>) =&gt; {
+            <span class="kw">crate</span>::MacroDelimiter::Brace(<span class="kw">_</span>) =&gt; {
                 state.write_u8(<span class="number">1u8</span>);
             }
-            MacroDelimiter::Bracket(<span class="kw">_</span>) =&gt; {
+            <span class="kw">crate</span>::MacroDelimiter::Bracket(<span class="kw">_</span>) =&gt; {
                 state.write_u8(<span class="number">2u8</span>);
             }
         }
@@ -4581,21 +4579,21 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>Meta {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::Meta {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
     {
         <span class="kw">match </span><span class="self">self </span>{
-            Meta::Path(v0) =&gt; {
+            <span class="kw">crate</span>::Meta::Path(v0) =&gt; {
                 state.write_u8(<span class="number">0u8</span>);
                 v0.hash(state);
             }
-            Meta::List(v0) =&gt; {
+            <span class="kw">crate</span>::Meta::List(v0) =&gt; {
                 state.write_u8(<span class="number">1u8</span>);
                 v0.hash(state);
             }
-            Meta::NameValue(v0) =&gt; {
+            <span class="kw">crate</span>::Meta::NameValue(v0) =&gt; {
                 state.write_u8(<span class="number">2u8</span>);
                 v0.hash(state);
             }
@@ -4604,7 +4602,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>MetaList {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::MetaList {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -4616,7 +4614,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>MetaNameValue {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::MetaNameValue {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -4627,7 +4625,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ParenthesizedGenericArguments {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ParenthesizedGenericArguments {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -4638,77 +4636,77 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>Pat {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::Pat {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
     {
         <span class="kw">match </span><span class="self">self </span>{
-            Pat::Const(v0) =&gt; {
+            <span class="kw">crate</span>::Pat::Const(v0) =&gt; {
                 state.write_u8(<span class="number">0u8</span>);
                 v0.hash(state);
             }
-            Pat::Ident(v0) =&gt; {
+            <span class="kw">crate</span>::Pat::Ident(v0) =&gt; {
                 state.write_u8(<span class="number">1u8</span>);
                 v0.hash(state);
             }
-            Pat::Lit(v0) =&gt; {
+            <span class="kw">crate</span>::Pat::Lit(v0) =&gt; {
                 state.write_u8(<span class="number">2u8</span>);
                 v0.hash(state);
             }
-            Pat::Macro(v0) =&gt; {
+            <span class="kw">crate</span>::Pat::Macro(v0) =&gt; {
                 state.write_u8(<span class="number">3u8</span>);
                 v0.hash(state);
             }
-            Pat::Or(v0) =&gt; {
+            <span class="kw">crate</span>::Pat::Or(v0) =&gt; {
                 state.write_u8(<span class="number">4u8</span>);
                 v0.hash(state);
             }
-            Pat::Paren(v0) =&gt; {
+            <span class="kw">crate</span>::Pat::Paren(v0) =&gt; {
                 state.write_u8(<span class="number">5u8</span>);
                 v0.hash(state);
             }
-            Pat::Path(v0) =&gt; {
+            <span class="kw">crate</span>::Pat::Path(v0) =&gt; {
                 state.write_u8(<span class="number">6u8</span>);
                 v0.hash(state);
             }
-            Pat::Range(v0) =&gt; {
+            <span class="kw">crate</span>::Pat::Range(v0) =&gt; {
                 state.write_u8(<span class="number">7u8</span>);
                 v0.hash(state);
             }
-            Pat::Reference(v0) =&gt; {
+            <span class="kw">crate</span>::Pat::Reference(v0) =&gt; {
                 state.write_u8(<span class="number">8u8</span>);
                 v0.hash(state);
             }
-            Pat::Rest(v0) =&gt; {
+            <span class="kw">crate</span>::Pat::Rest(v0) =&gt; {
                 state.write_u8(<span class="number">9u8</span>);
                 v0.hash(state);
             }
-            Pat::Slice(v0) =&gt; {
+            <span class="kw">crate</span>::Pat::Slice(v0) =&gt; {
                 state.write_u8(<span class="number">10u8</span>);
                 v0.hash(state);
             }
-            Pat::Struct(v0) =&gt; {
+            <span class="kw">crate</span>::Pat::Struct(v0) =&gt; {
                 state.write_u8(<span class="number">11u8</span>);
                 v0.hash(state);
             }
-            Pat::Tuple(v0) =&gt; {
+            <span class="kw">crate</span>::Pat::Tuple(v0) =&gt; {
                 state.write_u8(<span class="number">12u8</span>);
                 v0.hash(state);
             }
-            Pat::TupleStruct(v0) =&gt; {
+            <span class="kw">crate</span>::Pat::TupleStruct(v0) =&gt; {
                 state.write_u8(<span class="number">13u8</span>);
                 v0.hash(state);
             }
-            Pat::Type(v0) =&gt; {
+            <span class="kw">crate</span>::Pat::Type(v0) =&gt; {
                 state.write_u8(<span class="number">14u8</span>);
                 v0.hash(state);
             }
-            Pat::Verbatim(v0) =&gt; {
+            <span class="kw">crate</span>::Pat::Verbatim(v0) =&gt; {
                 state.write_u8(<span class="number">15u8</span>);
                 TokenStreamHelper(v0).hash(state);
             }
-            Pat::Wild(v0) =&gt; {
+            <span class="kw">crate</span>::Pat::Wild(v0) =&gt; {
                 state.write_u8(<span class="number">16u8</span>);
                 v0.hash(state);
             }
@@ -4717,7 +4715,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>PatIdent {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::PatIdent {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -4731,7 +4729,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>PatOr {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::PatOr {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -4743,7 +4741,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>PatParen {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::PatParen {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -4754,7 +4752,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>PatReference {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::PatReference {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -4766,7 +4764,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>PatRest {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::PatRest {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -4776,7 +4774,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>PatSlice {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::PatSlice {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -4787,7 +4785,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>PatStruct {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::PatStruct {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -4801,7 +4799,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>PatTuple {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::PatTuple {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -4812,7 +4810,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>PatTupleStruct {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::PatTupleStruct {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -4825,7 +4823,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>PatType {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::PatType {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -4837,7 +4835,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>PatWild {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::PatWild {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -4847,7 +4845,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>Path {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::Path {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -4858,20 +4856,20 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>PathArguments {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::PathArguments {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
     {
         <span class="kw">match </span><span class="self">self </span>{
-            PathArguments::None =&gt; {
+            <span class="kw">crate</span>::PathArguments::None =&gt; {
                 state.write_u8(<span class="number">0u8</span>);
             }
-            PathArguments::AngleBracketed(v0) =&gt; {
+            <span class="kw">crate</span>::PathArguments::AngleBracketed(v0) =&gt; {
                 state.write_u8(<span class="number">1u8</span>);
                 v0.hash(state);
             }
-            PathArguments::Parenthesized(v0) =&gt; {
+            <span class="kw">crate</span>::PathArguments::Parenthesized(v0) =&gt; {
                 state.write_u8(<span class="number">2u8</span>);
                 v0.hash(state);
             }
@@ -4880,7 +4878,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>PathSegment {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::PathSegment {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -4891,7 +4889,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>PredicateLifetime {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::PredicateLifetime {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -4902,7 +4900,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>PredicateType {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::PredicateType {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -4914,7 +4912,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>QSelf {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::QSelf {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -4926,16 +4924,16 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>RangeLimits {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::RangeLimits {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
     {
         <span class="kw">match </span><span class="self">self </span>{
-            RangeLimits::HalfOpen(<span class="kw">_</span>) =&gt; {
+            <span class="kw">crate</span>::RangeLimits::HalfOpen(<span class="kw">_</span>) =&gt; {
                 state.write_u8(<span class="number">0u8</span>);
             }
-            RangeLimits::Closed(<span class="kw">_</span>) =&gt; {
+            <span class="kw">crate</span>::RangeLimits::Closed(<span class="kw">_</span>) =&gt; {
                 state.write_u8(<span class="number">1u8</span>);
             }
         }
@@ -4943,7 +4941,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>Receiver {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::Receiver {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -4957,16 +4955,16 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>ReturnType {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::ReturnType {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
     {
         <span class="kw">match </span><span class="self">self </span>{
-            ReturnType::Default =&gt; {
+            <span class="kw">crate</span>::ReturnType::Default =&gt; {
                 state.write_u8(<span class="number">0u8</span>);
             }
-            ReturnType::Type(<span class="kw">_</span>, v1) =&gt; {
+            <span class="kw">crate</span>::ReturnType::Type(<span class="kw">_</span>, v1) =&gt; {
                 state.write_u8(<span class="number">1u8</span>);
                 v1.hash(state);
             }
@@ -4975,7 +4973,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>Signature {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::Signature {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -4993,16 +4991,16 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>StaticMutability {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::StaticMutability {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
     {
         <span class="kw">match </span><span class="self">self </span>{
-            StaticMutability::Mut(<span class="kw">_</span>) =&gt; {
+            <span class="kw">crate</span>::StaticMutability::Mut(<span class="kw">_</span>) =&gt; {
                 state.write_u8(<span class="number">0u8</span>);
             }
-            StaticMutability::None =&gt; {
+            <span class="kw">crate</span>::StaticMutability::None =&gt; {
                 state.write_u8(<span class="number">1u8</span>);
             }
         }
@@ -5010,26 +5008,26 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>Stmt {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::Stmt {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
     {
         <span class="kw">match </span><span class="self">self </span>{
-            Stmt::Local(v0) =&gt; {
+            <span class="kw">crate</span>::Stmt::Local(v0) =&gt; {
                 state.write_u8(<span class="number">0u8</span>);
                 v0.hash(state);
             }
-            Stmt::Item(v0) =&gt; {
+            <span class="kw">crate</span>::Stmt::Item(v0) =&gt; {
                 state.write_u8(<span class="number">1u8</span>);
                 v0.hash(state);
             }
-            Stmt::Expr(v0, v1) =&gt; {
+            <span class="kw">crate</span>::Stmt::Expr(v0, v1) =&gt; {
                 state.write_u8(<span class="number">2u8</span>);
                 v0.hash(state);
                 v1.hash(state);
             }
-            Stmt::Macro(v0) =&gt; {
+            <span class="kw">crate</span>::Stmt::Macro(v0) =&gt; {
                 state.write_u8(<span class="number">3u8</span>);
                 v0.hash(state);
             }
@@ -5038,7 +5036,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>StmtMacro {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::StmtMacro {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -5050,7 +5048,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>TraitBound {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::TraitBound {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -5063,16 +5061,16 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>TraitBoundModifier {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::TraitBoundModifier {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
     {
         <span class="kw">match </span><span class="self">self </span>{
-            TraitBoundModifier::None =&gt; {
+            <span class="kw">crate</span>::TraitBoundModifier::None =&gt; {
                 state.write_u8(<span class="number">0u8</span>);
             }
-            TraitBoundModifier::Maybe(<span class="kw">_</span>) =&gt; {
+            <span class="kw">crate</span>::TraitBoundModifier::Maybe(<span class="kw">_</span>) =&gt; {
                 state.write_u8(<span class="number">1u8</span>);
             }
         }
@@ -5080,29 +5078,29 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>TraitItem {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::TraitItem {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
     {
         <span class="kw">match </span><span class="self">self </span>{
-            TraitItem::Const(v0) =&gt; {
+            <span class="kw">crate</span>::TraitItem::Const(v0) =&gt; {
                 state.write_u8(<span class="number">0u8</span>);
                 v0.hash(state);
             }
-            TraitItem::Fn(v0) =&gt; {
+            <span class="kw">crate</span>::TraitItem::Fn(v0) =&gt; {
                 state.write_u8(<span class="number">1u8</span>);
                 v0.hash(state);
             }
-            TraitItem::Type(v0) =&gt; {
+            <span class="kw">crate</span>::TraitItem::Type(v0) =&gt; {
                 state.write_u8(<span class="number">2u8</span>);
                 v0.hash(state);
             }
-            TraitItem::Macro(v0) =&gt; {
+            <span class="kw">crate</span>::TraitItem::Macro(v0) =&gt; {
                 state.write_u8(<span class="number">3u8</span>);
                 v0.hash(state);
             }
-            TraitItem::Verbatim(v0) =&gt; {
+            <span class="kw">crate</span>::TraitItem::Verbatim(v0) =&gt; {
                 state.write_u8(<span class="number">4u8</span>);
                 TokenStreamHelper(v0).hash(state);
             }
@@ -5111,7 +5109,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>TraitItemConst {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::TraitItemConst {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -5125,7 +5123,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>TraitItemFn {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::TraitItemFn {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -5138,7 +5136,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>TraitItemMacro {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::TraitItemMacro {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -5150,7 +5148,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>TraitItemType {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::TraitItemType {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -5165,69 +5163,69 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>Type {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::Type {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
     {
         <span class="kw">match </span><span class="self">self </span>{
-            Type::Array(v0) =&gt; {
+            <span class="kw">crate</span>::Type::Array(v0) =&gt; {
                 state.write_u8(<span class="number">0u8</span>);
                 v0.hash(state);
             }
-            Type::BareFn(v0) =&gt; {
+            <span class="kw">crate</span>::Type::BareFn(v0) =&gt; {
                 state.write_u8(<span class="number">1u8</span>);
                 v0.hash(state);
             }
-            Type::Group(v0) =&gt; {
+            <span class="kw">crate</span>::Type::Group(v0) =&gt; {
                 state.write_u8(<span class="number">2u8</span>);
                 v0.hash(state);
             }
-            Type::ImplTrait(v0) =&gt; {
+            <span class="kw">crate</span>::Type::ImplTrait(v0) =&gt; {
                 state.write_u8(<span class="number">3u8</span>);
                 v0.hash(state);
             }
-            Type::Infer(v0) =&gt; {
+            <span class="kw">crate</span>::Type::Infer(v0) =&gt; {
                 state.write_u8(<span class="number">4u8</span>);
                 v0.hash(state);
             }
-            Type::Macro(v0) =&gt; {
+            <span class="kw">crate</span>::Type::Macro(v0) =&gt; {
                 state.write_u8(<span class="number">5u8</span>);
                 v0.hash(state);
             }
-            Type::Never(v0) =&gt; {
+            <span class="kw">crate</span>::Type::Never(v0) =&gt; {
                 state.write_u8(<span class="number">6u8</span>);
                 v0.hash(state);
             }
-            Type::Paren(v0) =&gt; {
+            <span class="kw">crate</span>::Type::Paren(v0) =&gt; {
                 state.write_u8(<span class="number">7u8</span>);
                 v0.hash(state);
             }
-            Type::Path(v0) =&gt; {
+            <span class="kw">crate</span>::Type::Path(v0) =&gt; {
                 state.write_u8(<span class="number">8u8</span>);
                 v0.hash(state);
             }
-            Type::Ptr(v0) =&gt; {
+            <span class="kw">crate</span>::Type::Ptr(v0) =&gt; {
                 state.write_u8(<span class="number">9u8</span>);
                 v0.hash(state);
             }
-            Type::Reference(v0) =&gt; {
+            <span class="kw">crate</span>::Type::Reference(v0) =&gt; {
                 state.write_u8(<span class="number">10u8</span>);
                 v0.hash(state);
             }
-            Type::Slice(v0) =&gt; {
+            <span class="kw">crate</span>::Type::Slice(v0) =&gt; {
                 state.write_u8(<span class="number">11u8</span>);
                 v0.hash(state);
             }
-            Type::TraitObject(v0) =&gt; {
+            <span class="kw">crate</span>::Type::TraitObject(v0) =&gt; {
                 state.write_u8(<span class="number">12u8</span>);
                 v0.hash(state);
             }
-            Type::Tuple(v0) =&gt; {
+            <span class="kw">crate</span>::Type::Tuple(v0) =&gt; {
                 state.write_u8(<span class="number">13u8</span>);
                 v0.hash(state);
             }
-            Type::Verbatim(v0) =&gt; {
+            <span class="kw">crate</span>::Type::Verbatim(v0) =&gt; {
                 state.write_u8(<span class="number">14u8</span>);
                 TokenStreamHelper(v0).hash(state);
             }
@@ -5236,7 +5234,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>TypeArray {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::TypeArray {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -5247,7 +5245,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>TypeBareFn {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::TypeBareFn {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -5262,7 +5260,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>TypeGroup {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::TypeGroup {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -5272,7 +5270,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>TypeImplTrait {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::TypeImplTrait {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -5282,7 +5280,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>TypeInfer {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::TypeInfer {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, _state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -5290,7 +5288,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>TypeMacro {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::TypeMacro {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -5300,7 +5298,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>TypeNever {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::TypeNever {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, _state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -5308,7 +5306,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>TypeParam {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::TypeParam {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -5323,21 +5321,21 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>TypeParamBound {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::TypeParamBound {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
     {
         <span class="kw">match </span><span class="self">self </span>{
-            TypeParamBound::Trait(v0) =&gt; {
+            <span class="kw">crate</span>::TypeParamBound::Trait(v0) =&gt; {
                 state.write_u8(<span class="number">0u8</span>);
                 v0.hash(state);
             }
-            TypeParamBound::Lifetime(v0) =&gt; {
+            <span class="kw">crate</span>::TypeParamBound::Lifetime(v0) =&gt; {
                 state.write_u8(<span class="number">1u8</span>);
                 v0.hash(state);
             }
-            TypeParamBound::Verbatim(v0) =&gt; {
+            <span class="kw">crate</span>::TypeParamBound::Verbatim(v0) =&gt; {
                 state.write_u8(<span class="number">2u8</span>);
                 TokenStreamHelper(v0).hash(state);
             }
@@ -5346,7 +5344,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>TypeParen {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::TypeParen {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -5356,7 +5354,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>TypePath {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::TypePath {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -5367,7 +5365,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>TypePtr {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::TypePtr {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -5379,7 +5377,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>TypeReference {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::TypeReference {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -5391,7 +5389,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>TypeSlice {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::TypeSlice {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -5401,7 +5399,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>TypeTraitObject {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::TypeTraitObject {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -5412,7 +5410,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>TypeTuple {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::TypeTuple {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -5422,19 +5420,19 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>UnOp {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::UnOp {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
     {
         <span class="kw">match </span><span class="self">self </span>{
-            UnOp::Deref(<span class="kw">_</span>) =&gt; {
+            <span class="kw">crate</span>::UnOp::Deref(<span class="kw">_</span>) =&gt; {
                 state.write_u8(<span class="number">0u8</span>);
             }
-            UnOp::Not(<span class="kw">_</span>) =&gt; {
+            <span class="kw">crate</span>::UnOp::Not(<span class="kw">_</span>) =&gt; {
                 state.write_u8(<span class="number">1u8</span>);
             }
-            UnOp::Neg(<span class="kw">_</span>) =&gt; {
+            <span class="kw">crate</span>::UnOp::Neg(<span class="kw">_</span>) =&gt; {
                 state.write_u8(<span class="number">2u8</span>);
             }
         }
@@ -5442,7 +5440,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>UseGlob {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::UseGlob {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, _state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -5450,7 +5448,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>UseGroup {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::UseGroup {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -5460,7 +5458,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>UseName {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::UseName {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -5470,7 +5468,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>UsePath {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::UsePath {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -5481,7 +5479,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>UseRename {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::UseRename {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -5492,29 +5490,29 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>UseTree {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::UseTree {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
     {
         <span class="kw">match </span><span class="self">self </span>{
-            UseTree::Path(v0) =&gt; {
+            <span class="kw">crate</span>::UseTree::Path(v0) =&gt; {
                 state.write_u8(<span class="number">0u8</span>);
                 v0.hash(state);
             }
-            UseTree::Name(v0) =&gt; {
+            <span class="kw">crate</span>::UseTree::Name(v0) =&gt; {
                 state.write_u8(<span class="number">1u8</span>);
                 v0.hash(state);
             }
-            UseTree::Rename(v0) =&gt; {
+            <span class="kw">crate</span>::UseTree::Rename(v0) =&gt; {
                 state.write_u8(<span class="number">2u8</span>);
                 v0.hash(state);
             }
-            UseTree::Glob(v0) =&gt; {
+            <span class="kw">crate</span>::UseTree::Glob(v0) =&gt; {
                 state.write_u8(<span class="number">3u8</span>);
                 v0.hash(state);
             }
-            UseTree::Group(v0) =&gt; {
+            <span class="kw">crate</span>::UseTree::Group(v0) =&gt; {
                 state.write_u8(<span class="number">4u8</span>);
                 v0.hash(state);
             }
@@ -5523,7 +5521,7 @@
 }
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>Variadic {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::Variadic {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -5535,7 +5533,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>Variant {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::Variant {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -5548,7 +5546,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>VisRestricted {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::VisRestricted {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -5559,20 +5557,20 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>Visibility {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::Visibility {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
     {
         <span class="kw">match </span><span class="self">self </span>{
-            Visibility::Public(<span class="kw">_</span>) =&gt; {
+            <span class="kw">crate</span>::Visibility::Public(<span class="kw">_</span>) =&gt; {
                 state.write_u8(<span class="number">0u8</span>);
             }
-            Visibility::Restricted(v0) =&gt; {
+            <span class="kw">crate</span>::Visibility::Restricted(v0) =&gt; {
                 state.write_u8(<span class="number">1u8</span>);
                 v0.hash(state);
             }
-            Visibility::Inherited =&gt; {
+            <span class="kw">crate</span>::Visibility::Inherited =&gt; {
                 state.write_u8(<span class="number">2u8</span>);
             }
         }
@@ -5580,7 +5578,7 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>WhereClause {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::WhereClause {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
@@ -5590,17 +5588,17 @@
 }
 <span class="attr">#[cfg(any(feature = <span class="string">"derive"</span>, feature = <span class="string">"full"</span>))]
 #[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"extra-traits"</span>)))]
-</span><span class="kw">impl </span>Hash <span class="kw">for </span>WherePredicate {
+</span><span class="kw">impl </span>Hash <span class="kw">for </span><span class="kw">crate</span>::WherePredicate {
     <span class="kw">fn </span>hash&lt;H&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, state: <span class="kw-2">&amp;mut </span>H)
     <span class="kw">where
         </span>H: Hasher,
     {
         <span class="kw">match </span><span class="self">self </span>{
-            WherePredicate::Lifetime(v0) =&gt; {
+            <span class="kw">crate</span>::WherePredicate::Lifetime(v0) =&gt; {
                 state.write_u8(<span class="number">0u8</span>);
                 v0.hash(state);
             }
-            WherePredicate::Type(v0) =&gt; {
+            <span class="kw">crate</span>::WherePredicate::Type(v0) =&gt; {
                 state.write_u8(<span class="number">1u8</span>);
                 v0.hash(state);
             }

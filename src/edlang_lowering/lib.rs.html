@@ -1229,6 +1229,9 @@
 <a href="#1228" id="1228">1228</a>
 <a href="#1229" id="1229">1229</a>
 <a href="#1230" id="1230">1230</a>
+<a href="#1231" id="1231">1231</a>
+<a href="#1232" id="1232">1232</a>
+<a href="#1233" id="1233">1233</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::HashMap;
 
 <span class="kw">use </span>ast::{BinaryOp, ModuleStatement, Span, WhileStmt};
@@ -1289,11 +1292,10 @@
         }
     }
 
-    <span class="kw">let </span>body = ctx.body.modules.get(<span class="kw-2">&amp;</span>id).unwrap();
-
     <span class="comment">// fill fn sigs
     </span><span class="kw">for </span>content <span class="kw">in </span><span class="kw-2">&amp;</span>module.contents {
         <span class="kw">if let </span>ModuleStatement::Function(fn_def) = content {
+            <span class="kw">let </span>body = ctx.body.modules.get(<span class="kw-2">&amp;</span>id).unwrap();
             <span class="kw">let </span>fn_id = <span class="kw-2">*</span>body.symbols.functions.get(<span class="kw-2">&amp;</span>fn_def.name.name).unwrap();
 
             <span class="kw">let </span><span class="kw-2">mut </span>args = Vec::new();
@@ -1323,7 +1325,11 @@
                 ctx = lower_function(ctx, fn_def, id)<span class="question-mark">?</span>;
             }
             <span class="comment">// ModuleStatement::Type(_) =&gt; todo!(),
-            </span>ModuleStatement::Module(_mod_def) =&gt; {}
+            </span>ModuleStatement::Module(mod_def) =&gt; {
+                <span class="kw">let </span>body = ctx.body.modules.get(<span class="kw-2">&amp;</span>id).unwrap();
+                <span class="kw">let </span>id = <span class="kw-2">*</span>body.symbols.modules.get(<span class="kw-2">&amp;</span>mod_def.name.name).unwrap();
+                ctx = lower_module(ctx, mod_def, id)<span class="question-mark">?</span>;
+            }
             <span class="kw">_ </span>=&gt; {}
         }
     }

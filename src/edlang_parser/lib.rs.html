@@ -146,9 +146,9 @@
 
 <span class="kw">pub fn </span>parse_ast(
     source: <span class="kw-2">&amp;</span>str,
-) -&gt; <span class="prelude-ty">Result</span>&lt;edlang_ast::Module, ParseError&lt;usize, Token, LexicalError&gt;&gt; {
+) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;edlang_ast::Module&gt;, ParseError&lt;usize, Token, LexicalError&gt;&gt; {
     <span class="kw">let </span>lexer = Lexer::new(source);
-    <span class="kw">let </span>parser = grammar::ModuleParser::new();
+    <span class="kw">let </span>parser = grammar::ModulesParser::new();
     parser.parse(lexer)
 }
 

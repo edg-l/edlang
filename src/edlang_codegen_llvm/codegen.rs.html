@@ -1404,6 +1404,9 @@
 <a href="#1403" id="1403">1403</a>
 <a href="#1404" id="1404">1404</a>
 <a href="#1405" id="1405">1405</a>
+<a href="#1406" id="1406">1406</a>
+<a href="#1407" id="1407">1407</a>
+<a href="#1408" id="1408">1408</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{collections::HashMap, error::Error, path::PathBuf};
 
 <span class="kw">use </span>edlang_ir <span class="kw">as </span>ir;
@@ -1627,7 +1630,7 @@
     };
 
     <span class="kw">let </span>fn_value = ctx.module.add_function(
-        <span class="kw-2">&amp;</span>body.name,
+        <span class="kw-2">&amp;</span>body.get_mangled_name(),
         fn_type,
         <span class="prelude-val">Some</span>(<span class="kw">if </span>body.is_extern {
             inkwell::module::Linkage::AvailableExternally
@@ -1662,7 +1665,7 @@
     <span class="kw">let </span>subprogram = ctx.di_builder.create_function(
         ctx.di_namespace,
         <span class="kw-2">&amp;</span>body.name,
-        <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>body.name),
+        <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>body.get_mangled_name()),
         ctx.di_unit.get_file(),
         line <span class="kw">as </span>u32 + <span class="number">1</span>,
         di_type,
@@ -1679,7 +1682,7 @@
     <span class="kw">let </span>body = ctx.ctx.program.functions.get(<span class="kw-2">&amp;</span>fn_id).unwrap();
     <span class="macro">trace!</span>(<span class="string">"compiling fn body: {}"</span>, body.name);
 
-    <span class="kw">let </span>fn_value = ctx.module.get_function(<span class="kw-2">&amp;</span>body.name).unwrap();
+    <span class="kw">let </span>fn_value = ctx.module.get_function(<span class="kw-2">&amp;</span>body.get_mangled_name()).unwrap();
     <span class="kw">let </span>di_program = fn_value.get_subprogram().unwrap();
 
     <span class="kw">let </span><span class="kw-2">mut </span>debug_loc = ctx.set_debug_loc(di_program.as_debug_info_scope(), body.fn_span);
@@ -1934,7 +1937,10 @@
                 target,
             } =&gt; {
                 <span class="kw">let </span>target_fn_body = ctx.ctx.program.functions.get(func).unwrap();
-                <span class="kw">let </span>fn_value = ctx.module.get_function(<span class="kw-2">&amp;</span>target_fn_body.name).unwrap();
+                <span class="kw">let </span>fn_value = ctx
+                    .module
+                    .get_function(<span class="kw-2">&amp;</span>target_fn_body.get_mangled_name())
+                    .unwrap();
                 <span class="kw">let </span>args: Vec&lt;<span class="kw">_</span>&gt; = args
                     .iter()
                     .map(|x| compile_rvalue(ctx, fn_id, <span class="kw-2">&amp;</span>locals, x).unwrap().<span class="number">0</span>.into())

@@ -211,10 +211,10 @@
     <span class="kw">let </span>path = args.input.display().to_string();
     <span class="kw">let </span>source = std::fs::read_to_string(<span class="kw-2">&amp;</span>args.input)<span class="question-mark">?</span>;
 
-    <span class="kw">let </span>module = edlang_parser::parse_ast(<span class="kw-2">&amp;</span>source);
+    <span class="kw">let </span>modules = edlang_parser::parse_ast(<span class="kw-2">&amp;</span>source);
 
-    <span class="kw">let </span>module = <span class="kw">match </span>module {
-        <span class="prelude-val">Ok</span>(module) =&gt; module,
+    <span class="kw">let </span>modules = <span class="kw">match </span>modules {
+        <span class="prelude-val">Ok</span>(modules) =&gt; modules,
         <span class="prelude-val">Err</span>(error) =&gt; {
             <span class="kw">let </span>report = edlang_parser::error_to_report(<span class="kw-2">&amp;</span>path, <span class="kw-2">&amp;</span>error)<span class="question-mark">?</span>;
             edlang_parser::print_report(<span class="kw-2">&amp;</span>path, <span class="kw-2">&amp;</span>source, report)<span class="question-mark">?</span>;
@@ -277,11 +277,11 @@
     <span class="macro">tracing::debug!</span>(<span class="string">"Debug Info: {:#?}"</span>, session.debug_info);
 
     <span class="kw">if </span>args.ast {
-        <span class="macro">println!</span>(<span class="string">"{:#?}"</span>, module);
+        <span class="macro">println!</span>(<span class="string">"{:#?}"</span>, modules);
         <span class="kw">return </span><span class="prelude-val">Ok</span>(());
     }
 
-    <span class="kw">let </span>program_ir = <span class="kw">match </span>lower_modules(<span class="kw-2">&amp;</span>[module.clone()]) {
+    <span class="kw">let </span>program_ir = <span class="kw">match </span>lower_modules(<span class="kw-2">&amp;</span>modules) {
         <span class="prelude-val">Ok</span>(ir) =&gt; ir,
         <span class="prelude-val">Err</span>(error) =&gt; {
             <span class="kw">let </span>report = edlang_check::lowering_error_to_report(error, <span class="kw-2">&amp;</span>session);

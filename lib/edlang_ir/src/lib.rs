@@ -239,7 +239,8 @@ pub enum TypeKind {
     Str,
     Ptr(bool, Box<TypeInfo>),
     Ref(bool, Box<TypeInfo>),
-    Struct(DefId), // todo, add generics
+    // name for print purposes
+    Struct(DefId, String), // todo, add generics
 }
 
 impl TypeKind {
@@ -276,7 +277,7 @@ impl TypeKind {
             TypeKind::FnDef(_, _) => unreachable!(),
             TypeKind::Ptr(_, _pointee) => todo!(),
             TypeKind::Ref(_, inner) => inner.kind.get_falsy_value(),
-            TypeKind::Struct(_) => todo!(),
+            TypeKind::Struct(_, _name) => todo!(),
             TypeKind::Str => todo!(),
         }
     }
@@ -320,7 +321,7 @@ impl fmt::Display for TypeKind {
 
                 write!(f, "&{word} {}", inner.kind)
             }
-            TypeKind::Struct(_) => todo!(),
+            TypeKind::Struct(_, name) => write!(f, "{}", name),
         }
     }
 }

@@ -560,7 +560,7 @@ fn find_expr_type(builder: &mut BodyBuilder, info: &ast::Expression) -> Option<T
                 .structs
                 .get(&info.name.name.name)
                 .expect("struct not found");
-            ir::TypeKind::Struct(id)
+            ir::TypeKind::Struct(id, info.name.name.name.clone())
         }
     })
 }
@@ -663,7 +663,7 @@ fn lower_expr(
                 .get(&info.name.name.name)
                 .expect("struct not found");
             let struct_body = builder.ctx.body.structs.get(&id).unwrap().clone();
-            let ty = TypeKind::Struct(id);
+            let ty = TypeKind::Struct(id, struct_body.name.clone());
             let struct_local = builder.add_local(Local::temp(ty.clone()));
 
             let place = Place {
@@ -1114,7 +1114,7 @@ fn lower_path(
                     ty = inner.kind;
                 }
 
-                if let TypeKind::Struct(id) = ty {
+                if let TypeKind::Struct(id, _name) = ty {
                     let struct_body = builder.ctx.body.structs.get(&id).unwrap();
                     let idx = *struct_body.name_to_idx.get(&name.name).unwrap();
                     projection.push(PlaceElem::Field { field_idx: idx });
@@ -1204,7 +1204,7 @@ pub fn lower_type(
                 let struct_body = ctx.body.structs.get(struct_id).unwrap();
                 ir::TypeInfo {
                     span: Some(struct_body.span),
-                    kind: TypeKind::Struct(*struct_id),
+                    kind: TypeKind::Struct(*struct_id, struct_body.name.clone()),
                 }
             } else {
                 Err(LoweringError::UnrecognizedType {

@@ -411,7 +411,7 @@ fn compile_fn(ctx: &ModuleCompileCtx, fn_id: DefId) -> Result<(), BuilderError> 
                                     "",
                                 )?;
                                 local_ty = match local_ty.kind {
-                                    ir::TypeKind::Struct(id) => {
+                                    ir::TypeKind::Struct(id, _) => {
                                         let strc = ctx.ctx.program.structs.get(&id).unwrap();
                                         strc.variants[*field_idx].ty.clone()
                                     }
@@ -1065,7 +1065,7 @@ fn compile_load_place<'ctx>(
             }
             ir::PlaceElem::Field { field_idx } => {
                 local_ty = match local_ty.kind {
-                    ir::TypeKind::Struct(id) => {
+                    ir::TypeKind::Struct(id, _) => {
                         let struct_body = ctx.ctx.program.structs.get(&id).unwrap();
                         let ty = struct_body.variants[*field_idx].ty.clone();
                         let field_name = struct_body.variants[*field_idx].name.clone();
@@ -1235,7 +1235,7 @@ fn compile_basic_type<'ctx>(
             .ptr_sized_int_type(&ctx.target_data, None)
             .ptr_type(AddressSpace::default())
             .as_basic_type_enum(),
-        ir::TypeKind::Struct(id) => {
+        ir::TypeKind::Struct(id, _) => {
             let body = ctx.ctx.program.structs.get(id).unwrap();
 
             let mut fields = Vec::new();
@@ -1263,91 +1263,93 @@ fn compile_debug_type<'ctx>(ctx: &ModuleCompileCtx<'ctx, '_>, ty: &ir::TypeInfo)
     // https://dwarfstd.org/doc/DWARF5.pdf#section.7.8
 
     // https://github.com/GaloisInc/dwarf-tools/blob/master/src/DWARF/DW/TAG.hs
+    let name = ty.kind.to_string();
+    let name = &name;
     match &ty.kind {
         ir::TypeKind::Unit => todo!(),
         ir::TypeKind::Bool => ctx
             .di_builder
-            .create_basic_type("bool", 1, 0x2, LLVMDIFlagPublic)
+            .create_basic_type(name, 1, 0x2, LLVMDIFlagPublic)
             .unwrap()
             .as_type(),
         ir::TypeKind::Char => ctx
             .di_builder
-            .create_basic_type("char", 8, 0x6, LLVMDIFlagPublic)
+            .create_basic_type(name, 8, 0x6, LLVMDIFlagPublic)
             .unwrap()
             .as_type(),
         ir::TypeKind::Int(ty) => match ty {
             ir::IntTy::I128 => ctx
                 .di_builder
-                .create_basic_type("i128", 128, 0x5, LLVMDIFlagPublic)
+                .create_basic_type(name, 128, 0x5, LLVMDIFlagPublic)
                 .unwrap()
                 .as_type(),
             ir::IntTy::I64 => ctx
                 .di_builder
-                .create_basic_type("i64", 64, 0x5, LLVMDIFlagPublic)
+                .create_basic_type(name, 64, 0x5, LLVMDIFlagPublic)
                 .unwrap()
                 .as_type(),
             ir::IntTy::I32 => ctx
                 .di_builder
-                .create_basic_type("i32", 32, 0x5, LLVMDIFlagPublic)
+                .create_basic_type(name, 32, 0x5, LLVMDIFlagPublic)
                 .unwrap()
                 .as_type(),
             ir::IntTy::I16 => ctx
                 .di_builder
-                .create_basic_type("i16", 16, 0x5, LLVMDIFlagPublic)
+                .create_basic_type(name, 16, 0x5, LLVMDIFlagPublic)
                 .unwrap()
                 .as_type(),
             ir::IntTy::I8 => ctx
                 .di_builder
-                .create_basic_type("i8", 8, 0x5, LLVMDIFlagPublic)
+                .create_basic_type(name, 8, 0x5, LLVMDIFlagPublic)
                 .unwrap()
                 .as_type(),
             ir::IntTy::Isize => ctx
                 .di_builder
-                .create_basic_type("isize", 64, 0x5, LLVMDIFlagPublic)
+                .create_basic_type(name, 64, 0x5, LLVMDIFlagPublic)
                 .unwrap()
                 .as_type(),
         },
         ir::TypeKind::Uint(ty) => match ty {
             ir::UintTy::U128 => ctx
                 .di_builder
-                .create_basic_type("u128", 128, 0x7, LLVMDIFlagPublic)
+                .create_basic_type(name, 128, 0x7, LLVMDIFlagPublic)
                 .unwrap()
                 .as_type(),
             ir::UintTy::U64 => ctx
                 .di_builder
-                .create_basic_type("u64", 64, 0x7, LLVMDIFlagPublic)
+                .create_basic_type(name, 64, 0x7, LLVMDIFlagPublic)
                 .unwrap()
                 .as_type(),
             ir::UintTy::U32 => ctx
                 .di_builder
-                .create_basic_type("u32", 32, 0x7, LLVMDIFlagPublic)
+                .create_basic_type(name, 32, 0x7, LLVMDIFlagPublic)
                 .unwrap()
                 .as_type(),
             ir::UintTy::U16 => ctx
                 .di_builder
-                .create_basic_type("u16", 16, 0x7, LLVMDIFlagPublic)
+                .create_basic_type(name, 16, 0x7, LLVMDIFlagPublic)
                 .unwrap()
                 .as_type(),
             ir::UintTy::U8 => ctx
                 .di_builder
-                .create_basic_type("u8", 8, 0x7, LLVMDIFlagPublic)
+                .create_basic_type(name, 8, 0x7, LLVMDIFlagPublic)
                 .unwrap()
                 .as_type(),
             ir::UintTy::Usize => ctx
                 .di_builder
-                .create_basic_type("usize", 64, 0x7, LLVMDIFlagPublic)
+                .create_basic_type(name, 64, 0x7, LLVMDIFlagPublic)
                 .unwrap()
                 .as_type(),
         },
         ir::TypeKind::Float(ty) => match ty {
             ir::FloatTy::F32 => ctx
                 .di_builder
-                .create_basic_type("f32", 32, 4, LLVMDIFlagPublic)
+                .create_basic_type(name, 32, 4, LLVMDIFlagPublic)
                 .unwrap()
                 .as_type(),
             ir::FloatTy::F64 => ctx
                 .di_builder
-                .create_basic_type("f64", 64, 4, LLVMDIFlagPublic)
+                .create_basic_type(name, 64, 4, LLVMDIFlagPublic)
                 .unwrap()
                 .as_type(),
         },
@@ -1357,7 +1359,7 @@ fn compile_debug_type<'ctx>(ctx: &ModuleCompileCtx<'ctx, '_>, ty: &ir::TypeInfo)
         ir::TypeKind::Ptr(_is_mut, pointee) => ctx
             .di_builder
             .create_pointer_type(
-                &format!("*{:?}", pointee.kind),
+                name,
                 compile_debug_type(ctx, pointee),
                 (ctx.target_data.get_pointer_byte_size(None) * 8).into(),
                 ctx.target_data.get_pointer_byte_size(None),
@@ -1368,7 +1370,7 @@ fn compile_debug_type<'ctx>(ctx: &ModuleCompileCtx<'ctx, '_>, ty: &ir::TypeInfo)
             .di_builder
             .create_reference_type(compile_debug_type(ctx, inner), 0x10)
             .as_type(),
-        ir::TypeKind::Struct(id) => {
+        ir::TypeKind::Struct(id, _) => {
             let body = ctx.ctx.program.structs.get(id).unwrap();
 
             let mut fields = Vec::new();

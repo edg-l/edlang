@@ -1232,6 +1232,11 @@
 <a href="#1231" id="1231">1231</a>
 <a href="#1232" id="1232">1232</a>
 <a href="#1233" id="1233">1233</a>
+<a href="#1234" id="1234">1234</a>
+<a href="#1235" id="1235">1235</a>
+<a href="#1236" id="1236">1236</a>
+<a href="#1237" id="1237">1237</a>
+<a href="#1238" id="1238">1238</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::HashMap;
 
 <span class="kw">use </span>ast::{BinaryOp, ModuleStatement, Span, WhileStmt};
@@ -1404,60 +1409,61 @@
         .unwrap()
         .clone();
 
-    <span class="comment">// store args ret
+    <span class="kw">if </span>func.body.is_some() &amp;&amp; !func.is_extern {
+        <span class="comment">// store args ret
 
-    </span>builder.ret_local = builder.body.locals.len();
-    builder.body.locals.push(Local::new(
-        <span class="prelude-val">None</span>,
-        LocalKind::ReturnPointer,
-        ret_ty.clone(),
-        <span class="prelude-val">None</span>,
-        <span class="bool-val">false</span>,
-    ));
-
-    <span class="kw">for </span>(arg, ty) <span class="kw">in </span>func.params.iter().zip(args_ty) {
-        builder
-            .name_to_local
-            .insert(arg.name.name.clone(), builder.body.locals.len());
+        </span>builder.ret_local = builder.body.locals.len();
         builder.body.locals.push(Local::new(
-            <span class="prelude-val">Some</span>(arg.name.span),
-            LocalKind::Arg,
-            ty,
-            <span class="prelude-val">Some</span>(arg.name.name.clone()),
+            <span class="prelude-val">None</span>,
+            LocalKind::ReturnPointer,
+            ret_ty.clone(),
+            <span class="prelude-val">None</span>,
             <span class="bool-val">false</span>,
         ));
-    }
 
-    <span class="comment">// Get all user defined locals
-    </span><span class="kw">for </span>stmt <span class="kw">in </span><span class="kw-2">&amp;</span>func.body.body {
-        <span class="kw">if let </span>ast::Statement::Let(info) = stmt {
-            <span class="kw">let </span>ty = lower_type(<span class="kw-2">&amp;</span>builder.ctx, <span class="kw-2">&amp;</span>info.r#type, builder.local_module)<span class="question-mark">?</span>;
+        <span class="kw">for </span>(arg, ty) <span class="kw">in </span>func.params.iter().zip(args_ty) {
             builder
                 .name_to_local
-                .insert(info.name.name.clone(), builder.body.locals.len());
+                .insert(arg.name.name.clone(), builder.body.locals.len());
             builder.body.locals.push(Local::new(
-                <span class="prelude-val">Some</span>(info.name.span),
-                LocalKind::Temp,
+                <span class="prelude-val">Some</span>(arg.name.span),
+                LocalKind::Arg,
                 ty,
-                <span class="prelude-val">Some</span>(info.name.name.clone()),
-                info.is_mut,
+                <span class="prelude-val">Some</span>(arg.name.name.clone()),
+                <span class="bool-val">false</span>,
             ));
         }
-    }
 
-    <span class="kw">for </span>stmt <span class="kw">in </span><span class="kw-2">&amp;</span>func.body.body {
-        lower_statement(<span class="kw-2">&amp;mut </span>builder, stmt, <span class="kw-2">&amp;</span>ret_ty)<span class="question-mark">?</span>;
-    }
+        <span class="comment">// Get all user defined locals
+        </span><span class="kw">for </span>stmt <span class="kw">in </span><span class="kw-2">&amp;</span>func.body.as_ref().unwrap().body {
+            <span class="kw">if let </span>ast::Statement::Let(info) = stmt {
+                <span class="kw">let </span>ty = lower_type(<span class="kw-2">&amp;</span>builder.ctx, <span class="kw-2">&amp;</span>info.r#type, builder.local_module)<span class="question-mark">?</span>;
+                builder
+                    .name_to_local
+                    .insert(info.name.name.clone(), builder.body.locals.len());
+                builder.body.locals.push(Local::new(
+                    <span class="prelude-val">Some</span>(info.name.span),
+                    LocalKind::Temp,
+                    ty,
+                    <span class="prelude-val">Some</span>(info.name.name.clone()),
+                    info.is_mut,
+                ));
+            }
+        }
 
-    <span class="kw">if </span>!builder.statements.is_empty() {
-        <span class="kw">let </span>statements = std::mem::take(<span class="kw-2">&amp;mut </span>builder.statements);
-        builder.body.blocks.push(BasicBlock {
-            statements: statements.into(),
-            terminator: Terminator::Return,
-            terminator_span: <span class="prelude-val">None</span>,
-        });
-    }
+        <span class="kw">for </span>stmt <span class="kw">in </span><span class="kw-2">&amp;</span>func.body.as_ref().unwrap().body {
+            lower_statement(<span class="kw-2">&amp;mut </span>builder, stmt, <span class="kw-2">&amp;</span>ret_ty)<span class="question-mark">?</span>;
+        }
 
+        <span class="kw">if </span>!builder.statements.is_empty() {
+            <span class="kw">let </span>statements = std::mem::take(<span class="kw-2">&amp;mut </span>builder.statements);
+            builder.body.blocks.push(BasicBlock {
+                statements: statements.into(),
+                terminator: Terminator::Return,
+                terminator_span: <span class="prelude-val">None</span>,
+            });
+        }
+    }
     <span class="kw">let </span>(<span class="kw-2">mut </span>ctx, body) = (builder.ctx, builder.body);
     ctx.unresolved_function_signatures.remove(<span class="kw-2">&amp;</span>body.def_id);
     ctx.body.functions.insert(body.def_id, body);
@@ -1712,6 +1718,8 @@
         kind: ty,
     };
 
+    <span class="macro">dbg!</span>(<span class="string">"here1"</span>);
+
     <span class="kw">for _ in </span><span class="number">0</span>..info.deref_times {
         <span class="kw">match </span><span class="kw-2">&amp;</span>ty.kind {
             TypeKind::Ptr(is_mut, inner) =&gt; {
@@ -1731,7 +1739,11 @@
         place.projection.push(PlaceElem::Deref);
     }
 
+    <span class="macro">dbg!</span>(<span class="string">"here2"</span>);
+
     <span class="kw">let </span>(rvalue, _ty, _span) = lower_expr(builder, <span class="kw-2">&amp;</span>info.value, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>ty))<span class="question-mark">?</span>;
+
+    <span class="macro">dbg!</span>(<span class="string">"here3"</span>);
 
     builder.statements.push(Statement {
         span: <span class="prelude-val">Some</span>(info.name.first.span),
@@ -2296,8 +2308,6 @@
         <span class="kw">let </span>(value, ty, span) = lower_expr(builder, value_expr, <span class="prelude-val">Some</span>(return_type))<span class="question-mark">?</span>;
 
         <span class="kw">if </span>return_type.kind != ty {
-            <span class="macro">dbg!</span>(<span class="string">"here"</span>);
-            <span class="macro">dbg!</span>(value);
             <span class="kw">return </span><span class="prelude-val">Err</span>(LoweringError::UnexpectedType {
                 span,
                 found: ty,

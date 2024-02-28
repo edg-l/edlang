@@ -536,6 +536,13 @@
 <a href="#535" id="535">535</a>
 <a href="#536" id="536">536</a>
 <a href="#537" id="537">537</a>
+<a href="#538" id="538">538</a>
+<a href="#539" id="539">539</a>
+<a href="#540" id="540">540</a>
+<a href="#541" id="541">541</a>
+<a href="#542" id="542">542</a>
+<a href="#543" id="543">543</a>
+<a href="#544" id="544">544</a>
 </pre></div><pre class="rust"><code><span class="comment">// Based on a cfg
 
 </span><span class="kw">use </span>std::{
@@ -544,6 +551,7 @@
 };
 
 <span class="kw">use </span>edlang_span::Span;
+<span class="kw">use </span>educe::Educe;
 <span class="kw">use </span>smallvec::SmallVec;
 
 <span class="kw">pub mod </span>scalar_int;
@@ -629,6 +637,10 @@
     }
 
     <span class="kw">pub fn </span>get_mangled_name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String {
+        <span class="kw">if </span><span class="self">self</span>.is_extern {
+            <span class="kw">return </span><span class="self">self</span>.name.clone();
+        }
+
         <span class="kw">if </span><span class="self">self</span>.name == <span class="string">"main" </span>{
             <span class="string">"main"</span>.to_string()
         } <span class="kw">else </span>{
@@ -759,9 +771,11 @@
     <span class="kw">pub </span>targets: Vec&lt;usize&gt;,
 }
 
-<span class="attr">#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+<span class="attr">#[derive(Debug, Clone, Educe, Eq, PartialOrd, Ord)]
+#[educe(PartialEq)]
 </span><span class="kw">pub struct </span>TypeInfo {
-    <span class="kw">pub </span>span: <span class="prelude-ty">Option</span>&lt;Span&gt;,
+    <span class="attr">#[educe(PartialEq(ignore))]
+    </span><span class="kw">pub </span>span: <span class="prelude-ty">Option</span>&lt;Span&gt;,
     <span class="kw">pub </span>kind: TypeKind,
 }
 

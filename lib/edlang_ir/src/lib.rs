@@ -89,6 +89,17 @@ impl Body {
     pub fn get_return_local(&self) -> Local {
         self.locals[0].clone()
     }
+
+    pub fn get_mangled_name(&self) -> String {
+        if self.name == "main" {
+            "main".to_string()
+        } else {
+            format!(
+                "{}@{}@{}",
+                self.name, self.def_id.program_id, self.def_id.id
+            )
+        }
+    }
 }
 
 #[derive(Debug, Clone)]

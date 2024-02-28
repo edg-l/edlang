@@ -58,11 +58,10 @@ fn lower_module(
         }
     }
 
-    let body = ctx.body.modules.get(&id).unwrap();
-
     // fill fn sigs
     for content in &module.contents {
         if let ModuleStatement::Function(fn_def) = content {
+            let body = ctx.body.modules.get(&id).unwrap();
             let fn_id = *body.symbols.functions.get(&fn_def.name.name).unwrap();
 
             let mut args = Vec::new();
@@ -92,7 +91,11 @@ fn lower_module(
                 ctx = lower_function(ctx, fn_def, id)?;
             }
             // ModuleStatement::Type(_) => todo!(),
-            ModuleStatement::Module(_mod_def) => {}
+            ModuleStatement::Module(mod_def) => {
+                let body = ctx.body.modules.get(&id).unwrap();
+                let id = *body.symbols.modules.get(&mod_def.name.name).unwrap();
+                ctx = lower_module(ctx, mod_def, id)?;
+            }
             _ => {}
         }
     }

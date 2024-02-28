@@ -221,7 +221,7 @@ fn compile_fn_signature(ctx: &ModuleCompileCtx<'_, '_>, fn_id: DefId) {
     };
 
     let fn_value = ctx.module.add_function(
-        &body.name,
+        &body.get_mangled_name(),
         fn_type,
         Some(if body.is_extern {
             inkwell::module::Linkage::AvailableExternally
@@ -256,7 +256,7 @@ fn compile_fn_signature(ctx: &ModuleCompileCtx<'_, '_>, fn_id: DefId) {
     let subprogram = ctx.di_builder.create_function(
         ctx.di_namespace,
         &body.name,
-        Some(&body.name),
+        Some(&body.get_mangled_name()),
         ctx.di_unit.get_file(),
         line as u32 + 1,
         di_type,
@@ -273,7 +273,7 @@ fn compile_fn(ctx: &ModuleCompileCtx, fn_id: DefId) -> Result<(), BuilderError> 
     let body = ctx.ctx.program.functions.get(&fn_id).unwrap();
     trace!("compiling fn body: {}", body.name);
 
-    let fn_value = ctx.module.get_function(&body.name).unwrap();
+    let fn_value = ctx.module.get_function(&body.get_mangled_name()).unwrap();
     let di_program = fn_value.get_subprogram().unwrap();
 
     let mut debug_loc = ctx.set_debug_loc(di_program.as_debug_info_scope(), body.fn_span);
@@ -528,7 +528,10 @@ fn compile_fn(ctx: &ModuleCompileCtx, fn_id: DefId) -> Result<(), BuilderError> 
                 target,
             } => {
                 let target_fn_body = ctx.ctx.program.functions.get(func).unwrap();
-                let fn_value = ctx.module.get_function(&target_fn_body.name).unwrap();
+                let fn_value = ctx
+                    .module
+                    .get_function(&target_fn_body.get_mangled_name())
+                    .unwrap();
                 let args: Vec<_> = args
                     .iter()
                     .map(|x| compile_rvalue(ctx, fn_id, &locals, x).unwrap().0.into())

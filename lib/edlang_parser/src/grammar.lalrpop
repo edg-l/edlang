@@ -466,6 +466,10 @@ pub(crate) Import: ast::Import = {
     }
 }
 
+pub Modules: Vec<ast::Module> = {
+  <Module+> => <>
+}
+
 pub Module: ast::Module = {
     <lo:@L> "mod" <name:Ident> "{" <imports:List<Import>?> <contents:List<ModuleStatement>> "}" <hi:@R> => ast::Module {
         name,

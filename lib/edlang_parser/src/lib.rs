@@ -22,9 +22,9 @@ pub mod grammar {
 
 pub fn parse_ast(
     source: &str,
-) -> Result<edlang_ast::Module, ParseError<usize, Token, LexicalError>> {
+) -> Result<Vec<edlang_ast::Module>, ParseError<usize, Token, LexicalError>> {
     let lexer = Lexer::new(source);
-    let parser = grammar::ModuleParser::new();
+    let parser = grammar::ModulesParser::new();
     parser.parse(lexer)
 }
 

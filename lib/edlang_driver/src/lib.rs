@@ -55,10 +55,10 @@ pub fn main() -> Result<(), Box<dyn Error>> {
     let path = args.input.display().to_string();
     let source = std::fs::read_to_string(&args.input)?;
 
-    let module = edlang_parser::parse_ast(&source);
+    let modules = edlang_parser::parse_ast(&source);
 
-    let module = match module {
-        Ok(module) => module,
+    let modules = match modules {
+        Ok(modules) => modules,
         Err(error) => {
             let report = edlang_parser::error_to_report(&path, &error)?;
             edlang_parser::print_report(&path, &source, report)?;
@@ -121,11 +121,11 @@ pub fn main() -> Result<(), Box<dyn Error>> {
     tracing::debug!("Debug Info: {:#?}", session.debug_info);
 
     if args.ast {
-        println!("{:#?}", module);
+        println!("{:#?}", modules);
         return Ok(());
     }
 
-    let program_ir = match lower_modules(&[module.clone()]) {
+    let program_ir = match lower_modules(&modules) {
         Ok(ir) => ir,
         Err(error) => {
             let report = edlang_check::lowering_error_to_report(error, &session);

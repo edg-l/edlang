@@ -535,6 +535,7 @@
 <a href="#534" id="534">534</a>
 <a href="#535" id="535">535</a>
 <a href="#536" id="536">536</a>
+<a href="#537" id="537">537</a>
 </pre></div><pre class="rust"><code><span class="comment">// Based on a cfg
 
 </span><span class="kw">use </span>std::{
@@ -776,7 +777,8 @@
     </span>Str,
     Ptr(bool, Box&lt;TypeInfo&gt;),
     Ref(bool, Box&lt;TypeInfo&gt;),
-    Struct(DefId), <span class="comment">// todo, add generics
+    <span class="comment">// name for print purposes
+    </span>Struct(DefId, String), <span class="comment">// todo, add generics
 </span>}
 
 <span class="kw">impl </span>TypeKind {
@@ -813,7 +815,7 @@
             TypeKind::FnDef(<span class="kw">_</span>, <span class="kw">_</span>) =&gt; <span class="macro">unreachable!</span>(),
             TypeKind::Ptr(<span class="kw">_</span>, _pointee) =&gt; <span class="macro">todo!</span>(),
             TypeKind::Ref(<span class="kw">_</span>, inner) =&gt; inner.kind.get_falsy_value(),
-            TypeKind::Struct(<span class="kw">_</span>) =&gt; <span class="macro">todo!</span>(),
+            TypeKind::Struct(<span class="kw">_</span>, _name) =&gt; <span class="macro">todo!</span>(),
             TypeKind::Str =&gt; <span class="macro">todo!</span>(),
         }
     }
@@ -857,7 +859,7 @@
 
                 <span class="macro">write!</span>(f, <span class="string">"&amp;{word} {}"</span>, inner.kind)
             }
-            TypeKind::Struct(<span class="kw">_</span>) =&gt; <span class="macro">todo!</span>(),
+            TypeKind::Struct(<span class="kw">_</span>, name) =&gt; <span class="macro">write!</span>(f, <span class="string">"{}"</span>, name),
         }
     }
 }

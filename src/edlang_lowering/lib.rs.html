@@ -1794,7 +1794,7 @@
                 .structs
                 .get(<span class="kw-2">&amp;</span>info.name.name.name)
                 .expect(<span class="string">"struct not found"</span>);
-            ir::TypeKind::Struct(id)
+            ir::TypeKind::Struct(id, info.name.name.name.clone())
         }
     })
 }
@@ -1897,7 +1897,7 @@
                 .get(<span class="kw-2">&amp;</span>info.name.name.name)
                 .expect(<span class="string">"struct not found"</span>);
             <span class="kw">let </span>struct_body = builder.ctx.body.structs.get(<span class="kw-2">&amp;</span>id).unwrap().clone();
-            <span class="kw">let </span>ty = TypeKind::Struct(id);
+            <span class="kw">let </span>ty = TypeKind::Struct(id, struct_body.name.clone());
             <span class="kw">let </span>struct_local = builder.add_local(Local::temp(ty.clone()));
 
             <span class="kw">let </span>place = Place {
@@ -2348,7 +2348,7 @@
                     ty = inner.kind;
                 }
 
-                <span class="kw">if let </span>TypeKind::Struct(id) = ty {
+                <span class="kw">if let </span>TypeKind::Struct(id, _name) = ty {
                     <span class="kw">let </span>struct_body = builder.ctx.body.structs.get(<span class="kw-2">&amp;</span>id).unwrap();
                     <span class="kw">let </span>idx = <span class="kw-2">*</span>struct_body.name_to_idx.get(<span class="kw-2">&amp;</span>name.name).unwrap();
                     projection.push(PlaceElem::Field { field_idx: idx });
@@ -2438,7 +2438,7 @@
                 <span class="kw">let </span>struct_body = ctx.body.structs.get(struct_id).unwrap();
                 ir::TypeInfo {
                     span: <span class="prelude-val">Some</span>(struct_body.span),
-                    kind: TypeKind::Struct(<span class="kw-2">*</span>struct_id),
+                    kind: TypeKind::Struct(<span class="kw-2">*</span>struct_id, struct_body.name.clone()),
                 }
             } <span class="kw">else </span>{
                 <span class="prelude-val">Err</span>(LoweringError::UnrecognizedType {

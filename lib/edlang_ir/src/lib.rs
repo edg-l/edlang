@@ -6,6 +6,7 @@ use std::{
 };
 
 use edlang_span::Span;
+use educe::Educe;
 use smallvec::SmallVec;
 
 pub mod scalar_int;
@@ -91,6 +92,10 @@ impl Body {
     }
 
     pub fn get_mangled_name(&self) -> String {
+        if self.is_extern {
+            return self.name.clone();
+        }
+
         if self.name == "main" {
             "main".to_string()
         } else {
@@ -221,8 +226,10 @@ pub struct SwitchTarget {
     pub targets: Vec<usize>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Educe, Eq, PartialOrd, Ord)]
+#[educe(PartialEq)]
 pub struct TypeInfo {
+    #[educe(PartialEq(ignore))]
     pub span: Option<Span>,
     pub kind: TypeKind,
 }

@@ -420,14 +420,24 @@ pub(crate) FnParam: ast::FnParam = {
 }
 
 pub(crate) Function: ast::Function = {
-    <lo:@L> <is_public:"pub"?> <is_extern:"extern"?> "fn" <name:Ident> "(" <params:Comma<FnParam>> ")"
-        <return_type:("->" <Type>)?> <body:Block> <hi:@R> => ast::Function {
+    <lo:@L> <is_public:"pub"?> "extern" "fn" <name:Ident> "(" <params:Comma<FnParam>> ")"
+        <return_type:("->" <Type>)?> ";" <hi:@R> => ast::Function {
         is_public: is_public.is_some(),
-        is_extern: is_extern.is_some(),
+        is_extern: true,
         name,
         params,
         return_type,
-        body,
+        body: None,
+        span: ast::Span::new(lo, hi),
+    },
+    <lo:@L> <is_public:"pub"?> "fn" <name:Ident> "(" <params:Comma<FnParam>> ")"
+        <return_type:("->" <Type>)?> <body:Block> <hi:@R> => ast::Function {
+        is_public: is_public.is_some(),
+        is_extern: false,
+        name,
+        params,
+        return_type,
+        body: Some(body),
         span: ast::Span::new(lo, hi),
     }
 }

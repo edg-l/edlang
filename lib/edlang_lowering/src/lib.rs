@@ -170,60 +170,61 @@ fn lower_function(
         .unwrap()
         .clone();
 
-    // store args ret
+    if func.body.is_some() && !func.is_extern {
+        // store args ret
 
-    builder.ret_local = builder.body.locals.len();
-    builder.body.locals.push(Local::new(
-        None,
-        LocalKind::ReturnPointer,
-        ret_ty.clone(),
-        None,
-        false,
-    ));
-
-    for (arg, ty) in func.params.iter().zip(args_ty) {
-        builder
-            .name_to_local
-            .insert(arg.name.name.clone(), builder.body.locals.len());
+        builder.ret_local = builder.body.locals.len();
         builder.body.locals.push(Local::new(
-            Some(arg.name.span),
-            LocalKind::Arg,
-            ty,
-            Some(arg.name.name.clone()),
+            None,
+            LocalKind::ReturnPointer,
+            ret_ty.clone(),
+            None,
             false,
         ));
-    }
 
-    // Get all user defined locals
-    for stmt in &func.body.body {
-        if let ast::Statement::Let(info) = stmt {
-            let ty = lower_type(&builder.ctx, &info.r#type, builder.local_module)?;
+        for (arg, ty) in func.params.iter().zip(args_ty) {
             builder
                 .name_to_local
-                .insert(info.name.name.clone(), builder.body.locals.len());
+                .insert(arg.name.name.clone(), builder.body.locals.len());
             builder.body.locals.push(Local::new(
-                Some(info.name.span),
-                LocalKind::Temp,
+                Some(arg.name.span),
+                LocalKind::Arg,
                 ty,
-                Some(info.name.name.clone()),
-                info.is_mut,
+                Some(arg.name.name.clone()),
+                false,
             ));
         }
-    }
 
-    for stmt in &func.body.body {
-        lower_statement(&mut builder, stmt, &ret_ty)?;
-    }
+        // Get all user defined locals
+        for stmt in &func.body.as_ref().unwrap().body {
+            if let ast::Statement::Let(info) = stmt {
+                let ty = lower_type(&builder.ctx, &info.r#type, builder.local_module)?;
+                builder
+                    .name_to_local
+                    .insert(info.name.name.clone(), builder.body.locals.len());
+                builder.body.locals.push(Local::new(
+                    Some(info.name.span),
+                    LocalKind::Temp,
+                    ty,
+                    Some(info.name.name.clone()),
+                    info.is_mut,
+                ));
+            }
+        }
 
-    if !builder.statements.is_empty() {
-        let statements = std::mem::take(&mut builder.statements);
-        builder.body.blocks.push(BasicBlock {
-            statements: statements.into(),
-            terminator: Terminator::Return,
-            terminator_span: None,
-        });
-    }
+        for stmt in &func.body.as_ref().unwrap().body {
+            lower_statement(&mut builder, stmt, &ret_ty)?;
+        }
 
+        if !builder.statements.is_empty() {
+            let statements = std::mem::take(&mut builder.statements);
+            builder.body.blocks.push(BasicBlock {
+                statements: statements.into(),
+                terminator: Terminator::Return,
+                terminator_span: None,
+            });
+        }
+    }
     let (mut ctx, body) = (builder.ctx, builder.body);
     ctx.unresolved_function_signatures.remove(&body.def_id);
     ctx.body.functions.insert(body.def_id, body);
@@ -478,6 +479,8 @@ fn lower_assign(builder: &mut BodyBuilder, info: &ast::AssignStmt) -> Result<(),
         kind: ty,
     };
 
+    dbg!("here1");
+
     for _ in 0..info.deref_times {
         match &ty.kind {
             TypeKind::Ptr(is_mut, inner) => {
@@ -497,7 +500,11 @@ fn lower_assign(builder: &mut BodyBuilder, info: &ast::AssignStmt) -> Result<(),
         place.projection.push(PlaceElem::Deref);
     }
 
+    dbg!("here2");
+
     let (rvalue, _ty, _span) = lower_expr(builder, &info.value, Some(&ty))?;
+
+    dbg!("here3");
 
     builder.statements.push(Statement {
         span: Some(info.name.first.span),
@@ -1062,8 +1069,6 @@ fn lower_return(
         let (value, ty, span) = lower_expr(builder, value_expr, Some(return_type))?;
 
         if return_type.kind != ty {
-            dbg!("here");
-            dbg!(value);
             return Err(LoweringError::UnexpectedType {
                 span,
                 found: ty,

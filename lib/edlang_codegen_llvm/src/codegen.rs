@@ -223,9 +223,7 @@ fn compile_fn_signature(ctx: &ModuleCompileCtx<'_, '_>, fn_id: DefId) {
     let fn_value = ctx.module.add_function(
         &body.get_mangled_name(),
         fn_type,
-        Some(if body.is_extern {
-            inkwell::module::Linkage::AvailableExternally
-        } else if body.is_pub {
+        Some(if body.is_pub || body.is_extern {
             inkwell::module::Linkage::External
         } else {
             inkwell::module::Linkage::Private
@@ -261,7 +259,7 @@ fn compile_fn_signature(ctx: &ModuleCompileCtx<'_, '_>, fn_id: DefId) {
         line as u32 + 1,
         di_type,
         body.is_pub,
-        true,
+        !body.is_extern,
         line as u32 + 1,
         0,
         false,
@@ -271,6 +269,11 @@ fn compile_fn_signature(ctx: &ModuleCompileCtx<'_, '_>, fn_id: DefId) {
 
 fn compile_fn(ctx: &ModuleCompileCtx, fn_id: DefId) -> Result<(), BuilderError> {
     let body = ctx.ctx.program.functions.get(&fn_id).unwrap();
+
+    if body.is_extern {
+        return Ok(());
+    }
+
     trace!("compiling fn body: {}", body.name);
 
     let fn_value = ctx.module.get_function(&body.get_mangled_name()).unwrap();

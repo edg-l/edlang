@@ -140,7 +140,7 @@ pub struct Function {
     pub is_public: bool,
     pub params: Vec<FnParam>,
     pub return_type: Option<Type>,
-    pub body: Block,
+    pub body: Option<Block>,
     pub span: Span,
 }
 

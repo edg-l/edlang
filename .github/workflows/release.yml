@@ -37,16 +37,16 @@ jobs:
       - name: build release
         run: cargo build --release
       - name: Generate a changelog
-        uses: orhun/git-cliff-action@v2
+        uses: orhun/git-cliff-action@v3
         id: git-cliff
         with:
-          args: --latest --strip header
+          args: -vv --latest --strip header
         env:
-          OUTPUT: ${{ github.workspace }}/CHANGES.md
+          OUTPUT: CHANGES.md
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
-          body_path: ${{ github.workspace }}/CHANGES.md
+          body: ${{ steps.git-cliff.outputs.content }}
           files: |
             README.md
             LICENSE

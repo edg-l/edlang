@@ -1,5 +1,9 @@
 name: Release
 
+permissions:
+  contents: write
+  discussions: write
+
 on:
   push:
     tags:
@@ -38,12 +42,11 @@ jobs:
         with:
           args: --latest --strip header
         env:
-          OUTPUT: CHANGES.md
+          OUTPUT: ${{ github.workspace }}/CHANGES.md
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
           body_path: ${{ github.workspace }}/CHANGES.md
-          generate_release_notes: true
           files: |
             README.md
             LICENSE

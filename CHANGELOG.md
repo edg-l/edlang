@@ -2,11 +2,33 @@
 
 All notable changes to this project will be documented in this file.
 
-## [unreleased]
+## [0.0.1-alpha.11] - 2024-03-01
+
+### 🚀 Features
+
+- Add modules support, add name mangling
+- Allow extern fns
+
+### 🐛 Bug Fixes
+
+- Debug type names
+
+## [0.0.1-alpha.10] - 2024-02-28
+
+### 🚀 Features
+
+- Check type correctness
 
 ### 🐛 Bug Fixes
 
 - *(ci)* Fix ci release
+- Fix checker
+
+### ⚙️ Miscellaneous Tasks
+
+- Update changelog
+- Update dependencies
+- Update version
 
 ## [0.0.1-alpha.9] - 2024-02-24
 

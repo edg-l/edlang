@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.0.1-alpha.12] - 2024-03-02
+
+### 🚀 Features
+
+- Add casts
+
+### 🐛 Bug Fixes
+
+- *(ci)* Try to fix release ci changelog
+
+### 🧪 Testing
+
+- Add cast test
+
 ## [0.0.1-alpha.11] - 2024-03-01
 
 ### 🚀 Features

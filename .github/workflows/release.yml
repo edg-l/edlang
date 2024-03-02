@@ -12,6 +12,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      release_body: ${{ steps.git-cliff.outputs.content }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -40,7 +42,7 @@ jobs:
         uses: orhun/git-cliff-action@v3
         id: git-cliff
         with:
-          args: -vv --tag ${{github.ref_name}} --strip header
+          args: -vv --latest --strip header
         env:
           OUTPUT: CHANGES.md
       - name: Release

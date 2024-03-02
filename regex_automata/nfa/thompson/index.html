@@ -12,7 +12,7 @@ string into something that can run a search looks roughly like this:</p>
 <li>The <code>NFA</code> is then used to build one of a few different regex engines:
 <ul>
 <li>An <code>NFA</code> is used directly in the <code>PikeVM</code> and <code>BoundedBacktracker</code> engines.</li>
-<li>An <code>NFA</code> is used by a <a href="crate::hybrid">hybrid NFA/DFA</a> to build out a DFA’s
+<li>An <code>NFA</code> is used by a <a href="../../hybrid/index.html" title="mod regex_automata::hybrid">hybrid NFA/DFA</a> to build out a DFA’s
 transition table at search time.</li>
 <li>An <code>NFA</code>, assuming it is one-pass, is used to build a full
 <a href="crate::dfa::onepass">one-pass DFA</a> ahead of time.</li>

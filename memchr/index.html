@@ -116,8 +116,8 @@ will also use AVX2 accelerated routines when the <code>avx2</code> feature is en
 compile time. In general, enable this feature if you can.</li>
 <li><strong>alloc</strong> - When enabled (the default), APIs in this crate requiring some
 kind of allocation will become available. For example, the
-<a href="crate::memmem::Finder::into_owned"><code>memmem::Finder::into_owned</code></a> API and the
-<a href="crate::arch::all::shiftor"><code>arch::all::shiftor</code></a> substring search
+<a href="memmem/struct.Finder.html#method.into_owned" title="method memchr::memmem::Finder::into_owned"><code>memmem::Finder::into_owned</code></a> API and the
+<a href="arch/all/shiftor/index.html" title="mod memchr::arch::all::shiftor"><code>arch::all::shiftor</code></a> substring search
 implementation. Otherwise, this crate is designed from the ground up to be
 usable in core-only contexts, so the <code>alloc</code> feature doesn’t add much
 currently. Notably, disabling <code>std</code> but enabling <code>alloc</code> will <strong>not</strong> result

@@ -26,7 +26,7 @@ pattern ID) at which a match occurred. This is generally why we also compile
 DFAs in reverse, so that we can run them after finding the end of a match to
 also find the start of a match.</li>
 <li>NFAs take worst case linear time to build, but DFAs take worst case
-exponential time to build. The <a href="crate::hybrid">hybrid NFA/DFA</a> mitigates this
+exponential time to build. The <a href="../hybrid/index.html" title="mod regex_automata::hybrid">hybrid NFA/DFA</a> mitigates this
 challenge for DFAs in many practical cases.</li>
 </ul>
 <p>There are likely other differences, but the bottom line is that NFAs tend to be

@@ -40,7 +40,7 @@ jobs:
         uses: orhun/git-cliff-action@v3
         id: git-cliff
         with:
-          args: -vv --latest --strip header
+          args: -vv --tag ${{github.ref_name}} --strip header
         env:
           OUTPUT: CHANGES.md
       - name: Release

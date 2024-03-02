@@ -10,6 +10,7 @@ mod common;
 #[test_case(include_str!("programs/factorial.ed"), "factorial", false, 24, &[] ; "factorial")]
 #[test_case(include_str!("programs/refs.ed"), "refs", false, 2, &[] ; "refs")]
 #[test_case(include_str!("programs/struct.ed"), "struct", false, 5, &[] ; "r#struct")]
+#[test_case(include_str!("programs/casts.ed"), "casts", false, 2, &[] ; "casts")]
 #[test_case(TEST_ADD, "TEST_ADD", false, 2, &[] ; "TEST_ADD")]
 #[test_case(TEST_SUB, "TEST_SUB", false, 1, &[] ; "TEST_SUB")]
 #[test_case(TEST_MUL, "TEST_MUL", false, 4, &[] ; "TEST_MUL")]

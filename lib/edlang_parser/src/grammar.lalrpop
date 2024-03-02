@@ -27,6 +27,7 @@ extern {
     "use" => Token::KeywordUse,
     "in" => Token::KeywordIn,
     "extern" => Token::KeywordExtern,
+    "as" => Token::KeywordAs,
 
     // literals
     "identifier" => Token::Identifier(<String>),
@@ -308,7 +309,6 @@ pub(crate) Term: ast::Expression = {
   #[precedence(level="0")]
   <ValueExpr> => ast::Expression::Value(<>),
   <FnCallExpr> => ast::Expression::FnCall(<>),
-  "(" <StructInitExpr> ")" => ast::Expression::StructInit(<>),
   #[precedence(level="2")] #[assoc(side="left")]
   "(" <Expression> ")",
 }
@@ -324,7 +324,6 @@ pub(crate) Expression: ast::Expression = {
     op,
     Box::new(rhs)
   ),
-
   #[precedence(level="2")] #[assoc(side="left")]
   <lhs:Expression> <op:BinaryFirstLvlOp> <rhs:Expression> => ast::Expression::Binary(
     Box::new(lhs),
@@ -343,6 +342,9 @@ pub(crate) Expression: ast::Expression = {
     op,
     Box::new(rhs)
   ),
+  #[precedence(level="5")] #[assoc(side="left")]
+  <lo:@L> <a:PathExpr> "as" <b: Type> <hi:@R> => ast::Expression::Cast(a, b, ast::Span::new(lo, hi)),
+  "(" <StructInitExpr> ")" => ast::Expression::StructInit(<>),
 }
 
 pub BinaryFirstLvlOp: ast::BinaryOp = {

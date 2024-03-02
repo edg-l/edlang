@@ -1020,6 +1020,103 @@ fn compile_rvalue<'ctx>(
             );
             compile_unary_op(ctx, fn_id, locals, *op, value)?
         }
+        ir::RValue::Cast(place, target_ty, span) => {
+            ctx.set_debug_loc(
+                ctx.builder
+                    .get_current_debug_location()
+                    .unwrap()
+                    .get_scope(),
+                *span,
+            );
+
+            let target_ty = target_ty.clone();
+            let target_llvm_ty = compile_basic_type(ctx, &target_ty);
+            let (value, ty) = compile_load_place(ctx, fn_id, locals, place, false)?;
+            let current_ty = compile_basic_type(ctx, &ty);
+
+            if target_llvm_ty.is_pointer_type() {
+                // int to ptr
+                let target_llvm_ty = target_llvm_ty.into_pointer_type();
+                if current_ty.is_int_type() {
+                    let value =
+                        ctx.builder
+                            .build_int_to_ptr(value.into_int_value(), target_llvm_ty, "")?;
+                    (value.as_basic_value_enum(), target_ty)
+                } else if current_ty.is_pointer_type() {
+                    (value, target_ty.clone())
+                } else {
+                    unreachable!("cast from {:?} to ptr", current_ty)
+                }
+            } else if target_llvm_ty.is_int_type() {
+                let is_signed = target_ty.kind.is_signed_integer();
+                let target_llvm_ty = target_llvm_ty.into_int_type();
+                if current_ty.is_int_type() {
+                    // int to int casts
+                    let current_ty = current_ty.into_int_type();
+
+                    match current_ty
+                        .get_bit_width()
+                        .cmp(&target_llvm_ty.get_bit_width())
+                    {
+                        std::cmp::Ordering::Greater => {
+                            let value = ctx.builder.build_int_truncate(
+                                value.into_int_value(),
+                                target_llvm_ty,
+                                "",
+                            )?;
+                            (value.as_basic_value_enum(), target_ty)
+                        }
+                        std::cmp::Ordering::Equal => (value, target_ty.clone()),
+                        std::cmp::Ordering::Less => {
+                            if is_signed {
+                                let value = ctx.builder.build_int_s_extend(
+                                    value.into_int_value(),
+                                    target_llvm_ty,
+                                    "",
+                                )?;
+                                (value.as_basic_value_enum(), target_ty)
+                            } else {
+                                let value = ctx.builder.build_int_z_extend(
+                                    value.into_int_value(),
+                                    target_llvm_ty,
+                                    "",
+                                )?;
+                                (value.as_basic_value_enum(), target_ty)
+                            }
+                        }
+                    }
+                } else if current_ty.is_float_type() {
+                    // float to int casts
+                    if is_signed {
+                        let value = ctx.builder.build_float_to_signed_int(
+                            value.into_float_value(),
+                            target_llvm_ty,
+                            "",
+                        )?;
+                        (value.as_basic_value_enum(), target_ty)
+                    } else {
+                        let value = ctx.builder.build_float_to_unsigned_int(
+                            value.into_float_value(),
+                            target_llvm_ty,
+                            "",
+                        )?;
+                        (value.as_basic_value_enum(), target_ty)
+                    }
+                } else if current_ty.is_pointer_type() {
+                    // ptr to int
+                    let value = ctx.builder.build_ptr_to_int(
+                        value.into_pointer_value(),
+                        target_llvm_ty,
+                        "",
+                    )?;
+                    (value.as_basic_value_enum(), target_ty)
+                } else {
+                    todo!("cast {:?} to int", current_ty)
+                }
+            } else {
+                todo!("cast from {:?} to {:?}", current_ty, target_llvm_ty)
+            }
+        }
     })
 }
 

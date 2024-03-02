@@ -516,15 +516,35 @@ fn lower_assign(builder: &mut BodyBuilder, info: &ast::AssignStmt) -> Result<(),
 
 fn find_expr_type(builder: &mut BodyBuilder, info: &ast::Expression) -> Option<TypeKind> {
     Some(match info {
-        ast::Expression::Value(x) => match x {
+        ast::Expression::Value(val) => match val {
             ast::ValueExpr::Bool { .. } => TypeKind::Bool,
             ast::ValueExpr::Char { .. } => TypeKind::Char,
             ast::ValueExpr::Int { .. } => return None,
             ast::ValueExpr::Float { .. } => return None,
             ast::ValueExpr::Str { .. } => todo!(),
             ast::ValueExpr::Path(path) => {
-                // todo: handle full path
-                builder.get_local(&path.first.name)?.ty.kind.clone()
+                let local = builder.get_local(&path.first.name)?;
+                let mut ty = local.ty.kind.clone();
+
+                for seg in &path.extra {
+                    match seg {
+                        ast::PathSegment::Field(field_name) => {
+                            ty = match ty {
+                                TypeKind::Struct(id, _struct_name) => {
+                                    let body = builder.ctx.body.structs.get(&id)?;
+                                    body.variants[*body.name_to_idx.get(&field_name.name)?]
+                                        .ty
+                                        .kind
+                                        .clone()
+                                }
+                                _ => unreachable!(),
+                            }
+                        }
+                        ast::PathSegment::Index { .. } => todo!(),
+                    }
+                }
+
+                ty
             }
         },
         ast::Expression::FnCall(info) => {
@@ -568,6 +588,11 @@ fn find_expr_type(builder: &mut BodyBuilder, info: &ast::Expression) -> Option<T
                 .get(&info.name.name.name)
                 .expect("struct not found");
             ir::TypeKind::Struct(id, info.name.name.name.clone())
+        }
+        ast::Expression::Cast(_, _new_ty, _) => {
+            // checks?
+
+            todo!()
         }
     })
 }
@@ -704,6 +729,15 @@ fn lower_expr(
             }
 
             (RValue::Use(Operand::Move(place), info.span), ty, info.span)
+        }
+        ast::Expression::Cast(path, cast_ty, span) => {
+            let (place, _ty, _path_span) = lower_path(builder, path)?;
+            let new_ty = lower_type(&builder.ctx, cast_ty, builder.local_module)?;
+            let kind = new_ty.kind.clone();
+
+            // todo: some checks?
+
+            (RValue::Cast(place, new_ty, *span), kind, *span)
         }
     })
 }

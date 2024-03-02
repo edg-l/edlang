@@ -259,6 +259,14 @@ impl TypeKind {
         matches!(self, Self::Int(_) | Self::Uint(_))
     }
 
+    pub const fn is_signed_integer(&self) -> bool {
+        matches!(self, Self::Int(_))
+    }
+
+    pub const fn is_float(&self) -> bool {
+        matches!(self, Self::Float(_))
+    }
+
     pub fn get_falsy_value(&self) -> ValueTree {
         match self {
             Self::Bool => ValueTree::Leaf(ConstValue::Bool(false)),
@@ -410,6 +418,7 @@ pub enum RValue {
     BinOp(BinOp, Operand, Operand, Span),
     LogicOp(LogicalOp, Operand, Operand, Span),
     UnOp(UnOp, Operand, Span),
+    Cast(Place, TypeInfo, Span),
 }
 
 #[derive(Debug, Clone)]

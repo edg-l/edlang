@@ -255,6 +255,7 @@
 <a href="#254" id="254">254</a>
 <a href="#255" id="255">255</a>
 <a href="#256" id="256">256</a>
+<a href="#257" id="257">257</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::BTreeMap;
 
 <span class="kw">pub use </span>edlang_span::Span;
@@ -433,6 +434,7 @@
     Binary(Box&lt;<span class="self">Self</span>&gt;, BinaryOp, Box&lt;<span class="self">Self</span>&gt;),
     Deref(Box&lt;<span class="self">Self</span>&gt;, Span),
     AsRef(Box&lt;<span class="self">Self</span>&gt;, bool, Span),
+    Cast(PathExpr, Type, Span),
 }
 
 <span class="attr">#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]

@@ -474,31 +474,31 @@ fn lower_let(builder: &mut BodyBuilder, info: &ast::LetStmt) -> Result<(), Lower
 
 fn lower_assign(builder: &mut BodyBuilder, info: &ast::AssignStmt) -> Result<(), LoweringError> {
     let (mut place, ty, _span) = lower_path(builder, &info.name)?;
-    let mut ty = TypeInfo {
+    let mut path_ty = TypeInfo {
         span: None,
         kind: ty,
     };
 
     for _ in 0..info.deref_times {
-        match &ty.kind {
+        match &path_ty.kind {
             TypeKind::Ptr(is_mut, inner) => {
                 if !is_mut {
                     panic!("trying to mutate non mut ptr");
                 }
-                ty = *inner.clone();
+                path_ty = *inner.clone();
             }
             TypeKind::Ref(is_mut, inner) => {
                 if !is_mut {
                     panic!("trying to mutate non mut ref");
                 }
-                ty = *inner.clone();
+                path_ty = *inner.clone();
             }
             _ => unreachable!(),
         }
         place.projection.push(PlaceElem::Deref);
     }
 
-    let (rvalue, _ty, _span) = lower_expr(builder, &info.value, Some(&ty))?;
+    let (rvalue, _ty, _span) = lower_expr(builder, &info.value, Some(&path_ty))?;
 
     builder.statements.push(Statement {
         span: Some(info.name.first.span),
@@ -1141,10 +1141,12 @@ fn lower_path(
     builder: &mut BodyBuilder,
     info: &ast::PathExpr,
 ) -> Result<(ir::Place, TypeKind, Span), LoweringError> {
-    let local = *builder
-        .name_to_local
-        .get(&info.first.name)
-        .expect("local not found");
+    let local = *builder.name_to_local.get(&info.first.name).ok_or(
+        LoweringError::UseOfUndeclaredVariable {
+            span: info.span,
+            name: info.first.name.clone(),
+        },
+    )?;
 
     let mut ty = builder.body.locals[local].ty.kind.clone();
     let mut projection = Vec::new();

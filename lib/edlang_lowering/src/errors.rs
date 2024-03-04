@@ -34,4 +34,6 @@ pub enum LoweringError {
         found: TypeKind,
         expected: TypeInfo,
     },
+    #[error("use of underclared variable {name:?}")]
+    UseOfUndeclaredVariable { span: Span, name: String },
 }

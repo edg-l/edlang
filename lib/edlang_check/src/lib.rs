@@ -85,7 +85,6 @@ pub fn lowering_error_to_report(
                 .finish()
         },
         LoweringError::UnexpectedType { span, found, expected } => {
-            dbg!(span);
             let mut labels = vec![
                 Label::new((path.clone(), span.into()))
                         .with_message(format!("Unexpected type '{}', expected '{}'", found, expected.kind))

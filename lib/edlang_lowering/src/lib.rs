@@ -745,7 +745,7 @@ fn lower_binary_expr(
 ) -> Result<(ir::RValue, TypeKind, Span), LoweringError> {
     trace!("lowering binary op: {:?}", op);
 
-    let (lhs, lhs_ty, _) = if type_hint.is_none() {
+    let (lhs, lhs_ty, lhs_span) = if type_hint.is_none() {
         let ty = find_expr_type(builder, lhs)
             .unwrap_or_else(|| find_expr_type(builder, rhs).expect("cant find type"));
         lower_expr(
@@ -759,7 +759,7 @@ fn lower_binary_expr(
     } else {
         lower_expr(builder, lhs, type_hint)?
     };
-    let (rhs, rhs_ty, _) = if type_hint.is_none() {
+    let (rhs, rhs_ty, rhs_span) = if type_hint.is_none() {
         let ty = find_expr_type(builder, rhs).unwrap_or(lhs_ty.clone());
         lower_expr(
             builder,
@@ -772,6 +772,17 @@ fn lower_binary_expr(
     } else {
         lower_expr(builder, rhs, type_hint)?
     };
+
+    if lhs_ty != rhs_ty {
+        return Err(LoweringError::UnexpectedType {
+            span: rhs_span,
+            found: rhs_ty,
+            expected: TypeInfo {
+                span: Some(lhs_span),
+                kind: lhs_ty,
+            },
+        });
+    }
 
     let lhs = match lhs {
         RValue::Use(op, _span) => op,

@@ -129,6 +129,7 @@
 <a href="#128" id="128">128</a>
 <a href="#129" id="129">129</a>
 <a href="#130" id="130">130</a>
+<a href="#131" id="131">131</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::ops::Range;
 
 <span class="kw">use </span>ariadne::{ColorGenerator, Label, Report, ReportKind};
@@ -216,6 +217,7 @@
                 .finish()
         },
         LoweringError::UnexpectedType { span, found, expected } =&gt; {
+            <span class="macro">dbg!</span>(span);
             <span class="kw">let </span><span class="kw-2">mut </span>labels = <span class="macro">vec!</span>[
                 Label::new((path.clone(), span.into()))
                         .with_message(<span class="macro">format!</span>(<span class="string">"Unexpected type '{}', expected '{}'"</span>, found, expected.kind))

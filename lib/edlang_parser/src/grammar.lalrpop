@@ -348,34 +348,34 @@ pub(crate) Expression: ast::Expression = {
 }
 
 pub BinaryFirstLvlOp: ast::BinaryOp = {
-  <lo:@L> "==" <hi:@R> => ast::BinaryOp::Compare(ast::CmpOp::Eq, ast::Span::new(hi, lo)),
-  <lo:@L> "!=" <hi:@R> => ast::BinaryOp::Compare(ast::CmpOp::NotEq, ast::Span::new(hi, lo)),
-  <lo:@L> "<" <hi:@R> => ast::BinaryOp::Compare(ast::CmpOp::Lt, ast::Span::new(hi, lo)),
-  <lo:@L> ">" <hi:@R> => ast::BinaryOp::Compare(ast::CmpOp::Gt, ast::Span::new(hi, lo)),
-  <lo:@L> "<=" <hi:@R> => ast::BinaryOp::Compare(ast::CmpOp::LtEq, ast::Span::new(hi, lo)),
-  <lo:@L> ">=" <hi:@R> => ast::BinaryOp::Compare(ast::CmpOp::GtEq, ast::Span::new(hi, lo)),
-  <lo:@L> "&&" <hi:@R> => ast::BinaryOp::Logic(ast::LogicOp::And, ast::Span::new(hi, lo)),
-  <lo:@L> "||" <hi:@R> => ast::BinaryOp::Logic(ast::LogicOp::Or, ast::Span::new(hi, lo)),
+  <lo:@L> "==" <hi:@R> => ast::BinaryOp::Compare(ast::CmpOp::Eq, ast::Span::new(lo, hi)),
+  <lo:@L> "!=" <hi:@R> => ast::BinaryOp::Compare(ast::CmpOp::NotEq, ast::Span::new(lo, hi)),
+  <lo:@L> "<" <hi:@R> => ast::BinaryOp::Compare(ast::CmpOp::Lt, ast::Span::new(lo, hi)),
+  <lo:@L> ">" <hi:@R> => ast::BinaryOp::Compare(ast::CmpOp::Gt, ast::Span::new(lo, hi)),
+  <lo:@L> "<=" <hi:@R> => ast::BinaryOp::Compare(ast::CmpOp::LtEq, ast::Span::new(lo, hi)),
+  <lo:@L> ">=" <hi:@R> => ast::BinaryOp::Compare(ast::CmpOp::GtEq, ast::Span::new(lo, hi)),
+  <lo:@L> "&&" <hi:@R> => ast::BinaryOp::Logic(ast::LogicOp::And, ast::Span::new(lo, hi)),
+  <lo:@L> "||" <hi:@R> => ast::BinaryOp::Logic(ast::LogicOp::Or, ast::Span::new(lo, hi)),
 }
 
 pub BinarySecondLvlOp: ast::BinaryOp = {
-  <lo:@L> "/" <hi:@R> => ast::BinaryOp::Arith(ast::ArithOp::Div, ast::Span::new(hi, lo)),
-  <lo:@L> "*" <hi:@R> => ast::BinaryOp::Arith(ast::ArithOp::Mul, ast::Span::new(hi, lo)),
-  <lo:@L> "%" <hi:@R> => ast::BinaryOp::Arith(ast::ArithOp::Mod, ast::Span::new(hi, lo)),
+  <lo:@L> "/" <hi:@R> => ast::BinaryOp::Arith(ast::ArithOp::Div, ast::Span::new(lo, hi)),
+  <lo:@L> "*" <hi:@R> => ast::BinaryOp::Arith(ast::ArithOp::Mul, ast::Span::new(lo, hi)),
+  <lo:@L> "%" <hi:@R> => ast::BinaryOp::Arith(ast::ArithOp::Mod, ast::Span::new(lo, hi)),
 }
 
 pub BinaryThirdLvlOp: ast::BinaryOp = {
-  <lo:@L> "+" <hi:@R> => ast::BinaryOp::Arith(ast::ArithOp::Add, ast::Span::new(hi, lo)),
-  <lo:@L> "-" <hi:@R> => ast::BinaryOp::Arith(ast::ArithOp::Sub, ast::Span::new(hi, lo)),
-  <lo:@L> "&" <hi:@R> => ast::BinaryOp::Bitwise(ast::BitwiseOp::And, ast::Span::new(hi, lo)),
-  <lo:@L> "|" <hi:@R> => ast::BinaryOp::Bitwise(ast::BitwiseOp::Or, ast::Span::new(hi, lo)),
-  <lo:@L> "^" <hi:@R> => ast::BinaryOp::Bitwise(ast::BitwiseOp::Xor, ast::Span::new(hi, lo)),
+  <lo:@L> "+" <hi:@R> => ast::BinaryOp::Arith(ast::ArithOp::Add, ast::Span::new(lo, hi)),
+  <lo:@L> "-" <hi:@R> => ast::BinaryOp::Arith(ast::ArithOp::Sub, ast::Span::new(lo, hi)),
+  <lo:@L> "&" <hi:@R> => ast::BinaryOp::Bitwise(ast::BitwiseOp::And, ast::Span::new(lo, hi)),
+  <lo:@L> "|" <hi:@R> => ast::BinaryOp::Bitwise(ast::BitwiseOp::Or, ast::Span::new(lo, hi)),
+  <lo:@L> "^" <hi:@R> => ast::BinaryOp::Bitwise(ast::BitwiseOp::Xor, ast::Span::new(lo, hi)),
 }
 
 pub UnaryOp: ast::UnaryOp = {
-  <lo:@L> "-" <hi:@R>  => ast::UnaryOp::ArithNeg(ast::Span::new(hi, lo)),
-  <lo:@L> "!" <hi:@R>  => ast::UnaryOp::LogicalNot(ast::Span::new(hi, lo)),
-  <lo:@L> "~" <hi:@R>  => ast::UnaryOp::BitwiseNot(ast::Span::new(hi, lo)),
+  <lo:@L> "-" <hi:@R>  => ast::UnaryOp::ArithNeg(ast::Span::new(lo, hi)),
+  <lo:@L> "!" <hi:@R>  => ast::UnaryOp::LogicalNot(ast::Span::new(lo, hi)),
+  <lo:@L> "~" <hi:@R>  => ast::UnaryOp::BitwiseNot(ast::Span::new(lo, hi)),
 }
 
 pub(crate) ValueExpr: ast::ValueExpr = {

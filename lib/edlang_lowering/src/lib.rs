@@ -479,8 +479,6 @@ fn lower_assign(builder: &mut BodyBuilder, info: &ast::AssignStmt) -> Result<(),
         kind: ty,
     };
 
-    dbg!("here1");
-
     for _ in 0..info.deref_times {
         match &ty.kind {
             TypeKind::Ptr(is_mut, inner) => {
@@ -500,11 +498,7 @@ fn lower_assign(builder: &mut BodyBuilder, info: &ast::AssignStmt) -> Result<(),
         place.projection.push(PlaceElem::Deref);
     }
 
-    dbg!("here2");
-
     let (rvalue, _ty, _span) = lower_expr(builder, &info.value, Some(&ty))?;
-
-    dbg!("here3");
 
     builder.statements.push(Statement {
         span: Some(info.name.first.span),

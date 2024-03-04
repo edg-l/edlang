@@ -1265,6 +1265,17 @@
 <a href="#1264" id="1264">1264</a>
 <a href="#1265" id="1265">1265</a>
 <a href="#1266" id="1266">1266</a>
+<a href="#1267" id="1267">1267</a>
+<a href="#1268" id="1268">1268</a>
+<a href="#1269" id="1269">1269</a>
+<a href="#1270" id="1270">1270</a>
+<a href="#1271" id="1271">1271</a>
+<a href="#1272" id="1272">1272</a>
+<a href="#1273" id="1273">1273</a>
+<a href="#1274" id="1274">1274</a>
+<a href="#1275" id="1275">1275</a>
+<a href="#1276" id="1276">1276</a>
+<a href="#1277" id="1277">1277</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::HashMap;
 
 <span class="kw">use </span>ast::{BinaryOp, ModuleStatement, Span, WhileStmt};
@@ -2012,7 +2023,7 @@
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(ir::RValue, TypeKind, Span), LoweringError&gt; {
     <span class="macro">trace!</span>(<span class="string">"lowering binary op: {:?}"</span>, op);
 
-    <span class="kw">let </span>(lhs, lhs_ty, <span class="kw">_</span>) = <span class="kw">if </span>type_hint.is_none() {
+    <span class="kw">let </span>(lhs, lhs_ty, lhs_span) = <span class="kw">if </span>type_hint.is_none() {
         <span class="kw">let </span>ty = find_expr_type(builder, lhs)
             .unwrap_or_else(|| find_expr_type(builder, rhs).expect(<span class="string">"cant find type"</span>));
         lower_expr(
@@ -2026,7 +2037,7 @@
     </span>} <span class="kw">else </span>{
         lower_expr(builder, lhs, type_hint)<span class="question-mark">?
     </span>};
-    <span class="kw">let </span>(rhs, rhs_ty, <span class="kw">_</span>) = <span class="kw">if </span>type_hint.is_none() {
+    <span class="kw">let </span>(rhs, rhs_ty, rhs_span) = <span class="kw">if </span>type_hint.is_none() {
         <span class="kw">let </span>ty = find_expr_type(builder, rhs).unwrap_or(lhs_ty.clone());
         lower_expr(
             builder,
@@ -2039,6 +2050,17 @@
     </span>} <span class="kw">else </span>{
         lower_expr(builder, rhs, type_hint)<span class="question-mark">?
     </span>};
+
+    <span class="kw">if </span>lhs_ty != rhs_ty {
+        <span class="kw">return </span><span class="prelude-val">Err</span>(LoweringError::UnexpectedType {
+            span: rhs_span,
+            found: rhs_ty,
+            expected: TypeInfo {
+                span: <span class="prelude-val">Some</span>(lhs_span),
+                kind: lhs_ty,
+            },
+        });
+    }
 
     <span class="kw">let </span>lhs = <span class="kw">match </span>lhs {
         RValue::Use(op, _span) =&gt; op,

@@ -1276,6 +1276,8 @@
 <a href="#1275" id="1275">1275</a>
 <a href="#1276" id="1276">1276</a>
 <a href="#1277" id="1277">1277</a>
+<a href="#1278" id="1278">1278</a>
+<a href="#1279" id="1279">1279</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::HashMap;
 
 <span class="kw">use </span>ast::{BinaryOp, ModuleStatement, Span, WhileStmt};
@@ -1752,31 +1754,31 @@
 
 <span class="kw">fn </span>lower_assign(builder: <span class="kw-2">&amp;mut </span>BodyBuilder, info: <span class="kw-2">&amp;</span>ast::AssignStmt) -&gt; <span class="prelude-ty">Result</span>&lt;(), LoweringError&gt; {
     <span class="kw">let </span>(<span class="kw-2">mut </span>place, ty, _span) = lower_path(builder, <span class="kw-2">&amp;</span>info.name)<span class="question-mark">?</span>;
-    <span class="kw">let </span><span class="kw-2">mut </span>ty = TypeInfo {
+    <span class="kw">let </span><span class="kw-2">mut </span>path_ty = TypeInfo {
         span: <span class="prelude-val">None</span>,
         kind: ty,
     };
 
     <span class="kw">for _ in </span><span class="number">0</span>..info.deref_times {
-        <span class="kw">match </span><span class="kw-2">&amp;</span>ty.kind {
+        <span class="kw">match </span><span class="kw-2">&amp;</span>path_ty.kind {
             TypeKind::Ptr(is_mut, inner) =&gt; {
                 <span class="kw">if </span>!is_mut {
                     <span class="macro">panic!</span>(<span class="string">"trying to mutate non mut ptr"</span>);
                 }
-                ty = <span class="kw-2">*</span>inner.clone();
+                path_ty = <span class="kw-2">*</span>inner.clone();
             }
             TypeKind::Ref(is_mut, inner) =&gt; {
                 <span class="kw">if </span>!is_mut {
                     <span class="macro">panic!</span>(<span class="string">"trying to mutate non mut ref"</span>);
                 }
-                ty = <span class="kw-2">*</span>inner.clone();
+                path_ty = <span class="kw-2">*</span>inner.clone();
             }
             <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
         }
         place.projection.push(PlaceElem::Deref);
     }
 
-    <span class="kw">let </span>(rvalue, _ty, _span) = lower_expr(builder, <span class="kw-2">&amp;</span>info.value, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>ty))<span class="question-mark">?</span>;
+    <span class="kw">let </span>(rvalue, _ty, _span) = lower_expr(builder, <span class="kw-2">&amp;</span>info.value, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>path_ty))<span class="question-mark">?</span>;
 
     builder.statements.push(Statement {
         span: <span class="prelude-val">Some</span>(info.name.first.span),
@@ -2419,10 +2421,12 @@
     builder: <span class="kw-2">&amp;mut </span>BodyBuilder,
     info: <span class="kw-2">&amp;</span>ast::PathExpr,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(ir::Place, TypeKind, Span), LoweringError&gt; {
-    <span class="kw">let </span>local = <span class="kw-2">*</span>builder
-        .name_to_local
-        .get(<span class="kw-2">&amp;</span>info.first.name)
-        .expect(<span class="string">"local not found"</span>);
+    <span class="kw">let </span>local = <span class="kw-2">*</span>builder.name_to_local.get(<span class="kw-2">&amp;</span>info.first.name).ok_or(
+        LoweringError::UseOfUndeclaredVariable {
+            span: info.span,
+            name: info.first.name.clone(),
+        },
+    )<span class="question-mark">?</span>;
 
     <span class="kw">let </span><span class="kw-2">mut </span>ty = builder.body.locals[local].ty.kind.clone();
     <span class="kw">let </span><span class="kw-2">mut </span>projection = Vec::new();

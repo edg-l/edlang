@@ -129,6 +129,16 @@
 <a href="#128" id="128">128</a>
 <a href="#129" id="129">129</a>
 <a href="#130" id="130">130</a>
+<a href="#131" id="131">131</a>
+<a href="#132" id="132">132</a>
+<a href="#133" id="133">133</a>
+<a href="#134" id="134">134</a>
+<a href="#135" id="135">135</a>
+<a href="#136" id="136">136</a>
+<a href="#137" id="137">137</a>
+<a href="#138" id="138">138</a>
+<a href="#139" id="139">139</a>
+<a href="#140" id="140">140</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::ops::Range;
 
 <span class="kw">use </span>ariadne::{ColorGenerator, Label, Report, ReportKind};
@@ -256,6 +266,16 @@
                         .with_color(colors.next()),
                 )
                 .finish()
+        },
+        LoweringError::UseOfUndeclaredVariable { span, name } =&gt; {
+            Report::build(ReportKind::Error, path.clone(), span.lo)
+            .with_code(<span class="string">"UseOfUndeclaredVariable"</span>)
+            .with_label(
+                Label::new((path, span.into()))
+                    .with_message(<span class="macro">format!</span>(<span class="string">"use of undeclared variable {:?}"</span>, name))
+                    .with_color(colors.next()),
+            )
+            .finish()
         },
     }
 }

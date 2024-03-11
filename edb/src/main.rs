@@ -258,7 +258,7 @@ mod {} {{
             let start = Instant::now();
             let object = compile(&compile_args)?;
 
-            if has_main {
+            if !has_main {
                 link_shared_lib(&[object], &output)?;
             } else {
                 link_binary(&[object], &output)?;

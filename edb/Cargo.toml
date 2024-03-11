@@ -1,8 +1,8 @@
 [package]
-name = "edlang"
+name = "edb"
 version = "0.0.1-alpha.12"
 authors = ["Edgar Luque <edgar@edgarluque.com>"]
-description = "A experimental language using LLVM."
+description = "The edlang language builder."
 edition = "2021"
 readme = "README.md"
 keywords = ["llvm", "compiler"]
@@ -14,4 +14,9 @@ repository = "https://github.com/edg-l/edlang"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-edlang_driver = { version = "0.0.1-alpha.12", path = "../../lib/edlang_driver" }
+edlang_driver = { version = "0.0.1-alpha.12", path = "../lib/edlang_driver" }
+anyhow = "1"
+clap = { version = "4.4.16", features = ["derive"] }
+toml = "0.8.10"
+serde = { version = "1.0.197", features = ["derive"] }
+git2 = "0.18.2"

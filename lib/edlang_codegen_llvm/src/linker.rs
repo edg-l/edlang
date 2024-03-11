@@ -3,10 +3,7 @@ use std::path::Path;
 use tracing::instrument;
 
 #[instrument(level = "debug")]
-pub fn link_shared_lib(
-    input_path: &Path,
-    output_filename: &Path,
-) -> Result<(), Box<dyn std::error::Error>> {
+pub fn link_shared_lib(input_path: &Path, output_filename: &Path) -> std::io::Result<()> {
     let args: &[&str] = {
         #[cfg(target_os = "macos")]
         {
@@ -51,10 +48,7 @@ pub fn link_shared_lib(
 }
 
 #[instrument(level = "debug")]
-pub fn link_binary(
-    input_path: &Path,
-    output_filename: &Path,
-) -> Result<(), Box<dyn std::error::Error>> {
+pub fn link_binary(input_path: &Path, output_filename: &Path) -> std::io::Result<()> {
     let args: &[&str] = {
         #[cfg(target_os = "macos")]
         {

@@ -15,7 +15,7 @@ repository = "https://github.com/edg-l/edlang"
 [dependencies]
 ariadne = { version = "0.4.0", features = ["auto-color"] }
 clap = { version = "4.4.16", features = ["derive"] }
-color-eyre = "0.6.2"
+anyhow = "1"
 edlang_ast = { version = "0.0.1-alpha.12", path = "../edlang_ast" }
 edlang_check = { version = "0.0.1-alpha.12", path = "../edlang_check" }
 edlang_codegen_llvm = { version = "0.0.1-alpha.12", path = "../edlang_codegen_llvm" }

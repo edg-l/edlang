@@ -1,5 +1,6 @@
-use std::{error::Error, path::PathBuf, time::Instant};
+use std::{path::PathBuf, time::Instant};
 
+use anyhow::{bail, Result};
 use ariadne::Source;
 use clap::Parser;
 use edlang_codegen_llvm::linker::{link_binary, link_shared_lib};
@@ -7,7 +8,7 @@ use edlang_lowering::lower_modules;
 use edlang_session::{DebugInfo, OptLevel, Session};
 
 #[derive(Parser, Debug)]
-#[command(author, version, about = "edlang compiler driver", long_about = None, bin_name = "edlang")]
+#[command(author, version, about = "edlang compiler driver", long_about = None, bin_name = "edlangc")]
 pub struct CompilerArgs {
     /// The input file.
     input: PathBuf,
@@ -45,12 +46,24 @@ pub struct CompilerArgs {
     asm: bool,
 }
 
-pub fn main() -> Result<(), Box<dyn Error>> {
-    let start_time = Instant::now();
-
+pub fn main() -> Result<()> {
     tracing_subscriber::fmt::init();
 
     let args = CompilerArgs::parse();
+
+    compile_single_file(args)?;
+
+    Ok(())
+}
+
+pub fn compile_single_file(args: CompilerArgs) -> Result<()> {
+    if !args.input.is_file() {
+        bail!("Input is not a file");
+    }
+
+    let start_time = Instant::now();
+
+    tracing_subscriber::fmt::init();
 
     let path = args.input.display().to_string();
     let source = std::fs::read_to_string(&args.input)?;
@@ -140,7 +153,7 @@ pub fn main() -> Result<(), Box<dyn Error>> {
         return Ok(());
     }
 
-    let object_path = edlang_codegen_llvm::compile(&session, &program_ir)?;
+    let object_path = edlang_codegen_llvm::compile(&session, &program_ir).unwrap();
 
     if session.library {
         link_shared_lib(&object_path, &session.output_file)?;

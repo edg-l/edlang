@@ -154,8 +154,22 @@
 <a href="#153" id="153">153</a>
 <a href="#154" id="154">154</a>
 <a href="#155" id="155">155</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>std::{error::Error, path::PathBuf, time::Instant};
+<a href="#156" id="156">156</a>
+<a href="#157" id="157">157</a>
+<a href="#158" id="158">158</a>
+<a href="#159" id="159">159</a>
+<a href="#160" id="160">160</a>
+<a href="#161" id="161">161</a>
+<a href="#162" id="162">162</a>
+<a href="#163" id="163">163</a>
+<a href="#164" id="164">164</a>
+<a href="#165" id="165">165</a>
+<a href="#166" id="166">166</a>
+<a href="#167" id="167">167</a>
+<a href="#168" id="168">168</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span>std::{path::PathBuf, time::Instant};
 
+<span class="kw">use </span>anyhow::{bail, <span class="prelude-ty">Result</span>};
 <span class="kw">use </span>ariadne::Source;
 <span class="kw">use </span>clap::Parser;
 <span class="kw">use </span>edlang_codegen_llvm::linker::{link_binary, link_shared_lib};
@@ -163,7 +177,7 @@
 <span class="kw">use </span>edlang_session::{DebugInfo, OptLevel, Session};
 
 <span class="attr">#[derive(Parser, Debug)]
-#[command(author, version, about = <span class="string">"edlang compiler driver"</span>, long_about = <span class="prelude-val">None</span>, bin_name = <span class="string">"edlang"</span>)]
+#[command(author, version, about = <span class="string">"edlang compiler driver"</span>, long_about = <span class="prelude-val">None</span>, bin_name = <span class="string">"edlangc"</span>)]
 </span><span class="kw">pub struct </span>CompilerArgs {
     <span class="doccomment">/// The input file.
     </span>input: PathBuf,
@@ -201,12 +215,24 @@
     </span>asm: bool,
 }
 
-<span class="kw">pub fn </span>main() -&gt; <span class="prelude-ty">Result</span>&lt;(), Box&lt;<span class="kw">dyn </span>Error&gt;&gt; {
-    <span class="kw">let </span>start_time = Instant::now();
-
+<span class="kw">pub fn </span>main() -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
     tracing_subscriber::fmt::init();
 
     <span class="kw">let </span>args = CompilerArgs::parse();
+
+    compile_single_file(args)<span class="question-mark">?</span>;
+
+    <span class="prelude-val">Ok</span>(())
+}
+
+<span class="kw">pub fn </span>compile_single_file(args: CompilerArgs) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">if </span>!args.input.is_file() {
+        <span class="macro">bail!</span>(<span class="string">"Input is not a file"</span>);
+    }
+
+    <span class="kw">let </span>start_time = Instant::now();
+
+    tracing_subscriber::fmt::init();
 
     <span class="kw">let </span>path = args.input.display().to_string();
     <span class="kw">let </span>source = std::fs::read_to_string(<span class="kw-2">&amp;</span>args.input)<span class="question-mark">?</span>;
@@ -296,7 +322,7 @@
         <span class="kw">return </span><span class="prelude-val">Ok</span>(());
     }
 
-    <span class="kw">let </span>object_path = edlang_codegen_llvm::compile(<span class="kw-2">&amp;</span>session, <span class="kw-2">&amp;</span>program_ir)<span class="question-mark">?</span>;
+    <span class="kw">let </span>object_path = edlang_codegen_llvm::compile(<span class="kw-2">&amp;</span>session, <span class="kw-2">&amp;</span>program_ir).unwrap();
 
     <span class="kw">if </span>session.library {
         link_shared_lib(<span class="kw-2">&amp;</span>object_path, <span class="kw-2">&amp;</span>session.output_file)<span class="question-mark">?</span>;

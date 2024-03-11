@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["main"],"struct":["CompilerArgs"]};
+window.SIDEBAR_ITEMS = {"fn":["compile_single_file","main"],"struct":["CompilerArgs"]};

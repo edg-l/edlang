@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [unreleased]
+
+### 🚀 Features
+
+- More checks
+- More checks
+- Initial work on edb, the edlang project manager
+- Usable edb
+- Version and readme
+
+### 🐛 Bug Fixes
+
+- Fix span in lalrpop
+- Fix on type qualifier lowering
+
 ## [0.0.1-alpha.12] - 2024-03-02
 
 ### 🚀 Features
@@ -15,6 +30,10 @@ All notable changes to this project will be documented in this file.
 ### 🧪 Testing
 
 - Add cast test
+
+### ⚙️ Miscellaneous Tasks
+
+- Version 0.0.1-alpha.12
 
 ## [0.0.1-alpha.11] - 2024-03-01
 

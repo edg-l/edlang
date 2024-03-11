@@ -552,7 +552,7 @@ mod {} {{
             <span class="kw">let </span>start = Instant::now();
             <span class="kw">let </span>object = compile(<span class="kw-2">&amp;</span>compile_args)<span class="question-mark">?</span>;
 
-            <span class="kw">if </span>has_main {
+            <span class="kw">if </span>!has_main {
                 link_shared_lib(<span class="kw-2">&amp;</span>[object], <span class="kw-2">&amp;</span>output)<span class="question-mark">?</span>;
             } <span class="kw">else </span>{
                 link_binary(<span class="kw-2">&amp;</span>[object], <span class="kw-2">&amp;</span>output)<span class="question-mark">?</span>;

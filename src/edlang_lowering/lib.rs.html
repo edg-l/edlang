@@ -2541,7 +2541,7 @@
         }
     };
 
-    <span class="kw">for </span>qualifier <span class="kw">in </span><span class="kw-2">&amp;</span>t.qualifiers {
+    <span class="kw">for </span>qualifier <span class="kw">in </span>t.qualifiers.iter().rev() {
         <span class="kw">let </span>kind = <span class="kw">match </span>qualifier {
             ast::TypeQualifier::Ref =&gt; TypeKind::Ref(<span class="bool-val">false</span>, Box::new(ty)),
             ast::TypeQualifier::RefMut =&gt; TypeKind::Ref(<span class="bool-val">true</span>, Box::new(ty)),

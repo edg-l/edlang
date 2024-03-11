@@ -53,4 +53,5 @@ jobs:
             README.md
             LICENSE
             CHANGES.md
-            target/release/edlang
+            target/release/edlangc
+            target/release/edb

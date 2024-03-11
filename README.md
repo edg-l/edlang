@@ -21,6 +21,25 @@ mod Main {
 }
 ```
 
+## edb: The edlang builder
+
+`edb` is a tool like cargo but for edlang:
+
+```
+edlang builder
+
+Usage: edlang <COMMAND>
+
+Commands:
+  new    Initialize a project
+  build  Build a project
+  help   Print this message or the help of the given subcommand(s)
+
+Options:
+  -h, --help     Print help
+  -V, --version  Print version
+```
+
 ## Dependencies
 
 - Rust

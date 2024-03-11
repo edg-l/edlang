@@ -39,6 +39,7 @@ pub struct ProgramBody {
 pub struct ModuleBody {
     pub module_id: DefId,
     pub parent_ids: Vec<DefId>,
+    pub file_id: usize,
     pub name: String,
     pub symbols: SymbolTable,
     /// Functions defined in this module.

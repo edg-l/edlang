@@ -4,13 +4,11 @@ use ariadne::Source;
 
 #[derive(Debug, Clone)]
 pub struct Session {
-    pub file_path: PathBuf,
+    pub file_paths: Vec<PathBuf>,
     pub debug_info: DebugInfo,
     pub optlevel: OptLevel,
-    pub source: Source<String>,
+    pub sources: Vec<Source<String>>,
     pub library: bool,
-    /// The directory where to store artifacts and intermediate files such as object files.
-    pub target_dir: PathBuf,
     pub output_file: PathBuf,
     pub output_llvm: bool,
     pub output_asm: bool,

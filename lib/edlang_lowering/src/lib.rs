@@ -15,27 +15,33 @@ mod common;
 pub mod errors;
 mod prepass;
 
-pub fn lower_modules(modules: &[ast::Module]) -> Result<ProgramBody, LoweringError> {
+pub fn lower_modules(modules: &[Vec<ast::Module>]) -> Result<ProgramBody, LoweringError> {
     let mut ctx = BuildCtx::default();
 
     // resolve symbols
-    for module in modules {
-        ctx = prepass::prepass_module(ctx, module)?;
+    for (file_id, modules) in modules.iter().enumerate() {
+        for module in modules {
+            ctx = prepass::prepass_module(ctx, module, file_id)?;
+        }
     }
 
     // resolve imports
-    for module in modules {
-        ctx = prepass::prepass_imports(ctx, module)?;
+    for (file_id, modules) in modules.iter().enumerate() {
+        for module in modules {
+            ctx = prepass::prepass_imports(ctx, module, file_id)?;
+        }
     }
 
-    for mod_def in modules {
-        let id = *ctx
-            .body
-            .top_level_module_names
-            .get(&mod_def.name.name)
-            .expect("module should exist");
+    for modules in modules {
+        for mod_def in modules {
+            let id = *ctx
+                .body
+                .top_level_module_names
+                .get(&mod_def.name.name)
+                .expect("module should exist");
 
-        ctx = lower_module(ctx, mod_def, id)?;
+            ctx = lower_module(ctx, mod_def, id)?;
+        }
     }
 
     Ok(ctx.body)
@@ -157,6 +163,10 @@ fn lower_function(
         ret_local: 0,
         name_to_local: HashMap::new(),
         statements: Vec::new(),
+        file_id: {
+            let body = ctx.body.modules.get(&module_id).unwrap();
+            body.file_id
+        },
         ctx,
     };
 
@@ -450,6 +460,7 @@ fn lower_let(builder: &mut BodyBuilder, info: &ast::LetStmt) -> Result<(), Lower
             span: info.span,
             found: found_ty,
             expected: ty.clone(),
+            file_id: builder.file_id,
         });
     }
 
@@ -781,6 +792,7 @@ fn lower_binary_expr(
                 span: Some(lhs_span),
                 kind: lhs_ty,
             },
+            file_id: builder.file_id,
         });
     }
 
@@ -1112,6 +1124,7 @@ fn lower_return(
                 span,
                 found: ty,
                 expected: return_type.clone(),
+                file_id: builder.file_id,
             });
         }
 
@@ -1145,6 +1158,7 @@ fn lower_path(
         LoweringError::UseOfUndeclaredVariable {
             span: info.span,
             name: info.first.name.clone(),
+            file_id: builder.file_id,
         },
     )?;
 
@@ -1256,6 +1270,7 @@ pub fn lower_type(
                 Err(LoweringError::UnrecognizedType {
                     span: t.name.span,
                     name: t.name.name.clone(),
+                    file_id: module.file_id,
                 })?
             }
         }

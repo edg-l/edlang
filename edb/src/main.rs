@@ -1,9 +1,15 @@
-use std::{collections::HashMap, path::PathBuf};
+use std::{collections::HashMap, fs::File, io::Read, path::PathBuf, time::Instant};
 
-use anyhow::{Context, Result};
+use anyhow::{bail, Context, Result};
 use clap::{Parser, Subcommand};
 use config::{Config, Package, Profile};
-use git2::{IndexAddOption, Repository, RepositoryInitOptions};
+use edlang_driver::{
+    compile,
+    linker::{link_binary, link_shared_lib},
+    CompilerArgs,
+};
+use git2::{IndexAddOption, Repository};
+use owo_colors::OwoColorize;
 
 mod config;
 
@@ -36,6 +42,10 @@ enum Commands {
         /// Build for release with all optimizations.
         #[arg(short, long, default_value_t = false)]
         release: bool,
+
+        /// Override the profile to use.
+        #[arg(short, long)]
+        profile: Option<String>,
     },
 }
 
@@ -131,13 +141,13 @@ mod {} {{
             }
 
             {
-                let mut repo = Repository::init(&path).context("failed to create repository")?;
+                let repo = Repository::init(&path).context("failed to create repository")?;
                 let sig = repo.signature()?;
                 let tree_id = {
                     let mut index = repo.index()?;
 
-                    index.add_all(["*"], IndexAddOption::DEFAULT, None)?;
-
+                    index.add_all(["."].iter(), IndexAddOption::DEFAULT, None)?;
+                    index.write()?;
                     index.write_tree()?
                 };
 
@@ -145,8 +155,138 @@ mod {} {{
                 repo.commit(Some("HEAD"), &sig, &sig, "Initial commit", &tree, &[])
                     .context("failed to create initial commit")?;
             }
+
+            if bin {
+                println!(
+                    "  {} binary (application) `{}` package",
+                    "Created".green().bold(),
+                    name
+                );
+            } else {
+                println!("  {} library `{}` package", "Created".green(), name);
+            }
         }
-        Commands::Build { release } => todo!(),
+        Commands::Build { release, profile } => {
+            let mut current_dir = std::env::current_dir()?;
+            let mut config_path = None;
+
+            for _ in 0..3 {
+                if !current_dir.join("Ed.toml").exists() {
+                    current_dir = if let Some(parent) = current_dir.parent() {
+                        parent.to_path_buf()
+                    } else {
+                        bail!("Couldn't find Ed.toml");
+                    };
+                } else {
+                    config_path = Some(current_dir.join("Ed.toml"));
+                    break;
+                }
+            }
+
+            let config_path = match config_path {
+                Some(x) => x,
+                None => bail!("Couldn't find Ed.toml"),
+            };
+
+            let base_dir = config_path
+                .parent()
+                .context("couldn't get config parent dir")?;
+            let mut config = File::open(&config_path).context("Failed to open Ed.toml")?;
+            let mut buf = String::new();
+            config.read_to_string(&mut buf)?;
+
+            let config: Config = toml::from_str(&buf).context("failed to parse Ed.toml")?;
+
+            println!(
+                "   {} {} v{} ({})",
+                "Compiling".green().bold(),
+                config.package.name,
+                config.package.version,
+                base_dir.display()
+            );
+
+            let src_dir = base_dir.join("src");
+            let target_dir = base_dir.join("target-ed");
+
+            if !target_dir.exists() {
+                std::fs::create_dir_all(&target_dir)?;
+            }
+
+            let has_main = src_dir.join("main.ed").exists();
+            let output = target_dir.join(config.package.name);
+
+            let (profile, profile_name) = if let Some(profile) = profile {
+                (
+                    config
+                        .profile
+                        .get(&profile)
+                        .context("Couldn't get requested profile")?,
+                    profile,
+                )
+            } else if release {
+                (
+                    config
+                        .profile
+                        .get("release")
+                        .context("Couldn't get profile: release")?,
+                    "release".to_string(),
+                )
+            } else {
+                (
+                    config
+                        .profile
+                        .get("dev")
+                        .context("Couldn't get profile: dev")?,
+                    "dev".to_string(),
+                )
+            };
+
+            let compile_args = CompilerArgs {
+                input: src_dir,
+                output: output.clone(),
+                release,
+                optlevel: Some(profile.opt_level),
+                debug_info: Some(profile.debug_info),
+                library: !has_main,
+                ast: false,
+                ir: false,
+                llvm: true,
+                asm: false,
+                object: true,
+            };
+
+            let start = Instant::now();
+            let object = compile(&compile_args)?;
+
+            if has_main {
+                link_shared_lib(&[object], &output)?;
+            } else {
+                link_binary(&[object], &output)?;
+            }
+
+            let elapsed = start.elapsed();
+
+            println!(
+                "   {} {} [{}{}] in {elapsed:?}",
+                "Finished".green().bold(),
+                profile_name,
+                if profile.opt_level > 0 {
+                    "optimized"
+                } else {
+                    "unoptimized"
+                },
+                if profile.debug_info {
+                    " + debuginfo"
+                } else {
+                    ""
+                }
+            );
+            /*
+
+                       Finished dev [unoptimized + debuginfo] target(s) in 0.06s
+            Running `/data2/edgar/edlang/target/debug/edb build`
+                    */
+        }
     }
 
     Ok(())

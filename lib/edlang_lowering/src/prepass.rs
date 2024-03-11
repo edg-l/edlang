@@ -6,7 +6,11 @@ use super::common::BuildCtx;
 use edlang_ast as ast;
 use edlang_ir::ModuleBody;
 
-pub fn prepass_module(mut ctx: BuildCtx, mod_def: &ast::Module) -> Result<BuildCtx, LoweringError> {
+pub fn prepass_module(
+    mut ctx: BuildCtx,
+    mod_def: &ast::Module,
+    file_id: usize,
+) -> Result<BuildCtx, LoweringError> {
     let module_id = ctx.gen.next_defid();
     tracing::debug!("running ir prepass on module {:?}", module_id);
 
@@ -29,6 +33,7 @@ pub fn prepass_module(mut ctx: BuildCtx, mod_def: &ast::Module) -> Result<BuildC
             constants: Default::default(),
             imports: Default::default(),
             span: mod_def.span,
+            file_id,
         },
     );
 
@@ -106,7 +111,7 @@ pub fn prepass_module(mut ctx: BuildCtx, mod_def: &ast::Module) -> Result<BuildC
                 .expect("module should exist");
 
             let next_id = *current_module.symbols.modules.get(&info.name.name).unwrap();
-            ctx = prepass_sub_module(ctx, &[module_id], next_id, info)?;
+            ctx = prepass_sub_module(ctx, &[module_id], next_id, info, file_id)?;
         }
     }
 
@@ -118,6 +123,7 @@ pub fn prepass_sub_module(
     parent_ids: &[DefId],
     module_id: DefId,
     mod_def: &ast::Module,
+    file_id: usize,
 ) -> Result<BuildCtx, LoweringError> {
     tracing::debug!("running ir prepass on submodule {:?}", module_id);
     let mut submodule_parents_ids = parent_ids.to_vec();
@@ -137,6 +143,7 @@ pub fn prepass_sub_module(
             types: Default::default(),
             constants: Default::default(),
             span: mod_def.span,
+            file_id,
         };
 
         for ct in &mod_def.contents {
@@ -201,7 +208,7 @@ pub fn prepass_sub_module(
     for ct in &mod_def.contents {
         if let ast::ModuleStatement::Module(info) = ct {
             let next_id = ctx.gen.next_defid();
-            ctx = prepass_sub_module(ctx, &submodule_parents_ids, next_id, info)?;
+            ctx = prepass_sub_module(ctx, &submodule_parents_ids, next_id, info, file_id)?;
         }
     }
 
@@ -211,6 +218,7 @@ pub fn prepass_sub_module(
 pub fn prepass_imports(
     mut ctx: BuildCtx,
     mod_def: &ast::Module,
+    file_id: usize,
 ) -> Result<BuildCtx, LoweringError> {
     let mod_id = *ctx
         .body
@@ -226,6 +234,7 @@ pub fn prepass_imports(
             .ok_or_else(|| LoweringError::ModuleNotFound {
                 span: import.module[0].span,
                 module: import.module[0].name.clone(),
+                file_id,
             })?;
         let mut imported_module =
             ctx.body
@@ -234,6 +243,7 @@ pub fn prepass_imports(
                 .ok_or(LoweringError::IdNotFound {
                     span: mod_def.span,
                     id: *imported_module_id,
+                    file_id,
                 })?;
 
         for module_path in import.module.iter().skip(1) {
@@ -244,11 +254,13 @@ pub fn prepass_imports(
                 .ok_or_else(|| LoweringError::ModuleNotFound {
                     span: module_path.span,
                     module: module_path.name.clone(),
+                    file_id,
                 })?;
             imported_module = ctx.body.modules.get(imported_module_id).ok_or({
                 LoweringError::IdNotFound {
                     span: module_path.span,
                     id: *imported_module_id,
+                    file_id,
                 }
             })?;
         }
@@ -269,6 +281,7 @@ pub fn prepass_imports(
                     module_span: mod_def.span,
                     import_span: import.span,
                     symbol: sym.clone(),
+                    file_id,
                 })?;
             }
         }
@@ -283,7 +296,7 @@ pub fn prepass_imports(
 
     for c in &mod_def.contents {
         if let ast::ModuleStatement::Module(info) = c {
-            ctx = prepass_imports_submodule(ctx, info, mod_id)?;
+            ctx = prepass_imports_submodule(ctx, info, mod_id, file_id)?;
         }
     }
 
@@ -294,6 +307,7 @@ pub fn prepass_imports_submodule(
     mut ctx: BuildCtx,
     mod_def: &ast::Module,
     parent_id: DefId,
+    file_id: usize,
 ) -> Result<BuildCtx, LoweringError> {
     let mod_id = *ctx
         .body
@@ -306,6 +320,7 @@ pub fn prepass_imports_submodule(
         .ok_or_else(|| LoweringError::ModuleNotFound {
             span: mod_def.span,
             module: mod_def.name.name.clone(),
+            file_id,
         })?;
 
     for import in &mod_def.imports {
@@ -316,11 +331,13 @@ pub fn prepass_imports_submodule(
             .ok_or_else(|| LoweringError::ModuleNotFound {
                 span: import.module[0].span,
                 module: import.module[0].name.clone(),
+                file_id,
             })?;
         let mut imported_module = ctx.body.modules.get(imported_module_id).ok_or_else(|| {
             LoweringError::ModuleNotFound {
                 span: import.module[0].span,
                 module: import.module[0].name.clone(),
+                file_id,
             }
         })?;
 
@@ -332,11 +349,13 @@ pub fn prepass_imports_submodule(
                 .ok_or_else(|| LoweringError::ModuleNotFound {
                     span: module_path.span,
                     module: module_path.name.clone(),
+                    file_id,
                 })?;
             imported_module = ctx.body.modules.get(imported_module_id).ok_or({
                 LoweringError::IdNotFound {
                     span: import.span,
                     id: *imported_module_id,
+                    file_id,
                 }
             })?;
         }
@@ -357,6 +376,7 @@ pub fn prepass_imports_submodule(
                     module_span: mod_def.span,
                     import_span: import.span,
                     symbol: sym.clone(),
+                    file_id,
                 })?;
             }
         }

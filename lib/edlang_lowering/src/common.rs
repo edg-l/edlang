@@ -60,6 +60,7 @@ pub struct BodyBuilder {
     pub statements: Vec<Statement>,
     pub name_to_local: HashMap<String, usize>,
     pub ret_local: usize,
+    pub file_id: usize,
     pub ctx: BuildCtx,
 }
 

@@ -6,7 +6,7 @@ use std::{
 };
 
 use ariadne::Source;
-use edlang_codegen_llvm::linker::{link_binary, link_shared_lib};
+use edlang_driver::linker::{link_binary, link_shared_lib};
 use edlang_lowering::lower_modules;
 use edlang_session::{DebugInfo, OptLevel, Session};
 use tempfile::TempDir;
@@ -36,13 +36,9 @@ pub fn compile_program(
 ) -> Result<CompileResult, Box<dyn std::error::Error>> {
     let modules = edlang_parser::parse_ast(source).unwrap();
 
-    let test_dir = tempfile::tempdir()?;
-    let test_dir_path = test_dir.path();
-    let target_dir = test_dir_path.join("build_artifacts/");
-    if !target_dir.exists() {
-        std::fs::create_dir_all(&target_dir)?;
-    }
-    let output_file = target_dir.join(PathBuf::from(name));
+    let test_dir = tempfile::tempdir().unwrap();
+    let test_dir_path = test_dir.path().canonicalize()?;
+    let output_file = test_dir_path.join(PathBuf::from(name));
     let output_file = if library {
         output_file.with_extension(Session::get_platform_library_ext())
     } else if cfg!(target_os = "windows") {
@@ -51,26 +47,28 @@ pub fn compile_program(
         output_file.with_extension("")
     };
 
+    let input_file = output_file.with_extension("ed");
+    std::fs::write(&input_file, source)?;
+
     let session = Session {
-        file_path: PathBuf::from(name),
+        file_paths: vec![input_file],
         debug_info: DebugInfo::Full,
         optlevel: OptLevel::Default,
-        source: Source::from(source.to_string()),
+        sources: vec![Source::from(source.to_string())],
         library,
-        target_dir,
         output_file,
         output_llvm: false,
         output_asm: false,
     };
 
-    let program_ir = lower_modules(&modules)?;
+    let program_ir = lower_modules(&[modules]).unwrap();
 
-    let object_path = edlang_codegen_llvm::compile(&session, &program_ir)?;
+    let object_path = edlang_codegen_llvm::compile(&session, &program_ir).unwrap();
 
     if library {
-        link_shared_lib(&object_path, &session.output_file)?;
+        link_shared_lib(&[object_path.clone()], &session.output_file).unwrap();
     } else {
-        link_binary(&object_path, &session.output_file)?;
+        link_binary(&[object_path.clone()], &session.output_file).unwrap();
     }
 
     Ok(CompileResult {
@@ -81,5 +79,5 @@ pub fn compile_program(
 }
 
 pub fn run_program(program: &Path, args: &[&str]) -> Result<Child, std::io::Error> {
-    std::process::Command::new(dbg!(program)).args(args).spawn()
+    std::process::Command::new(program).args(args).spawn()
 }

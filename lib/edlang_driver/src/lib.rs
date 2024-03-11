@@ -1,49 +1,60 @@
 use std::{path::PathBuf, time::Instant};
 
-use anyhow::{bail, Result};
-use ariadne::Source;
+use anyhow::Result;
+use ariadne::{sources, Source};
 use clap::Parser;
-use edlang_codegen_llvm::linker::{link_binary, link_shared_lib};
 use edlang_lowering::lower_modules;
 use edlang_session::{DebugInfo, OptLevel, Session};
+use walkdir::WalkDir;
+
+use crate::linker::{link_binary, link_shared_lib};
+
+pub mod linker;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about = "edlang compiler driver", long_about = None, bin_name = "edlangc")]
 pub struct CompilerArgs {
     /// The input file.
-    input: PathBuf,
+    pub input: PathBuf,
+
+    /// The output file.
+    pub output: PathBuf,
 
     /// Build for release with all optimizations.
     #[arg(short, long, default_value_t = false)]
-    release: bool,
+    pub release: bool,
 
     /// Set the optimization level, 0,1,2,3
     #[arg(short = 'O', long)]
-    optlevel: Option<u8>,
+    pub optlevel: Option<u8>,
 
     /// Always add debug info
     #[arg(long)]
-    debug_info: Option<bool>,
+    pub debug_info: Option<bool>,
 
     /// Build as a library.
     #[arg(short, long, default_value_t = false)]
-    library: bool,
+    pub library: bool,
 
     /// Print the edlang AST
     #[arg(long, default_value_t = false)]
-    ast: bool,
+    pub ast: bool,
 
     /// Print the edlang IR
     #[arg(long, default_value_t = false)]
-    ir: bool,
+    pub ir: bool,
 
     /// Output llvm ir
     #[arg(long, default_value_t = false)]
-    llvm: bool,
+    pub llvm: bool,
 
     /// Output asm
     #[arg(long, default_value_t = false)]
-    asm: bool,
+    pub asm: bool,
+
+    /// Output a object file
+    #[arg(long, default_value_t = false)]
+    pub object: bool,
 }
 
 pub fn main() -> Result<()> {
@@ -51,51 +62,59 @@ pub fn main() -> Result<()> {
 
     let args = CompilerArgs::parse();
 
-    compile_single_file(args)?;
+    let object = compile(&args)?;
+
+    if args.library {
+        link_shared_lib(&[object.clone()], &args.output)?;
+    } else {
+        link_binary(&[object.clone()], &args.output)?;
+    }
+
+    if !args.object {
+        std::fs::remove_file(object)?;
+    }
 
     Ok(())
 }
 
-pub fn compile_single_file(args: CompilerArgs) -> Result<()> {
-    if !args.input.is_file() {
-        bail!("Input is not a file");
+pub fn compile(args: &CompilerArgs) -> Result<PathBuf> {
+    let mut files = Vec::new();
+    for entry in WalkDir::new(&args.input) {
+        let entry = entry?;
+        if let Some(ext) = entry.path().extension() {
+            if ext.eq_ignore_ascii_case("ed") {
+                files.push(entry.path().to_path_buf());
+            }
+        }
+    }
+
+    if files.is_empty() {
+        panic!("files is empty");
     }
 
     let start_time = Instant::now();
 
-    tracing_subscriber::fmt::init();
+    let mut modules = Vec::new();
 
-    let path = args.input.display().to_string();
-    let source = std::fs::read_to_string(&args.input)?;
+    for path in files {
+        let source = std::fs::read_to_string(&path)?;
 
-    let modules = edlang_parser::parse_ast(&source);
+        let modules_ast = edlang_parser::parse_ast(&source);
 
-    let modules = match modules {
-        Ok(modules) => modules,
-        Err(error) => {
-            let report = edlang_parser::error_to_report(&path, &error)?;
-            edlang_parser::print_report(&path, &source, report)?;
-            std::process::exit(1)
-        }
-    };
-
-    let cwd = std::env::current_dir()?;
-    // todo: find a better name, "target" would clash with rust if running in the source tree.
-    let target_dir = cwd.join("target_ed/");
-    if !target_dir.exists() {
-        std::fs::create_dir_all(&target_dir)?;
+        let modules_temp = match modules_ast {
+            Ok(modules) => modules,
+            Err(error) => {
+                let path = path.display().to_string();
+                let report = edlang_parser::error_to_report(&path, &error)?;
+                edlang_parser::print_report(&path, &source, report)?;
+                std::process::exit(1)
+            }
+        };
+        modules.push((path, source, modules_temp));
     }
-    let output_file = target_dir.join(PathBuf::from(args.input.file_name().unwrap()));
-    let output_file = if args.library {
-        output_file.with_extension(Session::get_platform_library_ext())
-    } else if cfg!(target_os = "windows") {
-        output_file.with_extension("exe")
-    } else {
-        output_file.with_extension("")
-    };
 
     let session = Session {
-        file_path: args.input,
+        file_paths: modules.iter().map(|x| x.0.clone()).collect(),
         debug_info: if let Some(debug_info) = args.debug_info {
             if debug_info {
                 DebugInfo::Full
@@ -119,50 +138,50 @@ pub fn compile_single_file(args: CompilerArgs) -> Result<()> {
         } else {
             OptLevel::None
         },
-        source: Source::from(source),
+        sources: modules.iter().map(|x| Source::from(x.1.clone())).collect(),
         library: args.library,
-        target_dir,
-        output_file,
+        output_file: args.output.with_extension("o"),
         output_asm: args.asm,
         output_llvm: args.llvm,
     };
-    tracing::debug!("Input file: {:#?}", session.file_path);
-    tracing::debug!("Target dir: {:#?}", session.target_dir);
     tracing::debug!("Output file: {:#?}", session.output_file);
     tracing::debug!("Is library: {:#?}", session.library);
     tracing::debug!("Optlevel: {:#?}", session.optlevel);
     tracing::debug!("Debug Info: {:#?}", session.debug_info);
 
+    let path_cache: Vec<_> = modules
+        .iter()
+        .map(|x| (x.0.display().to_string(), x.1.clone()))
+        .collect();
+    let modules: Vec<_> = modules.iter().map(|x| x.2.clone()).collect();
+
     if args.ast {
-        println!("{:#?}", modules);
-        return Ok(());
+        std::fs::write(
+            session.output_file.with_extension("ast"),
+            format!("{:#?}", modules),
+        )?;
     }
 
     let program_ir = match lower_modules(&modules) {
         Ok(ir) => ir,
         Err(error) => {
             let report = edlang_check::lowering_error_to_report(error, &session);
-            let path = session.file_path.display().to_string();
-            report.eprint((path, session.source.clone()))?;
+            report.eprint(sources(path_cache))?;
             std::process::exit(1);
         }
     };
 
     if args.ir {
-        println!("{:#?}", program_ir);
-        return Ok(());
+        std::fs::write(
+            session.output_file.with_extension("ir"),
+            format!("{:#?}", program_ir),
+        )?;
     }
 
     let object_path = edlang_codegen_llvm::compile(&session, &program_ir).unwrap();
 
-    if session.library {
-        link_shared_lib(&object_path, &session.output_file)?;
-    } else {
-        link_binary(&object_path, &session.output_file)?;
-    }
-
     let elapsed = start_time.elapsed();
     tracing::debug!("Done in {:?}", elapsed);
 
-    Ok(())
+    Ok(object_path)
 }

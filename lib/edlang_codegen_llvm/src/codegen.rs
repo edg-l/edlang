@@ -35,17 +35,19 @@ struct ModuleCompileCtx<'ctx, 'm> {
     di_builder: DebugInfoBuilder<'ctx>,
     di_unit: DICompileUnit<'ctx>,
     target_data: TargetData,
-    _module_id: DefId,
+    module_id: DefId,
     di_namespace: DIScope<'ctx>,
 }
 
 impl<'ctx, 'm> ModuleCompileCtx<'ctx, 'm> {
-    pub fn _get_module_body(&self) -> &ModuleBody {
-        self.ctx.program.modules.get(&self._module_id).unwrap()
+    pub fn get_module_body(&self) -> &ModuleBody {
+        self.ctx.program.modules.get(&self.module_id).unwrap()
     }
 
     pub fn set_debug_loc(&self, scope: DIScope<'ctx>, span: Span) -> DILocation<'ctx> {
-        let (_, line, column) = self.ctx.session.source.get_offset_line(span.lo).unwrap();
+        let (_, line, column) = self.ctx.session.sources[self.get_module_body().file_id]
+            .get_offset_line(span.lo)
+            .unwrap();
         let debug_loc = self.di_builder.create_debug_location(
             self.ctx.context,
             line as u32 + 1,
@@ -98,25 +100,39 @@ pub fn compile(session: &Session, program: &ProgramBody) -> Result<PathBuf, Box<
 
     info!("compiling for: {:?}", target.get_description());
 
-    let filename = session.file_path.file_name().unwrap().to_string_lossy();
-    let dir = session.file_path.parent().unwrap().to_string_lossy();
     for module_id in program.top_level_modules.iter() {
         let module = ctx.program.modules.get(module_id).unwrap();
+        let file_path = session.file_paths[module.file_id].clone();
+        let abs_file_path = file_path
+            .canonicalize()
+            .expect("failed to canonicalize file path");
+        let filename = file_path.file_name().unwrap().to_str().unwrap();
+        let dirname = abs_file_path
+            .parent()
+            .unwrap()
+            .file_name()
+            .unwrap()
+            .to_str()
+            .unwrap();
+
         let llvm_module = context.create_module(&module.name);
-        llvm_module.set_source_file_name(&filename);
+        llvm_module.set_source_file_name(filename);
         llvm_module.set_triple(&triple);
         llvm_module.set_data_layout(&machine.get_target_data().get_data_layout());
         let (di_builder, di_unit) = llvm_module.create_debug_info_builder(
             true,
             inkwell::debug_info::DWARFSourceLanguage::Rust,
-            &filename,
-            &dir,
+            filename,
+            dirname,
             "edlang",
             true,
             "", // compiler flags
             1,
             "", // split name
-            inkwell::debug_info::DWARFEmissionKind::Full,
+            match session.debug_info {
+                edlang_session::DebugInfo::None => inkwell::debug_info::DWARFEmissionKind::None,
+                edlang_session::DebugInfo::Full => inkwell::debug_info::DWARFEmissionKind::Full,
+            },
             module.module_id.program_id.try_into().unwrap(), // compile unit id?
             false,
             false,
@@ -135,7 +151,7 @@ pub fn compile(session: &Session, program: &ProgramBody) -> Result<PathBuf, Box<
             di_unit,
             builder: &builder,
             target_data: machine.get_target_data(),
-            _module_id: *module_id,
+            module_id: *module_id,
             di_namespace,
         };
 
@@ -234,10 +250,7 @@ fn compile_fn_signature(ctx: &ModuleCompileCtx<'_, '_>, fn_id: DefId) {
 
     fn_value.set_call_conventions(0); // cconv
 
-    let (_, line, _col) = ctx
-        .ctx
-        .session
-        .source
+    let (_, line, _col) = ctx.ctx.session.sources[ctx.get_module_body().file_id]
         .get_offset_line(body.fn_span.lo)
         .unwrap();
 
@@ -1480,10 +1493,7 @@ fn compile_debug_type<'ctx>(ctx: &ModuleCompileCtx<'ctx, '_>, ty: &ir::TypeInfo)
                 fields.push(ty);
             }
 
-            let (_, line, _column) = ctx
-                .ctx
-                .session
-                .source
+            let (_, line, _column) = ctx.ctx.session.sources[ctx.get_module_body().file_id]
                 .get_offset_line(body.span.lo)
                 .unwrap();
             let real_ty = compile_basic_type(ctx, ty);

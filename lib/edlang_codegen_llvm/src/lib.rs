@@ -7,7 +7,6 @@ use edlang_session::Session;
 use ir::ProgramBody;
 
 pub mod codegen;
-pub mod linker;
 
 pub fn compile(
     session: &Session,

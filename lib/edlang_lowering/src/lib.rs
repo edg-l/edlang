@@ -1261,7 +1261,7 @@ pub fn lower_type(
         }
     };
 
-    for qualifier in &t.qualifiers {
+    for qualifier in t.qualifiers.iter().rev() {
         let kind = match qualifier {
             ast::TypeQualifier::Ref => TypeKind::Ref(false, Box::new(ty)),
             ast::TypeQualifier::RefMut => TypeKind::Ref(true, Box::new(ty)),

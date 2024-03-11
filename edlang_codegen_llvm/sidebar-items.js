@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["compile"],"mod":["codegen","linker"]};
+window.SIDEBAR_ITEMS = {"fn":["compile"],"mod":["codegen"]};

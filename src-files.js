@@ -19,8 +19,8 @@ var srcIndex = new Map(JSON.parse('[\
 ["edb",["",[],["config.rs","main.rs"]]],\
 ["edlang_ast",["",[],["lib.rs"]]],\
 ["edlang_check",["",[],["lib.rs"]]],\
-["edlang_codegen_llvm",["",[],["codegen.rs","lib.rs","linker.rs"]]],\
-["edlang_driver",["",[],["lib.rs"]]],\
+["edlang_codegen_llvm",["",[],["codegen.rs","lib.rs"]]],\
+["edlang_driver",["",[],["lib.rs","linker.rs"]]],\
 ["edlang_ir",["",[],["lib.rs","scalar_int.rs"]]],\
 ["edlang_lowering",["",[],["common.rs","errors.rs","lib.rs","prepass.rs"]]],\
 ["edlang_parser",["",[],["error.rs","lexer.rs","lib.rs","tokens.rs"]]],\
@@ -61,6 +61,7 @@ var srcIndex = new Map(JSON.parse('[\
 ["openssl_probe",["",[],["lib.rs"]]],\
 ["openssl_sys",["",[["handwritten",[],["aes.rs","asn1.rs","bio.rs","bn.rs","cmac.rs","cms.rs","conf.rs","crypto.rs","dh.rs","dsa.rs","ec.rs","err.rs","evp.rs","hmac.rs","kdf.rs","mod.rs","object.rs","ocsp.rs","params.rs","pem.rs","pkcs12.rs","pkcs7.rs","provider.rs","rand.rs","rsa.rs","safestack.rs","sha.rs","srtp.rs","ssl.rs","stack.rs","tls1.rs","types.rs","x509.rs","x509_vfy.rs","x509v3.rs"]]],["aes.rs","asn1.rs","bio.rs","bn.rs","cms.rs","crypto.rs","dtls1.rs","ec.rs","err.rs","evp.rs","lib.rs","macros.rs","obj_mac.rs","ocsp.rs","pem.rs","pkcs7.rs","rsa.rs","sha.rs","srtp.rs","ssl.rs","ssl3.rs","tls1.rs","types.rs","x509.rs","x509_vfy.rs","x509v3.rs"]]],\
 ["overload",["",[],["assignment.rs","binary.rs","lib.rs","unary.rs"]]],\
+["owo_colors",["",[["colors",[],["css.rs","custom.rs","dynamic.rs","xterm.rs"]]],["colors.rs","combo.rs","dyn_colors.rs","dyn_styles.rs","lib.rs","styled_list.rs","styles.rs"]]],\
 ["percent_encoding",["",[],["lib.rs"]]],\
 ["pin_project_lite",["",[],["lib.rs"]]],\
 ["proc_macro2",["",[],["detection.rs","extra.rs","fallback.rs","lib.rs","marker.rs","parse.rs","rcvec.rs","wrapper.rs"]]],\
@@ -68,6 +69,7 @@ var srcIndex = new Map(JSON.parse('[\
 ["regex",["",[["regex",[],["bytes.rs","mod.rs","string.rs"]],["regexset",[],["bytes.rs","mod.rs","string.rs"]]],["builders.rs","bytes.rs","error.rs","find_byte.rs","lib.rs"]]],\
 ["regex_automata",["",[["hybrid",[],["dfa.rs","error.rs","id.rs","mod.rs","regex.rs","search.rs"]],["meta",[],["error.rs","limited.rs","literal.rs","mod.rs","regex.rs","reverse_inner.rs","stopat.rs","strategy.rs","wrappers.rs"]],["nfa",[["thompson",[],["builder.rs","compiler.rs","error.rs","literal_trie.rs","map.rs","mod.rs","nfa.rs","pikevm.rs","range_trie.rs"]]],["mod.rs"]],["util",[["determinize",[],["mod.rs","state.rs"]],["prefilter",[],["aho_corasick.rs","byteset.rs","memchr.rs","memmem.rs","mod.rs","teddy.rs"]],["unicode_data",[],["mod.rs"]]],["alphabet.rs","captures.rs","empty.rs","escape.rs","int.rs","interpolate.rs","iter.rs","lazy.rs","look.rs","memchr.rs","mod.rs","pool.rs","primitives.rs","search.rs","sparse_set.rs","start.rs","syntax.rs","utf8.rs","wire.rs"]]],["lib.rs","macros.rs"]]],\
 ["regex_syntax",["",[["ast",[],["mod.rs","parse.rs","print.rs","visitor.rs"]],["hir",[],["interval.rs","literal.rs","mod.rs","print.rs","translate.rs","visitor.rs"]],["unicode_tables",[],["age.rs","case_folding_simple.rs","general_category.rs","grapheme_cluster_break.rs","mod.rs","perl_word.rs","property_bool.rs","property_names.rs","property_values.rs","script.rs","script_extension.rs","sentence_break.rs","word_break.rs"]]],["debug.rs","either.rs","error.rs","lib.rs","parser.rs","rank.rs","unicode.rs","utf8.rs"]]],\
+["same_file",["",[],["lib.rs","unix.rs"]]],\
 ["serde",["",[["de",[],["format.rs","ignored_any.rs","impls.rs","mod.rs","seed.rs","size_hint.rs","value.rs"]],["private",[],["de.rs","doc.rs","mod.rs","ser.rs"]],["ser",[],["fmt.rs","impls.rs","impossible.rs","mod.rs"]]],["integer128.rs","lib.rs","macros.rs"]]],\
 ["serde_derive",["",[["internals",[],["ast.rs","attr.rs","case.rs","check.rs","ctxt.rs","mod.rs","receiver.rs","respan.rs","symbol.rs"]]],["bound.rs","de.rs","dummy.rs","fragment.rs","lib.rs","pretend.rs","ser.rs","this.rs"]]],\
 ["serde_spanned",["",[],["lib.rs","spanned.rs"]]],\
@@ -94,6 +96,7 @@ var srcIndex = new Map(JSON.parse('[\
 ["unicode_width",["",[],["lib.rs","tables.rs"]]],\
 ["url",["",[],["host.rs","lib.rs","origin.rs","parser.rs","path_segments.rs","quirks.rs","slicing.rs"]]],\
 ["utf8parse",["",[],["lib.rs","types.rs"]]],\
+["walkdir",["",[],["dent.rs","error.rs","lib.rs","util.rs"]]],\
 ["winnow",["",[["ascii",[],["mod.rs"]],["binary",[["bits",[],["mod.rs"]]],["mod.rs"]],["combinator",[["debug",[],["mod.rs"]]],["branch.rs","core.rs","mod.rs","multi.rs","parser.rs","sequence.rs"]],["macros",[],["dispatch.rs","mod.rs","seq.rs"]],["stream",[],["impls.rs","mod.rs"]],["token",[],["mod.rs"]]],["error.rs","lib.rs","parser.rs"]]],\
 ["yansi",["",[],["color.rs","lib.rs","macros.rs","paint.rs","style.rs","windows.rs"]]]\
 ]'));

@@ -1278,6 +1278,21 @@
 <a href="#1277" id="1277">1277</a>
 <a href="#1278" id="1278">1278</a>
 <a href="#1279" id="1279">1279</a>
+<a href="#1280" id="1280">1280</a>
+<a href="#1281" id="1281">1281</a>
+<a href="#1282" id="1282">1282</a>
+<a href="#1283" id="1283">1283</a>
+<a href="#1284" id="1284">1284</a>
+<a href="#1285" id="1285">1285</a>
+<a href="#1286" id="1286">1286</a>
+<a href="#1287" id="1287">1287</a>
+<a href="#1288" id="1288">1288</a>
+<a href="#1289" id="1289">1289</a>
+<a href="#1290" id="1290">1290</a>
+<a href="#1291" id="1291">1291</a>
+<a href="#1292" id="1292">1292</a>
+<a href="#1293" id="1293">1293</a>
+<a href="#1294" id="1294">1294</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::HashMap;
 
 <span class="kw">use </span>ast::{BinaryOp, ModuleStatement, Span, WhileStmt};
@@ -1295,27 +1310,33 @@
 <span class="kw">pub mod </span>errors;
 <span class="kw">mod </span>prepass;
 
-<span class="kw">pub fn </span>lower_modules(modules: <span class="kw-2">&amp;</span>[ast::Module]) -&gt; <span class="prelude-ty">Result</span>&lt;ProgramBody, LoweringError&gt; {
+<span class="kw">pub fn </span>lower_modules(modules: <span class="kw-2">&amp;</span>[Vec&lt;ast::Module&gt;]) -&gt; <span class="prelude-ty">Result</span>&lt;ProgramBody, LoweringError&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>ctx = BuildCtx::default();
 
     <span class="comment">// resolve symbols
-    </span><span class="kw">for </span>module <span class="kw">in </span>modules {
-        ctx = prepass::prepass_module(ctx, module)<span class="question-mark">?</span>;
+    </span><span class="kw">for </span>(file_id, modules) <span class="kw">in </span>modules.iter().enumerate() {
+        <span class="kw">for </span>module <span class="kw">in </span>modules {
+            ctx = prepass::prepass_module(ctx, module, file_id)<span class="question-mark">?</span>;
+        }
     }
 
     <span class="comment">// resolve imports
-    </span><span class="kw">for </span>module <span class="kw">in </span>modules {
-        ctx = prepass::prepass_imports(ctx, module)<span class="question-mark">?</span>;
+    </span><span class="kw">for </span>(file_id, modules) <span class="kw">in </span>modules.iter().enumerate() {
+        <span class="kw">for </span>module <span class="kw">in </span>modules {
+            ctx = prepass::prepass_imports(ctx, module, file_id)<span class="question-mark">?</span>;
+        }
     }
 
-    <span class="kw">for </span>mod_def <span class="kw">in </span>modules {
-        <span class="kw">let </span>id = <span class="kw-2">*</span>ctx
-            .body
-            .top_level_module_names
-            .get(<span class="kw-2">&amp;</span>mod_def.name.name)
-            .expect(<span class="string">"module should exist"</span>);
+    <span class="kw">for </span>modules <span class="kw">in </span>modules {
+        <span class="kw">for </span>mod_def <span class="kw">in </span>modules {
+            <span class="kw">let </span>id = <span class="kw-2">*</span>ctx
+                .body
+                .top_level_module_names
+                .get(<span class="kw-2">&amp;</span>mod_def.name.name)
+                .expect(<span class="string">"module should exist"</span>);
 
-        ctx = lower_module(ctx, mod_def, id)<span class="question-mark">?</span>;
+            ctx = lower_module(ctx, mod_def, id)<span class="question-mark">?</span>;
+        }
     }
 
     <span class="prelude-val">Ok</span>(ctx.body)
@@ -1437,6 +1458,10 @@
         ret_local: <span class="number">0</span>,
         name_to_local: HashMap::new(),
         statements: Vec::new(),
+        file_id: {
+            <span class="kw">let </span>body = ctx.body.modules.get(<span class="kw-2">&amp;</span>module_id).unwrap();
+            body.file_id
+        },
         ctx,
     };
 
@@ -1730,6 +1755,7 @@
             span: info.span,
             found: found_ty,
             expected: ty.clone(),
+            file_id: builder.file_id,
         });
     }
 
@@ -2061,6 +2087,7 @@
                 span: <span class="prelude-val">Some</span>(lhs_span),
                 kind: lhs_ty,
             },
+            file_id: builder.file_id,
         });
     }
 
@@ -2392,6 +2419,7 @@
                 span,
                 found: ty,
                 expected: return_type.clone(),
+                file_id: builder.file_id,
             });
         }
 
@@ -2425,6 +2453,7 @@
         LoweringError::UseOfUndeclaredVariable {
             span: info.span,
             name: info.first.name.clone(),
+            file_id: builder.file_id,
         },
     )<span class="question-mark">?</span>;
 
@@ -2536,6 +2565,7 @@
                 <span class="prelude-val">Err</span>(LoweringError::UnrecognizedType {
                     span: t.name.span,
                     name: t.name.name.clone(),
+                    file_id: module.file_id,
                 })<span class="question-mark">?
             </span>}
         }

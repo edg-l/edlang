@@ -85,6 +85,7 @@
 <a href="#84" id="84">84</a>
 <a href="#85" id="85">85</a>
 <a href="#86" id="86">86</a>
+<a href="#87" id="87">87</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::HashMap;
 
 <span class="kw">use </span>edlang_ir::{Body, DefId, Local, ModuleBody, ProgramBody, Statement, TypeKind};
@@ -147,6 +148,7 @@
     <span class="kw">pub </span>statements: Vec&lt;Statement&gt;,
     <span class="kw">pub </span>name_to_local: HashMap&lt;String, usize&gt;,
     <span class="kw">pub </span>ret_local: usize,
+    <span class="kw">pub </span>file_id: usize,
     <span class="kw">pub </span>ctx: BuildCtx,
 }
 

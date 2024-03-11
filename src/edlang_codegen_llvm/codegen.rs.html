@@ -1509,6 +1509,16 @@
 <a href="#1508" id="1508">1508</a>
 <a href="#1509" id="1509">1509</a>
 <a href="#1510" id="1510">1510</a>
+<a href="#1511" id="1511">1511</a>
+<a href="#1512" id="1512">1512</a>
+<a href="#1513" id="1513">1513</a>
+<a href="#1514" id="1514">1514</a>
+<a href="#1515" id="1515">1515</a>
+<a href="#1516" id="1516">1516</a>
+<a href="#1517" id="1517">1517</a>
+<a href="#1518" id="1518">1518</a>
+<a href="#1519" id="1519">1519</a>
+<a href="#1520" id="1520">1520</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{collections::HashMap, error::Error, path::PathBuf};
 
 <span class="kw">use </span>edlang_ir <span class="kw">as </span>ir;
@@ -1546,17 +1556,19 @@
     di_builder: DebugInfoBuilder&lt;<span class="lifetime">'ctx</span>&gt;,
     di_unit: DICompileUnit&lt;<span class="lifetime">'ctx</span>&gt;,
     target_data: TargetData,
-    _module_id: DefId,
+    module_id: DefId,
     di_namespace: DIScope&lt;<span class="lifetime">'ctx</span>&gt;,
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">'ctx</span>, <span class="lifetime">'m</span>&gt; ModuleCompileCtx&lt;<span class="lifetime">'ctx</span>, <span class="lifetime">'m</span>&gt; {
-    <span class="kw">pub fn </span>_get_module_body(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ModuleBody {
-        <span class="self">self</span>.ctx.program.modules.get(<span class="kw-2">&amp;</span><span class="self">self</span>._module_id).unwrap()
+    <span class="kw">pub fn </span>get_module_body(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ModuleBody {
+        <span class="self">self</span>.ctx.program.modules.get(<span class="kw-2">&amp;</span><span class="self">self</span>.module_id).unwrap()
     }
 
     <span class="kw">pub fn </span>set_debug_loc(<span class="kw-2">&amp;</span><span class="self">self</span>, scope: DIScope&lt;<span class="lifetime">'ctx</span>&gt;, span: Span) -&gt; DILocation&lt;<span class="lifetime">'ctx</span>&gt; {
-        <span class="kw">let </span>(<span class="kw">_</span>, line, column) = <span class="self">self</span>.ctx.session.source.get_offset_line(span.lo).unwrap();
+        <span class="kw">let </span>(<span class="kw">_</span>, line, column) = <span class="self">self</span>.ctx.session.sources[<span class="self">self</span>.get_module_body().file_id]
+            .get_offset_line(span.lo)
+            .unwrap();
         <span class="kw">let </span>debug_loc = <span class="self">self</span>.di_builder.create_debug_location(
             <span class="self">self</span>.ctx.context,
             line <span class="kw">as </span>u32 + <span class="number">1</span>,
@@ -1609,25 +1621,39 @@
 
     <span class="macro">info!</span>(<span class="string">"compiling for: {:?}"</span>, target.get_description());
 
-    <span class="kw">let </span>filename = session.file_path.file_name().unwrap().to_string_lossy();
-    <span class="kw">let </span>dir = session.file_path.parent().unwrap().to_string_lossy();
     <span class="kw">for </span>module_id <span class="kw">in </span>program.top_level_modules.iter() {
         <span class="kw">let </span>module = ctx.program.modules.get(module_id).unwrap();
+        <span class="kw">let </span>file_path = session.file_paths[module.file_id].clone();
+        <span class="kw">let </span>abs_file_path = file_path
+            .canonicalize()
+            .expect(<span class="string">"failed to canonicalize file path"</span>);
+        <span class="kw">let </span>filename = file_path.file_name().unwrap().to_str().unwrap();
+        <span class="kw">let </span>dirname = abs_file_path
+            .parent()
+            .unwrap()
+            .file_name()
+            .unwrap()
+            .to_str()
+            .unwrap();
+
         <span class="kw">let </span>llvm_module = context.create_module(<span class="kw-2">&amp;</span>module.name);
-        llvm_module.set_source_file_name(<span class="kw-2">&amp;</span>filename);
+        llvm_module.set_source_file_name(filename);
         llvm_module.set_triple(<span class="kw-2">&amp;</span>triple);
         llvm_module.set_data_layout(<span class="kw-2">&amp;</span>machine.get_target_data().get_data_layout());
         <span class="kw">let </span>(di_builder, di_unit) = llvm_module.create_debug_info_builder(
             <span class="bool-val">true</span>,
             inkwell::debug_info::DWARFSourceLanguage::Rust,
-            <span class="kw-2">&amp;</span>filename,
-            <span class="kw-2">&amp;</span>dir,
+            filename,
+            dirname,
             <span class="string">"edlang"</span>,
             <span class="bool-val">true</span>,
             <span class="string">""</span>, <span class="comment">// compiler flags
             </span><span class="number">1</span>,
             <span class="string">""</span>, <span class="comment">// split name
-            </span>inkwell::debug_info::DWARFEmissionKind::Full,
+            </span><span class="kw">match </span>session.debug_info {
+                edlang_session::DebugInfo::None =&gt; inkwell::debug_info::DWARFEmissionKind::None,
+                edlang_session::DebugInfo::Full =&gt; inkwell::debug_info::DWARFEmissionKind::Full,
+            },
             module.module_id.program_id.try_into().unwrap(), <span class="comment">// compile unit id?
             </span><span class="bool-val">false</span>,
             <span class="bool-val">false</span>,
@@ -1646,7 +1672,7 @@
             di_unit,
             builder: <span class="kw-2">&amp;</span>builder,
             target_data: machine.get_target_data(),
-            _module_id: <span class="kw-2">*</span>module_id,
+            module_id: <span class="kw-2">*</span>module_id,
             di_namespace,
         };
 
@@ -1745,10 +1771,7 @@
 
     </span>fn_value.set_call_conventions(<span class="number">0</span>); <span class="comment">// cconv
 
-    </span><span class="kw">let </span>(<span class="kw">_</span>, line, _col) = ctx
-        .ctx
-        .session
-        .source
+    </span><span class="kw">let </span>(<span class="kw">_</span>, line, _col) = ctx.ctx.session.sources[ctx.get_module_body().file_id]
         .get_offset_line(body.fn_span.lo)
         .unwrap();
 
@@ -2991,10 +3014,7 @@
                 fields.push(ty);
             }
 
-            <span class="kw">let </span>(<span class="kw">_</span>, line, _column) = ctx
-                .ctx
-                .session
-                .source
+            <span class="kw">let </span>(<span class="kw">_</span>, line, _column) = ctx.ctx.session.sources[ctx.get_module_body().file_id]
                 .get_offset_line(body.span.lo)
                 .unwrap();
             <span class="kw">let </span>real_ty = compile_basic_type(ctx, ty);

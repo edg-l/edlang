@@ -40,21 +40,17 @@
 <a href="#39" id="39">39</a>
 <a href="#40" id="40">40</a>
 <a href="#41" id="41">41</a>
-<a href="#42" id="42">42</a>
-<a href="#43" id="43">43</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::path::PathBuf;
 
 <span class="kw">use </span>ariadne::Source;
 
 <span class="attr">#[derive(Debug, Clone)]
 </span><span class="kw">pub struct </span>Session {
-    <span class="kw">pub </span>file_path: PathBuf,
+    <span class="kw">pub </span>file_paths: Vec&lt;PathBuf&gt;,
     <span class="kw">pub </span>debug_info: DebugInfo,
     <span class="kw">pub </span>optlevel: OptLevel,
-    <span class="kw">pub </span>source: Source&lt;String&gt;,
+    <span class="kw">pub </span>sources: Vec&lt;Source&lt;String&gt;&gt;,
     <span class="kw">pub </span>library: bool,
-    <span class="doccomment">/// The directory where to store artifacts and intermediate files such as object files.
-    </span><span class="kw">pub </span>target_dir: PathBuf,
     <span class="kw">pub </span>output_file: PathBuf,
     <span class="kw">pub </span>output_llvm: bool,
     <span class="kw">pub </span>output_asm: bool,

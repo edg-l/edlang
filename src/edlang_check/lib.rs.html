@@ -139,6 +139,52 @@
 <a href="#138" id="138">138</a>
 <a href="#139" id="139">139</a>
 <a href="#140" id="140">140</a>
+<a href="#141" id="141">141</a>
+<a href="#142" id="142">142</a>
+<a href="#143" id="143">143</a>
+<a href="#144" id="144">144</a>
+<a href="#145" id="145">145</a>
+<a href="#146" id="146">146</a>
+<a href="#147" id="147">147</a>
+<a href="#148" id="148">148</a>
+<a href="#149" id="149">149</a>
+<a href="#150" id="150">150</a>
+<a href="#151" id="151">151</a>
+<a href="#152" id="152">152</a>
+<a href="#153" id="153">153</a>
+<a href="#154" id="154">154</a>
+<a href="#155" id="155">155</a>
+<a href="#156" id="156">156</a>
+<a href="#157" id="157">157</a>
+<a href="#158" id="158">158</a>
+<a href="#159" id="159">159</a>
+<a href="#160" id="160">160</a>
+<a href="#161" id="161">161</a>
+<a href="#162" id="162">162</a>
+<a href="#163" id="163">163</a>
+<a href="#164" id="164">164</a>
+<a href="#165" id="165">165</a>
+<a href="#166" id="166">166</a>
+<a href="#167" id="167">167</a>
+<a href="#168" id="168">168</a>
+<a href="#169" id="169">169</a>
+<a href="#170" id="170">170</a>
+<a href="#171" id="171">171</a>
+<a href="#172" id="172">172</a>
+<a href="#173" id="173">173</a>
+<a href="#174" id="174">174</a>
+<a href="#175" id="175">175</a>
+<a href="#176" id="176">176</a>
+<a href="#177" id="177">177</a>
+<a href="#178" id="178">178</a>
+<a href="#179" id="179">179</a>
+<a href="#180" id="180">180</a>
+<a href="#181" id="181">181</a>
+<a href="#182" id="182">182</a>
+<a href="#183" id="183">183</a>
+<a href="#184" id="184">184</a>
+<a href="#185" id="185">185</a>
+<a href="#186" id="186">186</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::ops::Range;
 
 <span class="kw">use </span>ariadne::{ColorGenerator, Label, Report, ReportKind};
@@ -150,11 +196,15 @@
     error: LoweringError,
     session: <span class="kw-2">&amp;</span>Session,
 ) -&gt; Report&lt;(String, Range&lt;usize&gt;)&gt; {
-    <span class="kw">let </span>path = session.file_path.display().to_string();
     <span class="kw">let </span><span class="kw-2">mut </span>colors = ColorGenerator::new();
     colors.next();
     <span class="kw">match </span>error {
-        LoweringError::ModuleNotFound { span, module } =&gt; {
+        LoweringError::ModuleNotFound {
+            span,
+            module,
+            file_id,
+        } =&gt; {
+            <span class="kw">let </span>path = session.file_paths[file_id].display().to_string();
             <span class="kw">let </span>offset = span.lo;
             Report::build(ReportKind::Error, path.clone(), offset)
                 .with_code(<span class="string">"E1"</span>)
@@ -166,55 +216,79 @@
                 .with_message(<span class="string">"Unresolved import."</span>)
                 .finish()
         }
-        LoweringError::FunctionNotFound { span, function } =&gt; {
+        LoweringError::FunctionNotFound {
+            span,
+            function,
+            file_id,
+        } =&gt; {
+            <span class="kw">let </span>path = session.file_paths[file_id].display().to_string();
             Report::build(ReportKind::Error, path.clone(), span.lo)
-            .with_code(<span class="string">"EFNNOTFOUND"</span>)
-            .with_label(
-                Label::new((path, span.into()))
-                    .with_message(<span class="macro">format!</span>(<span class="string">"Function {function:?} not found."</span>))
-                    .with_color(colors.next()),
-            )
-            .finish()
-        },
-        LoweringError::ImportNotFound { import_span, module_span, symbol } =&gt; {
-                <span class="kw">let </span>offset = symbol.span.lo;
-                Report::build(ReportKind::Error, path.clone(), offset)
-                    .with_code(<span class="string">"E2"</span>)
-                    .with_label(
-                        Label::new((path.clone(), module_span.into()))
-                            .with_message(<span class="string">"In module this module."</span>),
-                    )
-                    .with_label(
-                        Label::new((path.clone(), import_span.into()))
-                            .with_message(<span class="string">"In this import statement"</span>),
-                    )
-                    .with_label(
-                        Label::new((path, symbol.span.into()))
-                            .with_message(<span class="macro">format!</span>(<span class="string">"Failed to find symbol {:?}"</span>, symbol.name))
-                            .with_color(colors.next()),
-                    )
-                    .with_message(<span class="string">"Unresolved import."</span>)
-                    .finish()
-        },
-        LoweringError::BorrowNotMutable { span, name, type_span } =&gt; {
-            <span class="kw">let </span><span class="kw-2">mut </span>labels = <span class="macro">vec!</span>[
-                Label::new((path.clone(), span.into()))
-            .with_message(<span class="macro">format!</span>(<span class="string">"Can't mutate {name:?} because it's behind a immutable borrow"</span>))
-            .with_color(colors.next())
-            ];
+                .with_code(<span class="string">"EFNNOTFOUND"</span>)
+                .with_label(
+                    Label::new((path, span.into()))
+                        .with_message(<span class="macro">format!</span>(<span class="string">"Function {function:?} not found."</span>))
+                        .with_color(colors.next()),
+                )
+                .finish()
+        }
+        LoweringError::ImportNotFound {
+            import_span,
+            module_span,
+            symbol,
+            file_id,
+        } =&gt; {
+            <span class="kw">let </span>path = session.file_paths[file_id].display().to_string();
+            <span class="kw">let </span>offset = symbol.span.lo;
+            Report::build(ReportKind::Error, path.clone(), offset)
+                .with_code(<span class="string">"E2"</span>)
+                .with_label(
+                    Label::new((path.clone(), module_span.into()))
+                        .with_message(<span class="string">"In module this module."</span>),
+                )
+                .with_label(
+                    Label::new((path.clone(), import_span.into()))
+                        .with_message(<span class="string">"In this import statement"</span>),
+                )
+                .with_label(
+                    Label::new((path, symbol.span.into()))
+                        .with_message(<span class="macro">format!</span>(<span class="string">"Failed to find symbol {:?}"</span>, symbol.name))
+                        .with_color(colors.next()),
+                )
+                .with_message(<span class="string">"Unresolved import."</span>)
+                .finish()
+        }
+        LoweringError::BorrowNotMutable {
+            span,
+            name,
+            type_span,
+            file_id,
+        } =&gt; {
+            <span class="kw">let </span>path = session.file_paths[file_id].display().to_string();
+            <span class="kw">let </span><span class="kw-2">mut </span>labels = <span class="macro">vec!</span>[Label::new((path.clone(), span.into()))
+                .with_message(<span class="macro">format!</span>(
+                    <span class="string">"Can't mutate {name:?} because it's behind a immutable borrow"
+                </span>))
+                .with_color(colors.next())];
 
             <span class="kw">if let </span><span class="prelude-val">Some</span>(type_span) = type_span {
-                labels.push(Label::new((path.clone(), type_span.into()))
-                .with_message(<span class="macro">format!</span>(<span class="string">"Variable {name:?} has this type"</span>))
-                .with_color(colors.next()));
+                labels.push(
+                    Label::new((path.clone(), type_span.into()))
+                        .with_message(<span class="macro">format!</span>(<span class="string">"Variable {name:?} has this type"</span>))
+                        .with_color(colors.next()),
+                );
             }
 
             Report::build(ReportKind::Error, path.clone(), span.lo)
-            .with_code(<span class="string">"EREFMUT"</span>)
-            .with_labels(labels)
-            .finish()
-        },
-        LoweringError::UnrecognizedType { span, name } =&gt; {
+                .with_code(<span class="string">"EREFMUT"</span>)
+                .with_labels(labels)
+                .finish()
+        }
+        LoweringError::UnrecognizedType {
+            span,
+            name,
+            file_id,
+        } =&gt; {
+            <span class="kw">let </span>path = session.file_paths[file_id].display().to_string();
             Report::build(ReportKind::Error, path.clone(), span.lo)
                 .with_code(<span class="string">"E3"</span>)
                 .with_label(
@@ -224,19 +298,26 @@
                 )
                 .with_message(<span class="macro">format!</span>(<span class="string">"Unresolved type {:?}."</span>, name))
                 .finish()
-        },
-        LoweringError::UnexpectedType { span, found, expected } =&gt; {
-            <span class="kw">let </span><span class="kw-2">mut </span>labels = <span class="macro">vec!</span>[
-                Label::new((path.clone(), span.into()))
-                        .with_message(<span class="macro">format!</span>(<span class="string">"Unexpected type '{}', expected '{}'"</span>, found, expected.kind))
-                        .with_color(colors.next())
-            ];
+        }
+        LoweringError::UnexpectedType {
+            span,
+            found,
+            expected,
+            file_id,
+        } =&gt; {
+            <span class="kw">let </span>path = session.file_paths[file_id].display().to_string();
+            <span class="kw">let </span><span class="kw-2">mut </span>labels = <span class="macro">vec!</span>[Label::new((path.clone(), span.into()))
+                .with_message(<span class="macro">format!</span>(
+                    <span class="string">"Unexpected type '{}', expected '{}'"</span>,
+                    found, expected.kind
+                ))
+                .with_color(colors.next())];
 
             <span class="kw">if let </span><span class="prelude-val">Some</span>(span) = expected.span {
                 labels.push(
                     Label::new((path.clone(), span.into()))
                         .with_message(<span class="macro">format!</span>(<span class="string">"expected '{}' due to this type"</span>, expected.kind))
-                        .with_color(colors.next())
+                        .with_color(colors.next()),
                 );
             }
 
@@ -245,8 +326,9 @@
                 .with_labels(labels)
                 .with_message(<span class="macro">format!</span>(<span class="string">"expected type {}."</span>, expected.kind))
                 .finish()
-        },
-        LoweringError::IdNotFound { span, id } =&gt; {
+        }
+        LoweringError::IdNotFound { span, id, file_id } =&gt; {
+            <span class="kw">let </span>path = session.file_paths[file_id].display().to_string();
             Report::build(ReportKind::Error, path.clone(), span.lo)
                 .with_code(<span class="string">"E_ID"</span>)
                 .with_label(
@@ -256,8 +338,13 @@
                 )
                 .with_message(<span class="macro">format!</span>(<span class="string">"Failed to find definition id {id:?}, this is most likely a compiler bug or a unimplemented lowering"</span>))
                 .finish()
-        },
-        LoweringError::NotYetImplemented { span, message } =&gt; {
+        }
+        LoweringError::NotYetImplemented {
+            span,
+            message,
+            file_id,
+        } =&gt; {
+            <span class="kw">let </span>path = session.file_paths[file_id].display().to_string();
             Report::build(ReportKind::Error, path.clone(), span.lo)
                 .with_code(<span class="string">"TODO"</span>)
                 .with_label(
@@ -266,17 +353,22 @@
                         .with_color(colors.next()),
                 )
                 .finish()
-        },
-        LoweringError::UseOfUndeclaredVariable { span, name } =&gt; {
+        }
+        LoweringError::UseOfUndeclaredVariable {
+            span,
+            name,
+            file_id,
+        } =&gt; {
+            <span class="kw">let </span>path = session.file_paths[file_id].display().to_string();
             Report::build(ReportKind::Error, path.clone(), span.lo)
-            .with_code(<span class="string">"UseOfUndeclaredVariable"</span>)
-            .with_label(
-                Label::new((path, span.into()))
-                    .with_message(<span class="macro">format!</span>(<span class="string">"use of undeclared variable {:?}"</span>, name))
-                    .with_color(colors.next()),
-            )
-            .finish()
-        },
+                .with_code(<span class="string">"UseOfUndeclaredVariable"</span>)
+                .with_label(
+                    Label::new((path, span.into()))
+                        .with_message(<span class="macro">format!</span>(<span class="string">"use of undeclared variable {:?}"</span>, name))
+                        .with_color(colors.next()),
+                )
+                .finish()
+        }
     }
 }
 </code></pre></div></section></main></body></html>

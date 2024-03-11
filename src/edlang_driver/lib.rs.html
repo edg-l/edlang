@@ -167,52 +167,82 @@
 <a href="#166" id="166">166</a>
 <a href="#167" id="167">167</a>
 <a href="#168" id="168">168</a>
+<a href="#169" id="169">169</a>
+<a href="#170" id="170">170</a>
+<a href="#171" id="171">171</a>
+<a href="#172" id="172">172</a>
+<a href="#173" id="173">173</a>
+<a href="#174" id="174">174</a>
+<a href="#175" id="175">175</a>
+<a href="#176" id="176">176</a>
+<a href="#177" id="177">177</a>
+<a href="#178" id="178">178</a>
+<a href="#179" id="179">179</a>
+<a href="#180" id="180">180</a>
+<a href="#181" id="181">181</a>
+<a href="#182" id="182">182</a>
+<a href="#183" id="183">183</a>
+<a href="#184" id="184">184</a>
+<a href="#185" id="185">185</a>
+<a href="#186" id="186">186</a>
+<a href="#187" id="187">187</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{path::PathBuf, time::Instant};
 
-<span class="kw">use </span>anyhow::{bail, <span class="prelude-ty">Result</span>};
-<span class="kw">use </span>ariadne::Source;
+<span class="kw">use </span>anyhow::Result;
+<span class="kw">use </span>ariadne::{sources, Source};
 <span class="kw">use </span>clap::Parser;
-<span class="kw">use </span>edlang_codegen_llvm::linker::{link_binary, link_shared_lib};
 <span class="kw">use </span>edlang_lowering::lower_modules;
 <span class="kw">use </span>edlang_session::{DebugInfo, OptLevel, Session};
+<span class="kw">use </span>walkdir::WalkDir;
+
+<span class="kw">use </span><span class="kw">crate</span>::linker::{link_binary, link_shared_lib};
+
+<span class="kw">pub mod </span>linker;
 
 <span class="attr">#[derive(Parser, Debug)]
 #[command(author, version, about = <span class="string">"edlang compiler driver"</span>, long_about = <span class="prelude-val">None</span>, bin_name = <span class="string">"edlangc"</span>)]
 </span><span class="kw">pub struct </span>CompilerArgs {
     <span class="doccomment">/// The input file.
-    </span>input: PathBuf,
+    </span><span class="kw">pub </span>input: PathBuf,
+
+    <span class="doccomment">/// The output file.
+    </span><span class="kw">pub </span>output: PathBuf,
 
     <span class="doccomment">/// Build for release with all optimizations.
     </span><span class="attr">#[arg(short, long, default_value_t = <span class="bool-val">false</span>)]
-    </span>release: bool,
+    </span><span class="kw">pub </span>release: bool,
 
     <span class="doccomment">/// Set the optimization level, 0,1,2,3
     </span><span class="attr">#[arg(short = <span class="string">'O'</span>, long)]
-    </span>optlevel: <span class="prelude-ty">Option</span>&lt;u8&gt;,
+    </span><span class="kw">pub </span>optlevel: <span class="prelude-ty">Option</span>&lt;u8&gt;,
 
     <span class="doccomment">/// Always add debug info
     </span><span class="attr">#[arg(long)]
-    </span>debug_info: <span class="prelude-ty">Option</span>&lt;bool&gt;,
+    </span><span class="kw">pub </span>debug_info: <span class="prelude-ty">Option</span>&lt;bool&gt;,
 
     <span class="doccomment">/// Build as a library.
     </span><span class="attr">#[arg(short, long, default_value_t = <span class="bool-val">false</span>)]
-    </span>library: bool,
+    </span><span class="kw">pub </span>library: bool,
 
     <span class="doccomment">/// Print the edlang AST
     </span><span class="attr">#[arg(long, default_value_t = <span class="bool-val">false</span>)]
-    </span>ast: bool,
+    </span><span class="kw">pub </span>ast: bool,
 
     <span class="doccomment">/// Print the edlang IR
     </span><span class="attr">#[arg(long, default_value_t = <span class="bool-val">false</span>)]
-    </span>ir: bool,
+    </span><span class="kw">pub </span>ir: bool,
 
     <span class="doccomment">/// Output llvm ir
     </span><span class="attr">#[arg(long, default_value_t = <span class="bool-val">false</span>)]
-    </span>llvm: bool,
+    </span><span class="kw">pub </span>llvm: bool,
 
     <span class="doccomment">/// Output asm
     </span><span class="attr">#[arg(long, default_value_t = <span class="bool-val">false</span>)]
-    </span>asm: bool,
+    </span><span class="kw">pub </span>asm: bool,
+
+    <span class="doccomment">/// Output a object file
+    </span><span class="attr">#[arg(long, default_value_t = <span class="bool-val">false</span>)]
+    </span><span class="kw">pub </span>object: bool,
 }
 
 <span class="kw">pub fn </span>main() -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
@@ -220,51 +250,59 @@
 
     <span class="kw">let </span>args = CompilerArgs::parse();
 
-    compile_single_file(args)<span class="question-mark">?</span>;
+    <span class="kw">let </span>object = compile(<span class="kw-2">&amp;</span>args)<span class="question-mark">?</span>;
+
+    <span class="kw">if </span>args.library {
+        link_shared_lib(<span class="kw-2">&amp;</span>[object.clone()], <span class="kw-2">&amp;</span>args.output)<span class="question-mark">?</span>;
+    } <span class="kw">else </span>{
+        link_binary(<span class="kw-2">&amp;</span>[object.clone()], <span class="kw-2">&amp;</span>args.output)<span class="question-mark">?</span>;
+    }
+
+    <span class="kw">if </span>!args.object {
+        std::fs::remove_file(object)<span class="question-mark">?</span>;
+    }
 
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="kw">pub fn </span>compile_single_file(args: CompilerArgs) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
-    <span class="kw">if </span>!args.input.is_file() {
-        <span class="macro">bail!</span>(<span class="string">"Input is not a file"</span>);
+<span class="kw">pub fn </span>compile(args: <span class="kw-2">&amp;</span>CompilerArgs) -&gt; <span class="prelude-ty">Result</span>&lt;PathBuf&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>files = Vec::new();
+    <span class="kw">for </span>entry <span class="kw">in </span>WalkDir::new(<span class="kw-2">&amp;</span>args.input) {
+        <span class="kw">let </span>entry = entry<span class="question-mark">?</span>;
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(ext) = entry.path().extension() {
+            <span class="kw">if </span>ext.eq_ignore_ascii_case(<span class="string">"ed"</span>) {
+                files.push(entry.path().to_path_buf());
+            }
+        }
+    }
+
+    <span class="kw">if </span>files.is_empty() {
+        <span class="macro">panic!</span>(<span class="string">"files is empty"</span>);
     }
 
     <span class="kw">let </span>start_time = Instant::now();
 
-    tracing_subscriber::fmt::init();
+    <span class="kw">let </span><span class="kw-2">mut </span>modules = Vec::new();
 
-    <span class="kw">let </span>path = args.input.display().to_string();
-    <span class="kw">let </span>source = std::fs::read_to_string(<span class="kw-2">&amp;</span>args.input)<span class="question-mark">?</span>;
+    <span class="kw">for </span>path <span class="kw">in </span>files {
+        <span class="kw">let </span>source = std::fs::read_to_string(<span class="kw-2">&amp;</span>path)<span class="question-mark">?</span>;
 
-    <span class="kw">let </span>modules = edlang_parser::parse_ast(<span class="kw-2">&amp;</span>source);
+        <span class="kw">let </span>modules_ast = edlang_parser::parse_ast(<span class="kw-2">&amp;</span>source);
 
-    <span class="kw">let </span>modules = <span class="kw">match </span>modules {
-        <span class="prelude-val">Ok</span>(modules) =&gt; modules,
-        <span class="prelude-val">Err</span>(error) =&gt; {
-            <span class="kw">let </span>report = edlang_parser::error_to_report(<span class="kw-2">&amp;</span>path, <span class="kw-2">&amp;</span>error)<span class="question-mark">?</span>;
-            edlang_parser::print_report(<span class="kw-2">&amp;</span>path, <span class="kw-2">&amp;</span>source, report)<span class="question-mark">?</span>;
-            std::process::exit(<span class="number">1</span>)
-        }
-    };
-
-    <span class="kw">let </span>cwd = std::env::current_dir()<span class="question-mark">?</span>;
-    <span class="comment">// todo: find a better name, "target" would clash with rust if running in the source tree.
-    </span><span class="kw">let </span>target_dir = cwd.join(<span class="string">"target_ed/"</span>);
-    <span class="kw">if </span>!target_dir.exists() {
-        std::fs::create_dir_all(<span class="kw-2">&amp;</span>target_dir)<span class="question-mark">?</span>;
+        <span class="kw">let </span>modules_temp = <span class="kw">match </span>modules_ast {
+            <span class="prelude-val">Ok</span>(modules) =&gt; modules,
+            <span class="prelude-val">Err</span>(error) =&gt; {
+                <span class="kw">let </span>path = path.display().to_string();
+                <span class="kw">let </span>report = edlang_parser::error_to_report(<span class="kw-2">&amp;</span>path, <span class="kw-2">&amp;</span>error)<span class="question-mark">?</span>;
+                edlang_parser::print_report(<span class="kw-2">&amp;</span>path, <span class="kw-2">&amp;</span>source, report)<span class="question-mark">?</span>;
+                std::process::exit(<span class="number">1</span>)
+            }
+        };
+        modules.push((path, source, modules_temp));
     }
-    <span class="kw">let </span>output_file = target_dir.join(PathBuf::from(args.input.file_name().unwrap()));
-    <span class="kw">let </span>output_file = <span class="kw">if </span>args.library {
-        output_file.with_extension(Session::get_platform_library_ext())
-    } <span class="kw">else if </span><span class="macro">cfg!</span>(target_os = <span class="string">"windows"</span>) {
-        output_file.with_extension(<span class="string">"exe"</span>)
-    } <span class="kw">else </span>{
-        output_file.with_extension(<span class="string">""</span>)
-    };
 
     <span class="kw">let </span>session = Session {
-        file_path: args.input,
+        file_paths: modules.iter().map(|x| x.<span class="number">0</span>.clone()).collect(),
         debug_info: <span class="kw">if let </span><span class="prelude-val">Some</span>(debug_info) = args.debug_info {
             <span class="kw">if </span>debug_info {
                 DebugInfo::Full
@@ -288,51 +326,51 @@
         } <span class="kw">else </span>{
             OptLevel::None
         },
-        source: Source::from(source),
+        sources: modules.iter().map(|x| Source::from(x.<span class="number">1</span>.clone())).collect(),
         library: args.library,
-        target_dir,
-        output_file,
+        output_file: args.output.with_extension(<span class="string">"o"</span>),
         output_asm: args.asm,
         output_llvm: args.llvm,
     };
-    <span class="macro">tracing::debug!</span>(<span class="string">"Input file: {:#?}"</span>, session.file_path);
-    <span class="macro">tracing::debug!</span>(<span class="string">"Target dir: {:#?}"</span>, session.target_dir);
     <span class="macro">tracing::debug!</span>(<span class="string">"Output file: {:#?}"</span>, session.output_file);
     <span class="macro">tracing::debug!</span>(<span class="string">"Is library: {:#?}"</span>, session.library);
     <span class="macro">tracing::debug!</span>(<span class="string">"Optlevel: {:#?}"</span>, session.optlevel);
     <span class="macro">tracing::debug!</span>(<span class="string">"Debug Info: {:#?}"</span>, session.debug_info);
 
+    <span class="kw">let </span>path_cache: Vec&lt;<span class="kw">_</span>&gt; = modules
+        .iter()
+        .map(|x| (x.<span class="number">0</span>.display().to_string(), x.<span class="number">1</span>.clone()))
+        .collect();
+    <span class="kw">let </span>modules: Vec&lt;<span class="kw">_</span>&gt; = modules.iter().map(|x| x.<span class="number">2</span>.clone()).collect();
+
     <span class="kw">if </span>args.ast {
-        <span class="macro">println!</span>(<span class="string">"{:#?}"</span>, modules);
-        <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+        std::fs::write(
+            session.output_file.with_extension(<span class="string">"ast"</span>),
+            <span class="macro">format!</span>(<span class="string">"{:#?}"</span>, modules),
+        )<span class="question-mark">?</span>;
     }
 
     <span class="kw">let </span>program_ir = <span class="kw">match </span>lower_modules(<span class="kw-2">&amp;</span>modules) {
         <span class="prelude-val">Ok</span>(ir) =&gt; ir,
         <span class="prelude-val">Err</span>(error) =&gt; {
             <span class="kw">let </span>report = edlang_check::lowering_error_to_report(error, <span class="kw-2">&amp;</span>session);
-            <span class="kw">let </span>path = session.file_path.display().to_string();
-            report.eprint((path, session.source.clone()))<span class="question-mark">?</span>;
+            report.eprint(sources(path_cache))<span class="question-mark">?</span>;
             std::process::exit(<span class="number">1</span>);
         }
     };
 
     <span class="kw">if </span>args.ir {
-        <span class="macro">println!</span>(<span class="string">"{:#?}"</span>, program_ir);
-        <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+        std::fs::write(
+            session.output_file.with_extension(<span class="string">"ir"</span>),
+            <span class="macro">format!</span>(<span class="string">"{:#?}"</span>, program_ir),
+        )<span class="question-mark">?</span>;
     }
 
     <span class="kw">let </span>object_path = edlang_codegen_llvm::compile(<span class="kw-2">&amp;</span>session, <span class="kw-2">&amp;</span>program_ir).unwrap();
 
-    <span class="kw">if </span>session.library {
-        link_shared_lib(<span class="kw-2">&amp;</span>object_path, <span class="kw-2">&amp;</span>session.output_file)<span class="question-mark">?</span>;
-    } <span class="kw">else </span>{
-        link_binary(<span class="kw-2">&amp;</span>object_path, <span class="kw-2">&amp;</span>session.output_file)<span class="question-mark">?</span>;
-    }
-
     <span class="kw">let </span>elapsed = start_time.elapsed();
     <span class="macro">tracing::debug!</span>(<span class="string">"Done in {:?}"</span>, elapsed);
 
-    <span class="prelude-val">Ok</span>(())
+    <span class="prelude-val">Ok</span>(object_path)
 }
 </code></pre></div></section></main></body></html>

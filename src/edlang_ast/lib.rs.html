@@ -434,7 +434,7 @@
     Binary(Box&lt;<span class="self">Self</span>&gt;, BinaryOp, Box&lt;<span class="self">Self</span>&gt;),
     Deref(Box&lt;<span class="self">Self</span>&gt;, Span),
     AsRef(Box&lt;<span class="self">Self</span>&gt;, bool, Span),
-    Cast(PathExpr, Type, Span),
+    Cast(Box&lt;<span class="self">Self</span>&gt;, Type, Span),
 }
 
 <span class="attr">#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]

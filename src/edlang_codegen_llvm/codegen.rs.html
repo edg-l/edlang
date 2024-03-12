@@ -2554,7 +2554,7 @@
             );
             compile_unary_op(ctx, fn_id, locals, <span class="kw-2">*</span>op, value)<span class="question-mark">?
         </span>}
-        ir::RValue::Cast(place, target_ty, span) =&gt; {
+        ir::RValue::Cast(op, target_ty, span) =&gt; {
             ctx.set_debug_loc(
                 ctx.builder
                     .get_current_debug_location()
@@ -2565,7 +2565,7 @@
 
             <span class="kw">let </span>target_ty = target_ty.clone();
             <span class="kw">let </span>target_llvm_ty = compile_basic_type(ctx, <span class="kw-2">&amp;</span>target_ty);
-            <span class="kw">let </span>(value, ty) = compile_load_place(ctx, fn_id, locals, place, <span class="bool-val">false</span>)<span class="question-mark">?</span>;
+            <span class="kw">let </span>(value, ty) = compile_load_operand(ctx, fn_id, locals, op)<span class="question-mark">?</span>;
             <span class="kw">let </span>current_ty = compile_basic_type(ctx, <span class="kw-2">&amp;</span>ty);
 
             <span class="kw">if </span>target_llvm_ty.is_pointer_type() {

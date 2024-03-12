@@ -145,7 +145,7 @@ pub fn compile(session: &Session, program: &ProgramBody) -> Result<PathBuf, Box<
         );
 
         let di_namespace = di_builder
-            .create_namespace(di_unit.as_debug_info_scope(), &module.name, true)
+            .create_namespace(di_unit.get_file().as_debug_info_scope(), &module.name, true)
             .as_debug_info_scope();
 
         let mut module_ctx = ModuleCompileCtx {

@@ -1033,7 +1033,7 @@ fn compile_rvalue<'ctx>(
             );
             compile_unary_op(ctx, fn_id, locals, *op, value)?
         }
-        ir::RValue::Cast(place, target_ty, span) => {
+        ir::RValue::Cast(op, target_ty, span) => {
             ctx.set_debug_loc(
                 ctx.builder
                     .get_current_debug_location()
@@ -1044,7 +1044,7 @@ fn compile_rvalue<'ctx>(
 
             let target_ty = target_ty.clone();
             let target_llvm_ty = compile_basic_type(ctx, &target_ty);
-            let (value, ty) = compile_load_place(ctx, fn_id, locals, place, false)?;
+            let (value, ty) = compile_load_operand(ctx, fn_id, locals, op)?;
             let current_ty = compile_basic_type(ctx, &ty);
 
             if target_llvm_ty.is_pointer_type() {

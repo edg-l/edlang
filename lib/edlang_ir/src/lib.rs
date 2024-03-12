@@ -419,7 +419,7 @@ pub enum RValue {
     BinOp(BinOp, Operand, Operand, Span),
     LogicOp(LogicalOp, Operand, Operand, Span),
     UnOp(UnOp, Operand, Span),
-    Cast(Place, TypeInfo, Span),
+    Cast(Operand, TypeInfo, Span),
 }
 
 #[derive(Debug, Clone)]

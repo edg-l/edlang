@@ -176,7 +176,7 @@ pub enum Expression {
     Binary(Box<Self>, BinaryOp, Box<Self>),
     Deref(Box<Self>, Span),
     AsRef(Box<Self>, bool, Span),
-    Cast(PathExpr, Type, Span),
+    Cast(Box<Self>, Type, Span),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]

@@ -735,14 +735,37 @@ fn lower_expr(
 
             (RValue::Use(Operand::Move(place), info.span), ty, info.span)
         }
-        ast::Expression::Cast(path, cast_ty, span) => {
-            let (place, _ty, _path_span) = lower_path(builder, path)?;
+        ast::Expression::Cast(exp, cast_ty, span) => {
+            let (value, ty, _exp_span) = lower_expr(builder, exp, None)?;
             let new_ty = lower_type(&builder.ctx, cast_ty, builder.local_module)?;
             let kind = new_ty.kind.clone();
 
             // todo: some checks?
 
-            (RValue::Cast(place, new_ty, *span), kind, *span)
+            // check if its a use directly, to avoid a temporary.
+            let rvalue = match value {
+                RValue::Use(op, _) => RValue::Cast(op, new_ty.clone(), *span),
+                value => {
+                    let inner_local = builder.add_local(Local::temp(ty.clone()));
+                    let inner_place = Place {
+                        local: inner_local,
+                        projection: Default::default(),
+                    };
+
+                    builder.statements.push(Statement {
+                        span: None,
+                        kind: StatementKind::StorageLive(inner_local),
+                    });
+
+                    builder.statements.push(Statement {
+                        span: None,
+                        kind: StatementKind::Assign(inner_place.clone(), value),
+                    });
+                    RValue::Cast(Operand::Move(inner_place), new_ty.clone(), *span)
+                }
+            };
+
+            (rvalue, kind, *span)
         }
     })
 }

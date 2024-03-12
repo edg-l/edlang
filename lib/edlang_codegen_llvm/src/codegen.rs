@@ -1,4 +1,8 @@
-use std::{collections::HashMap, error::Error, path::PathBuf};
+use std::{
+    collections::{HashMap, VecDeque},
+    error::Error,
+    path::PathBuf,
+};
 
 use edlang_ir as ir;
 use edlang_ir::DefId;
@@ -70,7 +74,7 @@ pub fn compile(session: &Session, program: &ProgramBody) -> Result<PathBuf, Box<
         program,
     };
 
-    let mut llvm_modules = Vec::new();
+    let mut llvm_modules = VecDeque::new();
 
     Target::initialize_native(&InitializationConfig::default())?;
     let triple = TargetMachine::get_default_triple();
@@ -96,7 +100,7 @@ pub fn compile(session: &Session, program: &ProgramBody) -> Result<PathBuf, Box<
             inkwell::targets::CodeModel::Default,
         )
         .unwrap();
-    machine.set_asm_verbosity(true);
+    // machine.set_asm_verbosity(true);
 
     info!("compiling for: {:?}", target.get_description());
 
@@ -160,40 +164,44 @@ pub fn compile(session: &Session, program: &ProgramBody) -> Result<PathBuf, Box<
         module_ctx.di_builder.finalize();
         module_ctx.module.verify()?;
 
-        let opt = match session.optlevel {
-            edlang_session::OptLevel::None => "0",
-            edlang_session::OptLevel::Less => "1",
-            edlang_session::OptLevel::Default => "2",
-            edlang_session::OptLevel::Aggressive => "3",
-        };
-
-        let passopt = PassBuilderOptions::create();
-        module_ctx
-            .module
-            .run_passes(&format!("default<O{}>", opt), &machine, passopt)?;
-
-        if session.output_llvm {
-            module_ctx
-                .module
-                .print_to_file(session.output_file.with_extension("ll"))?;
-        }
-
-        if session.output_asm {
-            machine.write_to_file(
-                &module_ctx.module,
-                inkwell::targets::FileType::Assembly,
-                &session.output_file.with_extension("asm"),
-            )?;
-        }
-
-        machine.write_to_file(
-            &module_ctx.module,
-            inkwell::targets::FileType::Object,
-            &session.output_file.with_extension("o"),
-        )?;
         // todo link modules together
-        llvm_modules.push(module_ctx.module);
+        llvm_modules.push_back(module_ctx.module);
     }
+
+    let module = llvm_modules.pop_front().unwrap();
+
+    for x in llvm_modules.into_iter() {
+        module.link_in_module(x)?;
+    }
+
+    let opt = match session.optlevel {
+        edlang_session::OptLevel::None => "0",
+        edlang_session::OptLevel::Less => "1",
+        edlang_session::OptLevel::Default => "2",
+        edlang_session::OptLevel::Aggressive => "3",
+    };
+
+    let passopt = PassBuilderOptions::create();
+
+    module.run_passes(&format!("default<O{}>", opt), &machine, passopt)?;
+
+    if session.output_llvm {
+        module.print_to_file(session.output_file.with_extension("ll"))?;
+    }
+
+    if session.output_asm {
+        machine.write_to_file(
+            &module,
+            inkwell::targets::FileType::Assembly,
+            &session.output_file.with_extension("asm"),
+        )?;
+    }
+
+    machine.write_to_file(
+        &module,
+        inkwell::targets::FileType::Object,
+        &session.output_file.with_extension("o"),
+    )?;
 
     Ok(session.output_file.with_extension("o"))
 }
@@ -202,7 +210,7 @@ fn compile_module(ctx: &mut ModuleCompileCtx, module_id: DefId) {
     let module = ctx.ctx.program.modules.get(&module_id).unwrap();
     trace!("compiling module: {:?}", module_id);
     for id in module.functions.iter() {
-        compile_fn_signature(ctx, *id);
+        compile_fn_signature(ctx, *id, true);
     }
 
     for id in module.functions.iter() {
@@ -210,7 +218,7 @@ fn compile_module(ctx: &mut ModuleCompileCtx, module_id: DefId) {
     }
 }
 
-fn compile_fn_signature(ctx: &ModuleCompileCtx<'_, '_>, fn_id: DefId) {
+fn compile_fn_signature(ctx: &ModuleCompileCtx<'_, '_>, fn_id: DefId, is_definition: bool) {
     let (arg_types, ret_type) = ctx.ctx.program.function_signatures.get(&fn_id).unwrap();
     let body = ctx.ctx.program.functions.get(&fn_id).unwrap();
     trace!("compiling fn sig: {}", body.name);
@@ -271,8 +279,8 @@ fn compile_fn_signature(ctx: &ModuleCompileCtx<'_, '_>, fn_id: DefId) {
         ctx.di_unit.get_file(),
         line as u32 + 1,
         di_type,
-        body.is_pub,
-        !body.is_extern,
+        !body.is_pub,
+        is_definition,
         line as u32 + 1,
         0,
         false,
@@ -544,10 +552,16 @@ fn compile_fn(ctx: &ModuleCompileCtx, fn_id: DefId) -> Result<(), BuilderError> 
                 target,
             } => {
                 let target_fn_body = ctx.ctx.program.functions.get(func).unwrap();
-                let fn_value = ctx
-                    .module
-                    .get_function(&target_fn_body.get_mangled_name())
-                    .unwrap();
+                // compile_fn_signature(ctx, *id, true);
+                let fn_value = match ctx.module.get_function(&target_fn_body.get_mangled_name()) {
+                    Some(x) => x,
+                    None => {
+                        compile_fn_signature(ctx, target_fn_body.def_id, false);
+                        ctx.module
+                            .get_function(&target_fn_body.get_mangled_name())
+                            .unwrap()
+                    }
+                };
                 let args: Vec<_> = args
                     .iter()
                     .map(|x| compile_rvalue(ctx, fn_id, &locals, x).unwrap().0.into())

@@ -34,6 +34,7 @@ enum Commands {
         #[arg(long, group = "binary", default_value_t = true)]
         bin: bool,
 
+        /// Use a library template
         #[arg(long, group = "binary")]
         lib: bool,
     },

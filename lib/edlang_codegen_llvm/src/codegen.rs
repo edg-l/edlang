@@ -992,15 +992,15 @@ fn compile_rvalue<'ctx>(
                     for proj in &place.projection {
                         match proj {
                             ir::PlaceElem::Deref => {
-                                ptr = ctx
-                                    .builder
-                                    .build_load(compile_basic_type(ctx, &local_ty), ptr, "deref")?
-                                    .into_pointer_value();
                                 local_ty = match local_ty.kind {
                                     ir::TypeKind::Ptr(_, inner) => *inner,
                                     ir::TypeKind::Ref(_, inner) => *inner,
                                     _ => unreachable!(),
-                                }
+                                };
+                                ptr = ctx
+                                    .builder
+                                    .build_load(compile_basic_type(ctx, &local_ty), ptr, "deref")?
+                                    .into_pointer_value();
                             }
                             ir::PlaceElem::Field { .. } => todo!(),
                             ir::PlaceElem::Index { .. } => todo!(),

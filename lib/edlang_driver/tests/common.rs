@@ -34,7 +34,7 @@ pub fn compile_program(
     name: &str,
     library: bool,
 ) -> Result<CompileResult, Box<dyn std::error::Error>> {
-    let modules = edlang_parser::parse_ast(source).unwrap();
+    let module = edlang_parser::parse_ast(source, name).unwrap();
 
     let test_dir = tempfile::tempdir().unwrap();
     let test_dir_path = test_dir.path().canonicalize()?;
@@ -61,7 +61,7 @@ pub fn compile_program(
         output_asm: false,
     };
 
-    let program_ir = lower_modules(&[modules]).unwrap();
+    let program_ir = lower_modules(&[module]).unwrap();
 
     let object_path = edlang_codegen_llvm::compile(&session, &program_ir).unwrap();
 

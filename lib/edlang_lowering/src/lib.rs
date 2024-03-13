@@ -15,33 +15,27 @@ mod common;
 pub mod errors;
 mod prepass;
 
-pub fn lower_modules(modules: &[Vec<ast::Module>]) -> Result<ProgramBody, LoweringError> {
+pub fn lower_modules(modules: &[ast::Module]) -> Result<ProgramBody, LoweringError> {
     let mut ctx = BuildCtx::default();
 
     // resolve symbols
-    for (file_id, modules) in modules.iter().enumerate() {
-        for module in modules {
-            ctx = prepass::prepass_module(ctx, module, file_id)?;
-        }
+    for (file_id, module) in modules.iter().enumerate() {
+        ctx = prepass::prepass_module(ctx, module, file_id)?;
     }
 
     // resolve imports
-    for (file_id, modules) in modules.iter().enumerate() {
-        for module in modules {
-            ctx = prepass::prepass_imports(ctx, module, file_id)?;
-        }
+    for (file_id, module) in modules.iter().enumerate() {
+        ctx = prepass::prepass_imports(ctx, module, file_id)?;
     }
 
-    for modules in modules {
-        for mod_def in modules {
-            let id = *ctx
-                .body
-                .top_level_module_names
-                .get(&mod_def.name.name)
-                .expect("module should exist");
+    for mod_def in modules {
+        let id = *ctx
+            .body
+            .top_level_module_names
+            .get(&mod_def.name.name)
+            .expect("module should exist");
 
-            ctx = lower_module(ctx, mod_def, id)?;
-        }
+        ctx = lower_module(ctx, mod_def, id)?;
     }
 
     Ok(ctx.body)

@@ -99,10 +99,13 @@ pub fn compile(args: &CompilerArgs) -> Result<PathBuf> {
     for path in files {
         let source = std::fs::read_to_string(&path)?;
 
-        let modules_ast = edlang_parser::parse_ast(&source);
+        let module_ast = edlang_parser::parse_ast(
+            &source,
+            &path.file_stem().expect("no file stem").to_string_lossy(),
+        );
 
-        let modules_temp = match modules_ast {
-            Ok(modules) => modules,
+        let module_temp = match module_ast {
+            Ok(module) => module,
             Err(error) => {
                 let path = path.display().to_string();
                 let report = edlang_parser::error_to_report(&path, &error)?;
@@ -110,7 +113,7 @@ pub fn compile(args: &CompilerArgs) -> Result<PathBuf> {
                 std::process::exit(1)
             }
         };
-        modules.push((path, source, modules_temp));
+        modules.push((path, source, module_temp));
     }
 
     let session = Session {

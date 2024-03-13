@@ -33,6 +33,7 @@ pub struct ProgramBody {
     pub structs: BTreeMap<DefId, AdtBody>,
     /// The function signatures.
     pub function_signatures: BTreeMap<DefId, (Vec<TypeInfo>, TypeInfo)>,
+    pub file_names: BTreeMap<usize, String>,
 }
 
 #[derive(Debug, Clone)]

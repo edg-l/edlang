@@ -114,30 +114,18 @@ fn main() -> Result<()> {
             if bin {
                 std::fs::write(
                     path.join("src").join("main.ed"),
-                    format!(
-                        r#"
-mod {} {{
-    pub fn main() -> i32 {{
-        return 0;
-    }}
-}}"#,
-                        name
-                    ),
+                    r#"pub fn main() -> i32 {{
+    return 0;
+}"#,
                 )?;
             }
 
             if lib {
                 std::fs::write(
                     path.join("src").join("lib.ed"),
-                    format!(
-                        r#"
-mod {} {{
-    pub fn hello_world() -> i32 {{
-        return 0;
-    }}
-}}"#,
-                        name
-                    ),
+                    r#"pub fn main() -> i32 {{
+    return 0;
+}"#,
                 )?;
             }
 

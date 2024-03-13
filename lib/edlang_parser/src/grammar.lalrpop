@@ -3,7 +3,7 @@ use crate::lexer::LexicalError;
 use edlang_ast as ast;
 use std::str::FromStr;
 
-grammar;
+grammar<'module_name>(module_name: &'module_name str);
 
 extern {
   type Location = usize;
@@ -478,8 +478,16 @@ pub(crate) Import: ast::Import = {
     }
 }
 
-pub Modules: Vec<ast::Module> = {
-  <Module+> => <>
+pub TopLevelModule: ast::Module = {
+  <lo:@L> <imports:List<Import>?> <contents:List<ModuleStatement>> <hi:@R> => ast::Module {
+        name: ast::Ident {
+          name: module_name.to_string(),
+          span: ast::Span::new(0, 0),
+        },
+        imports: imports.unwrap_or(vec![]),
+        contents,
+        span: ast::Span::new(lo, hi),
+    }
 }
 
 pub Module: ast::Module = {

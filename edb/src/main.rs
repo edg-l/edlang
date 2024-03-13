@@ -106,7 +106,7 @@ fn main() -> Result<()> {
 
             std::fs::write(config_path, toml::to_string_pretty(&config)?)
                 .context("failed to write Ed.toml")?;
-            std::fs::write(path.join(".gitignore"), "/target-ed\n")
+            std::fs::write(path.join(".gitignore"), "/build\n")
                 .context("failed to write .gitignore")?;
             std::fs::write(path.join(".gitattributes"), "*.ed linguist-language=Rust\n")
                 .context("failed to write .gitattributes")?;
@@ -207,7 +207,7 @@ mod {} {{
             );
 
             let src_dir = base_dir.join("src");
-            let target_dir = base_dir.join("target-ed");
+            let target_dir = base_dir.join("build");
 
             if !target_dir.exists() {
                 std::fs::create_dir_all(&target_dir)?;

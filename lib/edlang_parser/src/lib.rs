@@ -46,7 +46,7 @@ pub fn error_to_report<'a>(
         ParseError::InvalidToken { location } => {
             let loc = *location;
             Report::build(ReportKind::Error, path, loc)
-                .with_code("P1")
+                .with_code("InvalidToken")
                 .with_label(
                     Label::new((path, loc..(loc + 1)))
                         .with_color(colors.next())
@@ -57,7 +57,7 @@ pub fn error_to_report<'a>(
         ParseError::UnrecognizedEof { location, expected } => {
             let loc = *location;
             Report::build(ReportKind::Error, path, loc)
-                .with_code("P2")
+                .with_code("UnrecognizedEof")
                 .with_label(
                     Label::new((path, loc..(loc + 1)))
                         .with_message(format!(
@@ -70,7 +70,7 @@ pub fn error_to_report<'a>(
         }
         ParseError::UnrecognizedToken { token, expected } => {
             Report::build(ReportKind::Error, path, token.0)
-                .with_code(3)
+                .with_code("UnrecognizedToken")
                 .with_label(
                     Label::new((path, token.0..token.2))
                         .with_message(format!(
@@ -83,7 +83,7 @@ pub fn error_to_report<'a>(
                 .finish()
         }
         ParseError::ExtraToken { token } => Report::build(ReportKind::Error, path, token.0)
-            .with_code("P3")
+            .with_code("ExtraToken")
             .with_message("Extra token")
             .with_label(
                 Label::new((path, token.0..token.2))
@@ -94,7 +94,7 @@ pub fn error_to_report<'a>(
             LexicalError::InvalidToken(err, range) => match err {
                 tokens::LexingError::NumberParseError => {
                     Report::build(ReportKind::Error, path, range.start)
-                        .with_code(4)
+                        .with_code("InvalidToken")
                         .with_message("Error parsing literal number")
                         .with_label(
                             Label::new((path, range.start..range.end))
@@ -104,7 +104,7 @@ pub fn error_to_report<'a>(
                         .finish()
                 }
                 tokens::LexingError::Other => Report::build(ReportKind::Error, path, range.start)
-                    .with_code(4)
+                    .with_code("Other")
                     .with_message("Other error")
                     .with_label(
                         Label::new((path, range.start..range.end))

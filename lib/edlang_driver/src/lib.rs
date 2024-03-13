@@ -79,7 +79,7 @@ pub fn main() -> Result<()> {
 
 pub fn compile(args: &CompilerArgs) -> Result<PathBuf> {
     let mut files = Vec::new();
-    for entry in WalkDir::new(&args.input) {
+    for entry in WalkDir::new(&args.input).sort_by_file_name() {
         let entry = entry?;
         if let Some(ext) = entry.path().extension() {
             if ext.eq_ignore_ascii_case("ed") {

@@ -1519,7 +1519,25 @@
 <a href="#1518" id="1518">1518</a>
 <a href="#1519" id="1519">1519</a>
 <a href="#1520" id="1520">1520</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>std::{collections::HashMap, error::Error, path::PathBuf};
+<a href="#1521" id="1521">1521</a>
+<a href="#1522" id="1522">1522</a>
+<a href="#1523" id="1523">1523</a>
+<a href="#1524" id="1524">1524</a>
+<a href="#1525" id="1525">1525</a>
+<a href="#1526" id="1526">1526</a>
+<a href="#1527" id="1527">1527</a>
+<a href="#1528" id="1528">1528</a>
+<a href="#1529" id="1529">1529</a>
+<a href="#1530" id="1530">1530</a>
+<a href="#1531" id="1531">1531</a>
+<a href="#1532" id="1532">1532</a>
+<a href="#1533" id="1533">1533</a>
+<a href="#1534" id="1534">1534</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span>std::{
+    collections::{HashMap, VecDeque},
+    error::Error,
+    path::PathBuf,
+};
 
 <span class="kw">use </span>edlang_ir <span class="kw">as </span>ir;
 <span class="kw">use </span>edlang_ir::DefId;
@@ -1591,7 +1609,7 @@
         program,
     };
 
-    <span class="kw">let </span><span class="kw-2">mut </span>llvm_modules = Vec::new();
+    <span class="kw">let </span><span class="kw-2">mut </span>llvm_modules = VecDeque::new();
 
     Target::initialize_native(<span class="kw-2">&amp;</span>InitializationConfig::default())<span class="question-mark">?</span>;
     <span class="kw">let </span>triple = TargetMachine::get_default_triple();
@@ -1617,9 +1635,9 @@
             inkwell::targets::CodeModel::Default,
         )
         .unwrap();
-    machine.set_asm_verbosity(<span class="bool-val">true</span>);
+    <span class="comment">// machine.set_asm_verbosity(true);
 
-    <span class="macro">info!</span>(<span class="string">"compiling for: {:?}"</span>, target.get_description());
+    </span><span class="macro">info!</span>(<span class="string">"compiling for: {:?}"</span>, target.get_description());
 
     <span class="kw">for </span>module_id <span class="kw">in </span>program.top_level_modules.iter() {
         <span class="kw">let </span>module = ctx.program.modules.get(module_id).unwrap();
@@ -1662,7 +1680,7 @@
         );
 
         <span class="kw">let </span>di_namespace = di_builder
-            .create_namespace(di_unit.as_debug_info_scope(), <span class="kw-2">&amp;</span>module.name, <span class="bool-val">true</span>)
+            .create_namespace(di_unit.get_file().as_debug_info_scope(), <span class="kw-2">&amp;</span>module.name, <span class="bool-val">true</span>)
             .as_debug_info_scope();
 
         <span class="kw">let </span><span class="kw-2">mut </span>module_ctx = ModuleCompileCtx {
@@ -1681,40 +1699,44 @@
         module_ctx.di_builder.finalize();
         module_ctx.module.verify()<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>opt = <span class="kw">match </span>session.optlevel {
-            edlang_session::OptLevel::None =&gt; <span class="string">"0"</span>,
-            edlang_session::OptLevel::Less =&gt; <span class="string">"1"</span>,
-            edlang_session::OptLevel::Default =&gt; <span class="string">"2"</span>,
-            edlang_session::OptLevel::Aggressive =&gt; <span class="string">"3"</span>,
-        };
-
-        <span class="kw">let </span>passopt = PassBuilderOptions::create();
-        module_ctx
-            .module
-            .run_passes(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"default&lt;O{}&gt;"</span>, opt), <span class="kw-2">&amp;</span>machine, passopt)<span class="question-mark">?</span>;
-
-        <span class="kw">if </span>session.output_llvm {
-            module_ctx
-                .module
-                .print_to_file(session.output_file.with_extension(<span class="string">"ll"</span>))<span class="question-mark">?</span>;
-        }
-
-        <span class="kw">if </span>session.output_asm {
-            machine.write_to_file(
-                <span class="kw-2">&amp;</span>module_ctx.module,
-                inkwell::targets::FileType::Assembly,
-                <span class="kw-2">&amp;</span>session.output_file.with_extension(<span class="string">"asm"</span>),
-            )<span class="question-mark">?</span>;
-        }
-
-        machine.write_to_file(
-            <span class="kw-2">&amp;</span>module_ctx.module,
-            inkwell::targets::FileType::Object,
-            <span class="kw-2">&amp;</span>session.output_file.with_extension(<span class="string">"o"</span>),
-        )<span class="question-mark">?</span>;
         <span class="comment">// todo link modules together
-        </span>llvm_modules.push(module_ctx.module);
+        </span>llvm_modules.push_back(module_ctx.module);
     }
+
+    <span class="kw">let </span>module = llvm_modules.pop_front().unwrap();
+
+    <span class="kw">for </span>x <span class="kw">in </span>llvm_modules.into_iter() {
+        module.link_in_module(x)<span class="question-mark">?</span>;
+    }
+
+    <span class="kw">let </span>opt = <span class="kw">match </span>session.optlevel {
+        edlang_session::OptLevel::None =&gt; <span class="string">"0"</span>,
+        edlang_session::OptLevel::Less =&gt; <span class="string">"1"</span>,
+        edlang_session::OptLevel::Default =&gt; <span class="string">"2"</span>,
+        edlang_session::OptLevel::Aggressive =&gt; <span class="string">"3"</span>,
+    };
+
+    <span class="kw">let </span>passopt = PassBuilderOptions::create();
+
+    module.run_passes(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"default&lt;O{}&gt;"</span>, opt), <span class="kw-2">&amp;</span>machine, passopt)<span class="question-mark">?</span>;
+
+    <span class="kw">if </span>session.output_llvm {
+        module.print_to_file(session.output_file.with_extension(<span class="string">"ll"</span>))<span class="question-mark">?</span>;
+    }
+
+    <span class="kw">if </span>session.output_asm {
+        machine.write_to_file(
+            <span class="kw-2">&amp;</span>module,
+            inkwell::targets::FileType::Assembly,
+            <span class="kw-2">&amp;</span>session.output_file.with_extension(<span class="string">"asm"</span>),
+        )<span class="question-mark">?</span>;
+    }
+
+    machine.write_to_file(
+        <span class="kw-2">&amp;</span>module,
+        inkwell::targets::FileType::Object,
+        <span class="kw-2">&amp;</span>session.output_file.with_extension(<span class="string">"o"</span>),
+    )<span class="question-mark">?</span>;
 
     <span class="prelude-val">Ok</span>(session.output_file.with_extension(<span class="string">"o"</span>))
 }
@@ -1723,7 +1745,7 @@
     <span class="kw">let </span>module = ctx.ctx.program.modules.get(<span class="kw-2">&amp;</span>module_id).unwrap();
     <span class="macro">trace!</span>(<span class="string">"compiling module: {:?}"</span>, module_id);
     <span class="kw">for </span>id <span class="kw">in </span>module.functions.iter() {
-        compile_fn_signature(ctx, <span class="kw-2">*</span>id);
+        compile_fn_signature(ctx, <span class="kw-2">*</span>id, <span class="bool-val">true</span>);
     }
 
     <span class="kw">for </span>id <span class="kw">in </span>module.functions.iter() {
@@ -1731,7 +1753,7 @@
     }
 }
 
-<span class="kw">fn </span>compile_fn_signature(ctx: <span class="kw-2">&amp;</span>ModuleCompileCtx&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, fn_id: DefId) {
+<span class="kw">fn </span>compile_fn_signature(ctx: <span class="kw-2">&amp;</span>ModuleCompileCtx&lt;<span class="lifetime">'_</span>, <span class="lifetime">'_</span>&gt;, fn_id: DefId, is_definition: bool) {
     <span class="kw">let </span>(arg_types, ret_type) = ctx.ctx.program.function_signatures.get(<span class="kw-2">&amp;</span>fn_id).unwrap();
     <span class="kw">let </span>body = ctx.ctx.program.functions.get(<span class="kw-2">&amp;</span>fn_id).unwrap();
     <span class="macro">trace!</span>(<span class="string">"compiling fn sig: {}"</span>, body.name);
@@ -1792,8 +1814,8 @@
         ctx.di_unit.get_file(),
         line <span class="kw">as </span>u32 + <span class="number">1</span>,
         di_type,
-        body.is_pub,
-        !body.is_extern,
+        !body.is_pub,
+        is_definition,
         line <span class="kw">as </span>u32 + <span class="number">1</span>,
         <span class="number">0</span>,
         <span class="bool-val">false</span>,
@@ -2065,10 +2087,16 @@
                 target,
             } =&gt; {
                 <span class="kw">let </span>target_fn_body = ctx.ctx.program.functions.get(func).unwrap();
-                <span class="kw">let </span>fn_value = ctx
-                    .module
-                    .get_function(<span class="kw-2">&amp;</span>target_fn_body.get_mangled_name())
-                    .unwrap();
+                <span class="comment">// compile_fn_signature(ctx, *id, true);
+                </span><span class="kw">let </span>fn_value = <span class="kw">match </span>ctx.module.get_function(<span class="kw-2">&amp;</span>target_fn_body.get_mangled_name()) {
+                    <span class="prelude-val">Some</span>(x) =&gt; x,
+                    <span class="prelude-val">None </span>=&gt; {
+                        compile_fn_signature(ctx, target_fn_body.def_id, <span class="bool-val">false</span>);
+                        ctx.module
+                            .get_function(<span class="kw-2">&amp;</span>target_fn_body.get_mangled_name())
+                            .unwrap()
+                    }
+                };
                 <span class="kw">let </span>args: Vec&lt;<span class="kw">_</span>&gt; = args
                     .iter()
                     .map(|x| compile_rvalue(ctx, fn_id, <span class="kw-2">&amp;</span>locals, x).unwrap().<span class="number">0</span>.into())

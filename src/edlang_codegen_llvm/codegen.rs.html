@@ -1533,6 +1533,9 @@
 <a href="#1532" id="1532">1532</a>
 <a href="#1533" id="1533">1533</a>
 <a href="#1534" id="1534">1534</a>
+<a href="#1535" id="1535">1535</a>
+<a href="#1536" id="1536">1536</a>
+<a href="#1537" id="1537">1537</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{
     collections::{HashMap, VecDeque},
     error::Error,
@@ -1782,7 +1785,7 @@
     <span class="kw">let </span>fn_value = ctx.module.add_function(
         <span class="kw-2">&amp;</span>body.get_mangled_name(),
         fn_type,
-        <span class="prelude-val">Some</span>(<span class="kw">if </span>body.is_pub || body.is_extern {
+        <span class="prelude-val">Some</span>(<span class="kw">if </span>body.is_extern || body.is_exported {
             inkwell::module::Linkage::External
         } <span class="kw">else </span>{
             inkwell::module::Linkage::Private
@@ -1807,20 +1810,23 @@
             DIFlagsConstants::PRIVATE
         },
     );
-    <span class="kw">let </span>subprogram = ctx.di_builder.create_function(
-        ctx.di_namespace,
-        <span class="kw-2">&amp;</span>body.name,
-        <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>body.get_mangled_name()),
-        ctx.di_unit.get_file(),
-        line <span class="kw">as </span>u32 + <span class="number">1</span>,
-        di_type,
-        !body.is_pub,
-        is_definition,
-        line <span class="kw">as </span>u32 + <span class="number">1</span>,
-        <span class="number">0</span>,
-        <span class="bool-val">false</span>,
-    );
-    fn_value.set_subprogram(subprogram);
+
+    <span class="kw">if </span>fn_value.get_subprogram().is_none() {
+        <span class="kw">let </span>subprogram = ctx.di_builder.create_function(
+            ctx.di_namespace,
+            <span class="kw-2">&amp;</span>body.name,
+            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>body.get_mangled_name()),
+            ctx.di_unit.get_file(),
+            line <span class="kw">as </span>u32 + <span class="number">1</span>,
+            di_type,
+            body.is_exported || body.is_extern,
+            is_definition &amp;&amp; !body.is_extern,
+            line <span class="kw">as </span>u32 + <span class="number">1</span>,
+            <span class="number">0</span>,
+            <span class="bool-val">false</span>,
+        );
+        fn_value.set_subprogram(subprogram);
+    }
 }
 
 <span class="kw">fn </span>compile_fn(ctx: <span class="kw-2">&amp;</span>ModuleCompileCtx, fn_id: DefId) -&gt; <span class="prelude-ty">Result</span>&lt;(), BuilderError&gt; {

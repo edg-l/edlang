@@ -137,6 +137,8 @@
 <a href="#136" id="136">136</a>
 <a href="#137" id="137">137</a>
 <a href="#138" id="138">138</a>
+<a href="#139" id="139">139</a>
+<a href="#140" id="140">140</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>logos::Logos;
 <span class="kw">use </span>std::convert::Infallible;
 
@@ -196,6 +198,8 @@
     </span>KeywordExtern,
     <span class="attr">#[token(<span class="string">"as"</span>)]
     </span>KeywordAs,
+    <span class="attr">#[token(<span class="string">"exported"</span>)]
+    </span>KeywordExported,
 
     <span class="comment">// Modern way of allowing identifiers, read: https://unicode.org/reports/tr31/
     </span><span class="attr">#[regex(<span class="string">r"[\p{XID_Start}_]\p{XID_Continue}*"</span>, |lex| lex.slice().to_string())]

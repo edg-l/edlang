@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["compile","main"],"mod":["linker"],"struct":["CompilerArgs"]};
+window.SIDEBAR_ITEMS = {"fn":["compile","main","parse_file"],"mod":["linker"],"struct":["CompilerArgs"]};

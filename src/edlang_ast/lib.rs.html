@@ -256,6 +256,8 @@
 <a href="#255" id="255">255</a>
 <a href="#256" id="256">256</a>
 <a href="#257" id="257">257</a>
+<a href="#258" id="258">258</a>
+<a href="#259" id="259">259</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::BTreeMap;
 
 <span class="kw">pub use </span>edlang_span::Span;
@@ -264,6 +266,7 @@
 </span><span class="kw">pub struct </span>Module {
     <span class="kw">pub </span>name: Ident,
     <span class="kw">pub </span>imports: Vec&lt;Import&gt;,
+    <span class="kw">pub </span>external_modules: Vec&lt;Ident&gt;,
     <span class="kw">pub </span>contents: Vec&lt;ModuleStatement&gt;,
     <span class="kw">pub </span>span: Span,
 }
@@ -396,6 +399,7 @@
     <span class="kw">pub </span>name: Ident,
     <span class="kw">pub </span>is_extern: bool,
     <span class="kw">pub </span>is_public: bool,
+    <span class="kw">pub </span>is_exported: bool,
     <span class="kw">pub </span>params: Vec&lt;FnParam&gt;,
     <span class="kw">pub </span>return_type: <span class="prelude-ty">Option</span>&lt;Type&gt;,
     <span class="kw">pub </span>body: <span class="prelude-ty">Option</span>&lt;Block&gt;,

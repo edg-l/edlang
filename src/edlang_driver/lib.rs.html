@@ -189,14 +189,19 @@
 <a href="#188" id="188">188</a>
 <a href="#189" id="189">189</a>
 <a href="#190" id="190">190</a>
+<a href="#191" id="191">191</a>
+<a href="#192" id="192">192</a>
+<a href="#193" id="193">193</a>
+<a href="#194" id="194">194</a>
+<a href="#195" id="195">195</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{path::PathBuf, time::Instant};
 
 <span class="kw">use </span>anyhow::Result;
 <span class="kw">use </span>ariadne::{sources, Source};
 <span class="kw">use </span>clap::Parser;
+<span class="kw">use </span>edlang_ast::Module;
 <span class="kw">use </span>edlang_lowering::lower_modules;
 <span class="kw">use </span>edlang_session::{DebugInfo, OptLevel, Session};
-<span class="kw">use </span>walkdir::WalkDir;
 
 <span class="kw">use </span><span class="kw">crate</span>::linker::{link_binary, link_shared_lib};
 
@@ -268,44 +273,48 @@
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="kw">pub fn </span>compile(args: <span class="kw-2">&amp;</span>CompilerArgs) -&gt; <span class="prelude-ty">Result</span>&lt;PathBuf&gt; {
-    <span class="kw">let </span><span class="kw-2">mut </span>files = Vec::new();
-    <span class="kw">for </span>entry <span class="kw">in </span>WalkDir::new(<span class="kw-2">&amp;</span>args.input).sort_by_file_name() {
-        <span class="kw">let </span>entry = entry<span class="question-mark">?</span>;
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(ext) = entry.path().extension() {
-            <span class="kw">if </span>ext.eq_ignore_ascii_case(<span class="string">"ed"</span>) {
-                files.push(entry.path().to_path_buf());
-            }
+<span class="kw">pub fn </span>parse_file(modules: <span class="kw-2">&amp;mut </span>Vec&lt;(PathBuf, String, Module)&gt;, <span class="kw-2">mut </span>path: PathBuf) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">if </span>path.is_dir() {
+        path = path.join(<span class="string">"mod.ed"</span>);
+    }
+
+    <span class="kw">let </span>source = std::fs::read_to_string(<span class="kw-2">&amp;</span>path)<span class="question-mark">?</span>;
+
+    <span class="kw">let </span>module_ast = edlang_parser::parse_ast(
+        <span class="kw-2">&amp;</span>source,
+        <span class="kw-2">&amp;</span>path.file_stem().expect(<span class="string">"no file stem"</span>).to_string_lossy(),
+    );
+
+    <span class="kw">let </span>module_temp = <span class="kw">match </span>module_ast {
+        <span class="prelude-val">Ok</span>(module) =&gt; module,
+        <span class="prelude-val">Err</span>(error) =&gt; {
+            <span class="kw">let </span>path = path.display().to_string();
+            <span class="kw">let </span>report = edlang_parser::error_to_report(<span class="kw-2">&amp;</span>path, <span class="kw-2">&amp;</span>error)<span class="question-mark">?</span>;
+            edlang_parser::print_report(<span class="kw-2">&amp;</span>path, <span class="kw-2">&amp;</span>source, report)<span class="question-mark">?</span>;
+            std::process::exit(<span class="number">1</span>)
         }
+    };
+
+    <span class="kw">for </span>ident <span class="kw">in </span><span class="kw-2">&amp;</span>module_temp.external_modules {
+        <span class="kw">let </span>module_path = path
+            .parent()
+            .unwrap()
+            .join(<span class="kw-2">&amp;</span>ident.name)
+            .with_extension(<span class="string">"ed"</span>);
+        <span class="comment">// todo: fancy error if doesnt exist?
+        </span>parse_file(modules, module_path)<span class="question-mark">?</span>;
     }
 
-    <span class="kw">if </span>files.is_empty() {
-        <span class="macro">panic!</span>(<span class="string">"files is empty"</span>);
-    }
+    modules.push((path, source, module_temp));
 
+    <span class="prelude-val">Ok</span>(())
+}
+
+<span class="kw">pub fn </span>compile(args: <span class="kw-2">&amp;</span>CompilerArgs) -&gt; <span class="prelude-ty">Result</span>&lt;PathBuf&gt; {
     <span class="kw">let </span>start_time = Instant::now();
 
     <span class="kw">let </span><span class="kw-2">mut </span>modules = Vec::new();
-
-    <span class="kw">for </span>path <span class="kw">in </span>files {
-        <span class="kw">let </span>source = std::fs::read_to_string(<span class="kw-2">&amp;</span>path)<span class="question-mark">?</span>;
-
-        <span class="kw">let </span>module_ast = edlang_parser::parse_ast(
-            <span class="kw-2">&amp;</span>source,
-            <span class="kw-2">&amp;</span>path.file_stem().expect(<span class="string">"no file stem"</span>).to_string_lossy(),
-        );
-
-        <span class="kw">let </span>module_temp = <span class="kw">match </span>module_ast {
-            <span class="prelude-val">Ok</span>(module) =&gt; module,
-            <span class="prelude-val">Err</span>(error) =&gt; {
-                <span class="kw">let </span>path = path.display().to_string();
-                <span class="kw">let </span>report = edlang_parser::error_to_report(<span class="kw-2">&amp;</span>path, <span class="kw-2">&amp;</span>error)<span class="question-mark">?</span>;
-                edlang_parser::print_report(<span class="kw-2">&amp;</span>path, <span class="kw-2">&amp;</span>source, report)<span class="question-mark">?</span>;
-                std::process::exit(<span class="number">1</span>)
-            }
-        };
-        modules.push((path, source, module_temp));
-    }
+    parse_file(<span class="kw-2">&amp;mut </span>modules, args.input.clone())<span class="question-mark">?</span>;
 
     <span class="kw">let </span>session = Session {
         file_paths: modules.iter().map(|x| x.<span class="number">0</span>.clone()).collect(),
@@ -372,7 +381,8 @@
         )<span class="question-mark">?</span>;
     }
 
-    <span class="kw">let </span>object_path = edlang_codegen_llvm::compile(<span class="kw-2">&amp;</span>session, <span class="kw-2">&amp;</span>program_ir).unwrap();
+    <span class="kw">let </span>object_path =
+        edlang_codegen_llvm::compile(<span class="kw-2">&amp;</span>session, <span class="kw-2">&amp;</span>program_ir).expect(<span class="string">"failed to compile"</span>);
 
     <span class="kw">let </span>elapsed = start_time.elapsed();
     <span class="macro">tracing::debug!</span>(<span class="string">"Done in {:?}"</span>, elapsed);

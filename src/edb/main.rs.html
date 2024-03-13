@@ -281,6 +281,32 @@
 <a href="#280" id="280">280</a>
 <a href="#281" id="281">281</a>
 <a href="#282" id="282">282</a>
+<a href="#283" id="283">283</a>
+<a href="#284" id="284">284</a>
+<a href="#285" id="285">285</a>
+<a href="#286" id="286">286</a>
+<a href="#287" id="287">287</a>
+<a href="#288" id="288">288</a>
+<a href="#289" id="289">289</a>
+<a href="#290" id="290">290</a>
+<a href="#291" id="291">291</a>
+<a href="#292" id="292">292</a>
+<a href="#293" id="293">293</a>
+<a href="#294" id="294">294</a>
+<a href="#295" id="295">295</a>
+<a href="#296" id="296">296</a>
+<a href="#297" id="297">297</a>
+<a href="#298" id="298">298</a>
+<a href="#299" id="299">299</a>
+<a href="#300" id="300">300</a>
+<a href="#301" id="301">301</a>
+<a href="#302" id="302">302</a>
+<a href="#303" id="303">303</a>
+<a href="#304" id="304">304</a>
+<a href="#305" id="305">305</a>
+<a href="#306" id="306">306</a>
+<a href="#307" id="307">307</a>
+<a href="#308" id="308">308</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{collections::HashMap, fs::File, io::Read, path::PathBuf, time::Instant};
 
 <span class="kw">use </span>anyhow::{bail, Context, <span class="prelude-ty">Result</span>};
@@ -397,7 +423,7 @@
             <span class="kw">if </span>bin {
                 std::fs::write(
                     path.join(<span class="string">"src"</span>).join(<span class="string">"main.ed"</span>),
-                    <span class="string">r#"pub fn main() -&gt; i32 {{
+                    <span class="string">r#"pub fn main() -&gt; i32 {
     return 0;
 }"#</span>,
                 )<span class="question-mark">?</span>;
@@ -406,7 +432,7 @@
             <span class="kw">if </span>lib {
                 std::fs::write(
                     path.join(<span class="string">"src"</span>).join(<span class="string">"lib.ed"</span>),
-                    <span class="string">r#"pub fn main() -&gt; i32 {{
+                    <span class="string">r#"pub fn main() -&gt; i32 {
     return 0;
 }"#</span>,
                 )<span class="question-mark">?</span>;
@@ -484,7 +510,6 @@
                 std::fs::create_dir_all(<span class="kw-2">&amp;</span>target_dir)<span class="question-mark">?</span>;
             }
 
-            <span class="kw">let </span>has_main = src_dir.join(<span class="string">"main.ed"</span>).exists();
             <span class="kw">let </span>output = target_dir.join(config.package.name);
 
             <span class="kw">let </span>(profile, profile_name) = <span class="kw">if let </span><span class="prelude-val">Some</span>(profile) = profile {
@@ -513,27 +538,44 @@
                 )
             };
 
-            <span class="kw">let </span>compile_args = CompilerArgs {
-                input: src_dir,
-                output: output.clone(),
-                release,
-                optlevel: <span class="prelude-val">Some</span>(profile.opt_level),
-                debug_info: <span class="prelude-val">Some</span>(profile.debug_info),
-                library: !has_main,
-                ast: <span class="bool-val">false</span>,
-                ir: <span class="bool-val">false</span>,
-                llvm: <span class="bool-val">true</span>,
-                asm: <span class="bool-val">false</span>,
-                object: <span class="bool-val">true</span>,
-            };
+            <span class="kw">let </span>lib_ed = src_dir.join(<span class="string">"lib.ed"</span>);
+            <span class="kw">let </span>main_ed = src_dir.join(<span class="string">"main.ed"</span>);
 
             <span class="kw">let </span>start = Instant::now();
-            <span class="kw">let </span>object = compile(<span class="kw-2">&amp;</span>compile_args)<span class="question-mark">?</span>;
 
-            <span class="kw">if </span>!has_main {
-                link_shared_lib(<span class="kw-2">&amp;</span>[object], <span class="kw-2">&amp;</span>output)<span class="question-mark">?</span>;
-            } <span class="kw">else </span>{
-                link_binary(<span class="kw-2">&amp;</span>[object], <span class="kw-2">&amp;</span>output)<span class="question-mark">?</span>;
+            <span class="kw">for </span>file <span class="kw">in </span>[main_ed, lib_ed] {
+                <span class="kw">if </span>file.exists() {
+                    <span class="kw">let </span>is_lib = file.file_stem().unwrap() == <span class="string">"lib"</span>;
+
+                    <span class="kw">let </span>compile_args = CompilerArgs {
+                        input: file,
+                        output: <span class="kw">if </span>is_lib {
+                            <span class="kw">let </span>name = output.file_stem().unwrap().to_string_lossy().to_string();
+                            <span class="kw">let </span>name = <span class="macro">format!</span>(<span class="string">"lib{name}"</span>);
+                            output
+                                .with_file_name(name)
+                                .with_extension(get_platform_library_ext())
+                        } <span class="kw">else </span>{
+                            output.clone()
+                        },
+                        release,
+                        optlevel: <span class="prelude-val">Some</span>(profile.opt_level),
+                        debug_info: <span class="prelude-val">Some</span>(profile.debug_info),
+                        library: is_lib,
+                        ast: <span class="bool-val">false</span>,
+                        ir: <span class="bool-val">false</span>,
+                        llvm: <span class="bool-val">true</span>,
+                        asm: <span class="bool-val">false</span>,
+                        object: <span class="bool-val">true</span>,
+                    };
+                    <span class="kw">let </span>object = compile(<span class="kw-2">&amp;</span>compile_args)<span class="question-mark">?</span>;
+
+                    <span class="kw">if </span>compile_args.library {
+                        link_shared_lib(<span class="kw-2">&amp;</span>[object], <span class="kw-2">&amp;</span>compile_args.output)<span class="question-mark">?</span>;
+                    } <span class="kw">else </span>{
+                        link_binary(<span class="kw-2">&amp;</span>[object], <span class="kw-2">&amp;</span>compile_args.output)<span class="question-mark">?</span>;
+                    }
+                }
             }
 
             <span class="kw">let </span>elapsed = start.elapsed();
@@ -562,5 +604,15 @@
     }
 
     <span class="prelude-val">Ok</span>(())
+}
+
+<span class="kw">pub fn </span>get_platform_library_ext() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
+    <span class="kw">if </span><span class="macro">cfg!</span>(target_os = <span class="string">"macos"</span>) {
+        <span class="string">"dylib"
+    </span>} <span class="kw">else if </span><span class="macro">cfg!</span>(target_os = <span class="string">"windows"</span>) {
+        <span class="string">"dll"
+    </span>} <span class="kw">else </span>{
+        <span class="string">"so"
+    </span>}
 }
 </code></pre></div></section></main></body></html>

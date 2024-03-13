@@ -122,6 +122,7 @@
 <a href="#121" id="121">121</a>
 <a href="#122" id="122">122</a>
 <a href="#123" id="123">123</a>
+<a href="#124" id="124">124</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::ops::Range;
 
 <span class="kw">use </span><span class="kw">crate</span>::error::Error;
@@ -146,10 +147,11 @@
 
 <span class="kw">pub fn </span>parse_ast(
     source: <span class="kw-2">&amp;</span>str,
-) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;edlang_ast::Module&gt;, ParseError&lt;usize, Token, LexicalError&gt;&gt; {
+    module_name: <span class="kw-2">&amp;</span>str,
+) -&gt; <span class="prelude-ty">Result</span>&lt;edlang_ast::Module, ParseError&lt;usize, Token, LexicalError&gt;&gt; {
     <span class="kw">let </span>lexer = Lexer::new(source);
-    <span class="kw">let </span>parser = grammar::ModulesParser::new();
-    parser.parse(lexer)
+    <span class="kw">let </span>parser = grammar::TopLevelModuleParser::new();
+    parser.parse(module_name, lexer)
 }
 
 <span class="kw">pub fn </span>print_report&lt;<span class="lifetime">'a</span>&gt;(
@@ -170,7 +172,7 @@
         ParseError::InvalidToken { location } =&gt; {
             <span class="kw">let </span>loc = <span class="kw-2">*</span>location;
             Report::build(ReportKind::Error, path, loc)
-                .with_code(<span class="string">"P1"</span>)
+                .with_code(<span class="string">"InvalidToken"</span>)
                 .with_label(
                     Label::new((path, loc..(loc + <span class="number">1</span>)))
                         .with_color(colors.next())
@@ -181,7 +183,7 @@
         ParseError::UnrecognizedEof { location, expected } =&gt; {
             <span class="kw">let </span>loc = <span class="kw-2">*</span>location;
             Report::build(ReportKind::Error, path, loc)
-                .with_code(<span class="string">"P2"</span>)
+                .with_code(<span class="string">"UnrecognizedEof"</span>)
                 .with_label(
                     Label::new((path, loc..(loc + <span class="number">1</span>)))
                         .with_message(<span class="macro">format!</span>(
@@ -194,7 +196,7 @@
         }
         ParseError::UnrecognizedToken { token, expected } =&gt; {
             Report::build(ReportKind::Error, path, token.<span class="number">0</span>)
-                .with_code(<span class="number">3</span>)
+                .with_code(<span class="string">"UnrecognizedToken"</span>)
                 .with_label(
                     Label::new((path, token.<span class="number">0</span>..token.<span class="number">2</span>))
                         .with_message(<span class="macro">format!</span>(
@@ -207,7 +209,7 @@
                 .finish()
         }
         ParseError::ExtraToken { token } =&gt; Report::build(ReportKind::Error, path, token.<span class="number">0</span>)
-            .with_code(<span class="string">"P3"</span>)
+            .with_code(<span class="string">"ExtraToken"</span>)
             .with_message(<span class="string">"Extra token"</span>)
             .with_label(
                 Label::new((path, token.<span class="number">0</span>..token.<span class="number">2</span>))
@@ -218,7 +220,7 @@
             LexicalError::InvalidToken(err, range) =&gt; <span class="kw">match </span>err {
                 tokens::LexingError::NumberParseError =&gt; {
                     Report::build(ReportKind::Error, path, range.start)
-                        .with_code(<span class="number">4</span>)
+                        .with_code(<span class="string">"InvalidToken"</span>)
                         .with_message(<span class="string">"Error parsing literal number"</span>)
                         .with_label(
                             Label::new((path, range.start..range.end))
@@ -228,7 +230,7 @@
                         .finish()
                 }
                 tokens::LexingError::Other =&gt; Report::build(ReportKind::Error, path, range.start)
-                    .with_code(<span class="number">4</span>)
+                    .with_code(<span class="string">"Other"</span>)
                     .with_message(<span class="string">"Other error"</span>)
                     .with_label(
                         Label::new((path, range.start..range.end))

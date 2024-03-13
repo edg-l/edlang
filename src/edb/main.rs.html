@@ -281,18 +281,6 @@
 <a href="#280" id="280">280</a>
 <a href="#281" id="281">281</a>
 <a href="#282" id="282">282</a>
-<a href="#283" id="283">283</a>
-<a href="#284" id="284">284</a>
-<a href="#285" id="285">285</a>
-<a href="#286" id="286">286</a>
-<a href="#287" id="287">287</a>
-<a href="#288" id="288">288</a>
-<a href="#289" id="289">289</a>
-<a href="#290" id="290">290</a>
-<a href="#291" id="291">291</a>
-<a href="#292" id="292">292</a>
-<a href="#293" id="293">293</a>
-<a href="#294" id="294">294</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{collections::HashMap, fs::File, io::Read, path::PathBuf, time::Instant};
 
 <span class="kw">use </span>anyhow::{bail, Context, <span class="prelude-ty">Result</span>};
@@ -401,7 +389,7 @@
 
             std::fs::write(config_path, toml::to_string_pretty(<span class="kw-2">&amp;</span>config)<span class="question-mark">?</span>)
                 .context(<span class="string">"failed to write Ed.toml"</span>)<span class="question-mark">?</span>;
-            std::fs::write(path.join(<span class="string">".gitignore"</span>), <span class="string">"/target-ed\n"</span>)
+            std::fs::write(path.join(<span class="string">".gitignore"</span>), <span class="string">"/build\n"</span>)
                 .context(<span class="string">"failed to write .gitignore"</span>)<span class="question-mark">?</span>;
             std::fs::write(path.join(<span class="string">".gitattributes"</span>), <span class="string">"*.ed linguist-language=Rust\n"</span>)
                 .context(<span class="string">"failed to write .gitattributes"</span>)<span class="question-mark">?</span>;
@@ -409,30 +397,18 @@
             <span class="kw">if </span>bin {
                 std::fs::write(
                     path.join(<span class="string">"src"</span>).join(<span class="string">"main.ed"</span>),
-                    <span class="macro">format!</span>(
-                        <span class="string">r#"
-mod {} {{
-    pub fn main() -&gt; i32 {{
-        return 0;
-    }}
-}}"#</span>,
-                        name
-                    ),
+                    <span class="string">r#"pub fn main() -&gt; i32 {{
+    return 0;
+}"#</span>,
                 )<span class="question-mark">?</span>;
             }
 
             <span class="kw">if </span>lib {
                 std::fs::write(
                     path.join(<span class="string">"src"</span>).join(<span class="string">"lib.ed"</span>),
-                    <span class="macro">format!</span>(
-                        <span class="string">r#"
-mod {} {{
-    pub fn hello_world() -&gt; i32 {{
-        return 0;
-    }}
-}}"#</span>,
-                        name
-                    ),
+                    <span class="string">r#"pub fn main() -&gt; i32 {{
+    return 0;
+}"#</span>,
                 )<span class="question-mark">?</span>;
             }
 
@@ -502,7 +478,7 @@ mod {} {{
             );
 
             <span class="kw">let </span>src_dir = base_dir.join(<span class="string">"src"</span>);
-            <span class="kw">let </span>target_dir = base_dir.join(<span class="string">"target-ed"</span>);
+            <span class="kw">let </span>target_dir = base_dir.join(<span class="string">"build"</span>);
 
             <span class="kw">if </span>!target_dir.exists() {
                 std::fs::create_dir_all(<span class="kw-2">&amp;</span>target_dir)<span class="question-mark">?</span>;

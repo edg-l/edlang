@@ -553,6 +553,7 @@
 <a href="#552" id="552">552</a>
 <a href="#553" id="553">553</a>
 <a href="#554" id="554">554</a>
+<a href="#555" id="555">555</a>
 </pre></div><pre class="rust"><code><span class="comment">// Based on a cfg
 
 </span><span class="kw">use </span>std::{
@@ -588,6 +589,7 @@
     <span class="kw">pub </span>structs: BTreeMap&lt;DefId, AdtBody&gt;,
     <span class="doccomment">/// The function signatures.
     </span><span class="kw">pub </span>function_signatures: BTreeMap&lt;DefId, (Vec&lt;TypeInfo&gt;, TypeInfo)&gt;,
+    <span class="kw">pub </span>file_names: BTreeMap&lt;usize, String&gt;,
 }
 
 <span class="attr">#[derive(Debug, Clone)]

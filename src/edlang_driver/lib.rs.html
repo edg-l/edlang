@@ -186,6 +186,9 @@
 <a href="#185" id="185">185</a>
 <a href="#186" id="186">186</a>
 <a href="#187" id="187">187</a>
+<a href="#188" id="188">188</a>
+<a href="#189" id="189">189</a>
+<a href="#190" id="190">190</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{path::PathBuf, time::Instant};
 
 <span class="kw">use </span>anyhow::Result;
@@ -267,7 +270,7 @@
 
 <span class="kw">pub fn </span>compile(args: <span class="kw-2">&amp;</span>CompilerArgs) -&gt; <span class="prelude-ty">Result</span>&lt;PathBuf&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>files = Vec::new();
-    <span class="kw">for </span>entry <span class="kw">in </span>WalkDir::new(<span class="kw-2">&amp;</span>args.input) {
+    <span class="kw">for </span>entry <span class="kw">in </span>WalkDir::new(<span class="kw-2">&amp;</span>args.input).sort_by_file_name() {
         <span class="kw">let </span>entry = entry<span class="question-mark">?</span>;
         <span class="kw">if let </span><span class="prelude-val">Some</span>(ext) = entry.path().extension() {
             <span class="kw">if </span>ext.eq_ignore_ascii_case(<span class="string">"ed"</span>) {
@@ -287,10 +290,13 @@
     <span class="kw">for </span>path <span class="kw">in </span>files {
         <span class="kw">let </span>source = std::fs::read_to_string(<span class="kw-2">&amp;</span>path)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>modules_ast = edlang_parser::parse_ast(<span class="kw-2">&amp;</span>source);
+        <span class="kw">let </span>module_ast = edlang_parser::parse_ast(
+            <span class="kw-2">&amp;</span>source,
+            <span class="kw-2">&amp;</span>path.file_stem().expect(<span class="string">"no file stem"</span>).to_string_lossy(),
+        );
 
-        <span class="kw">let </span>modules_temp = <span class="kw">match </span>modules_ast {
-            <span class="prelude-val">Ok</span>(modules) =&gt; modules,
+        <span class="kw">let </span>module_temp = <span class="kw">match </span>module_ast {
+            <span class="prelude-val">Ok</span>(module) =&gt; module,
             <span class="prelude-val">Err</span>(error) =&gt; {
                 <span class="kw">let </span>path = path.display().to_string();
                 <span class="kw">let </span>report = edlang_parser::error_to_report(<span class="kw-2">&amp;</span>path, <span class="kw-2">&amp;</span>error)<span class="question-mark">?</span>;
@@ -298,7 +304,7 @@
                 std::process::exit(<span class="number">1</span>)
             }
         };
-        modules.push((path, source, modules_temp));
+        modules.push((path, source, module_temp));
     }
 
     <span class="kw">let </span>session = Session {

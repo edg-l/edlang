@@ -1310,12 +1310,6 @@
 <a href="#1309" id="1309">1309</a>
 <a href="#1310" id="1310">1310</a>
 <a href="#1311" id="1311">1311</a>
-<a href="#1312" id="1312">1312</a>
-<a href="#1313" id="1313">1313</a>
-<a href="#1314" id="1314">1314</a>
-<a href="#1315" id="1315">1315</a>
-<a href="#1316" id="1316">1316</a>
-<a href="#1317" id="1317">1317</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::HashMap;
 
 <span class="kw">use </span>ast::{BinaryOp, ModuleStatement, Span, WhileStmt};
@@ -1333,33 +1327,27 @@
 <span class="kw">pub mod </span>errors;
 <span class="kw">mod </span>prepass;
 
-<span class="kw">pub fn </span>lower_modules(modules: <span class="kw-2">&amp;</span>[Vec&lt;ast::Module&gt;]) -&gt; <span class="prelude-ty">Result</span>&lt;ProgramBody, LoweringError&gt; {
+<span class="kw">pub fn </span>lower_modules(modules: <span class="kw-2">&amp;</span>[ast::Module]) -&gt; <span class="prelude-ty">Result</span>&lt;ProgramBody, LoweringError&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>ctx = BuildCtx::default();
 
     <span class="comment">// resolve symbols
-    </span><span class="kw">for </span>(file_id, modules) <span class="kw">in </span>modules.iter().enumerate() {
-        <span class="kw">for </span>module <span class="kw">in </span>modules {
-            ctx = prepass::prepass_module(ctx, module, file_id)<span class="question-mark">?</span>;
-        }
+    </span><span class="kw">for </span>(file_id, module) <span class="kw">in </span>modules.iter().enumerate() {
+        ctx = prepass::prepass_module(ctx, module, file_id)<span class="question-mark">?</span>;
     }
 
     <span class="comment">// resolve imports
-    </span><span class="kw">for </span>(file_id, modules) <span class="kw">in </span>modules.iter().enumerate() {
-        <span class="kw">for </span>module <span class="kw">in </span>modules {
-            ctx = prepass::prepass_imports(ctx, module, file_id)<span class="question-mark">?</span>;
-        }
+    </span><span class="kw">for </span>(file_id, module) <span class="kw">in </span>modules.iter().enumerate() {
+        ctx = prepass::prepass_imports(ctx, module, file_id)<span class="question-mark">?</span>;
     }
 
-    <span class="kw">for </span>modules <span class="kw">in </span>modules {
-        <span class="kw">for </span>mod_def <span class="kw">in </span>modules {
-            <span class="kw">let </span>id = <span class="kw-2">*</span>ctx
-                .body
-                .top_level_module_names
-                .get(<span class="kw-2">&amp;</span>mod_def.name.name)
-                .expect(<span class="string">"module should exist"</span>);
+    <span class="kw">for </span>mod_def <span class="kw">in </span>modules {
+        <span class="kw">let </span>id = <span class="kw-2">*</span>ctx
+            .body
+            .top_level_module_names
+            .get(<span class="kw-2">&amp;</span>mod_def.name.name)
+            .expect(<span class="string">"module should exist"</span>);
 
-            ctx = lower_module(ctx, mod_def, id)<span class="question-mark">?</span>;
-        }
+        ctx = lower_module(ctx, mod_def, id)<span class="question-mark">?</span>;
     }
 
     <span class="prelude-val">Ok</span>(ctx.body)

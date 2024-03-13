@@ -1,11 +1,9 @@
-mod Main {
-    pub fn main(argc: i64) -> i64 {
-        let mut a: i64 = 0;
+pub fn main(argc: i64) -> i64 {
+    let mut a: i64 = 0;
 
-        if argc > 2 {
-            a = 1;
-        }
-
-        return a;
+    if argc > 2 {
+        a = 1;
     }
+
+    return a;
 }

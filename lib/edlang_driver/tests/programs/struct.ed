@@ -1,20 +1,18 @@
-mod Main {
 
-    struct Hello {
-        a: i32,
-        b: i64,
-    }
+struct Hello {
+    a: i32,
+    b: i64,
+}
 
-    pub fn main() -> i64 {
-        let x: Hello = Hello {
-            a: 2,
-            b: 3,
-        };
-        hello(&mut x);
-        return x.b;
-    }
+pub fn main() -> i64 {
+    let x: Hello = Hello {
+        a: 2,
+        b: 3,
+    };
+    hello(&mut x);
+    return x.b;
+}
 
-    pub fn hello(a: &mut Hello) {
-        a.b = 5;
-    }
+pub fn hello(a: &mut Hello) {
+    a.b = 5;
 }

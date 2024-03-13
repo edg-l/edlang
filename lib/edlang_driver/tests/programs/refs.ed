@@ -1,13 +1,12 @@
-mod Main {
-    pub fn main() -> i64 {
-        let mut a: i64 = 0;
 
-        hello(&mut a);
+pub fn main() -> i64 {
+    let mut a: i64 = 0;
 
-        return a;
-    }
+    hello(&mut a);
 
-    pub fn hello(a: &mut i32) {
-        *a = 2;
-    }
+    return a;
+}
+
+pub fn hello(a: &mut i32) {
+    *a = 2;
 }

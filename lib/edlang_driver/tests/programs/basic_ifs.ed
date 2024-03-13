@@ -1,19 +1,18 @@
-mod Main {
-    fn add(a: i32, b: i32) -> i32 {
-        return a + b;
-    }
 
-    fn check(a: i32) -> i32 {
-        if a == 2 {
-            return a;
-        } else {
-            return 0;
-        }
-    }
+fn add(a: i32, b: i32) -> i32 {
+    return a + b;
+}
 
-    pub fn main() -> i32 {
-        let x: i32 = 2 + 3;
-        let y: i32 = add(x, 4);
-        return y;
+fn check(a: i32) -> i32 {
+    if a == 2 {
+        return a;
+    } else {
+        return 0;
     }
+}
+
+pub fn main() -> i32 {
+    let x: i32 = 2 + 3;
+    let y: i32 = add(x, 4);
+    return y;
 }

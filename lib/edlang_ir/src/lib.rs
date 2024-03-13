@@ -70,6 +70,8 @@ pub struct Body {
     pub def_id: DefId,
     pub is_pub: bool,
     pub is_extern: bool,
+    // exported means externally available in a shared library or as main
+    pub is_exported: bool,
     pub name: String,
     pub locals: SmallVec<[Local; 4]>,
     pub blocks: SmallVec<[BasicBlock; 8]>,
@@ -94,18 +96,14 @@ impl Body {
     }
 
     pub fn get_mangled_name(&self) -> String {
-        if self.is_extern {
+        if self.is_extern || self.is_exported {
             return self.name.clone();
         }
 
-        if self.name == "main" {
-            "main".to_string()
-        } else {
-            format!(
-                "{}@{}@{}",
-                self.name, self.def_id.program_id, self.def_id.id
-            )
-        }
+        format!(
+            "{}@{}@{}",
+            self.name, self.def_id.program_id, self.def_id.id
+        )
     }
 }
 

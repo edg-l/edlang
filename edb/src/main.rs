@@ -114,7 +114,7 @@ fn main() -> Result<()> {
             if bin {
                 std::fs::write(
                     path.join("src").join("main.ed"),
-                    r#"pub fn main() -> i32 {{
+                    r#"pub fn main() -> i32 {
     return 0;
 }"#,
                 )?;
@@ -123,7 +123,7 @@ fn main() -> Result<()> {
             if lib {
                 std::fs::write(
                     path.join("src").join("lib.ed"),
-                    r#"pub fn main() -> i32 {{
+                    r#"pub fn main() -> i32 {
     return 0;
 }"#,
                 )?;
@@ -201,7 +201,6 @@ fn main() -> Result<()> {
                 std::fs::create_dir_all(&target_dir)?;
             }
 
-            let has_main = src_dir.join("main.ed").exists();
             let output = target_dir.join(config.package.name);
 
             let (profile, profile_name) = if let Some(profile) = profile {
@@ -230,27 +229,44 @@ fn main() -> Result<()> {
                 )
             };
 
-            let compile_args = CompilerArgs {
-                input: src_dir,
-                output: output.clone(),
-                release,
-                optlevel: Some(profile.opt_level),
-                debug_info: Some(profile.debug_info),
-                library: !has_main,
-                ast: false,
-                ir: false,
-                llvm: true,
-                asm: false,
-                object: true,
-            };
+            let lib_ed = src_dir.join("lib.ed");
+            let main_ed = src_dir.join("main.ed");
 
             let start = Instant::now();
-            let object = compile(&compile_args)?;
 
-            if !has_main {
-                link_shared_lib(&[object], &output)?;
-            } else {
-                link_binary(&[object], &output)?;
+            for file in [main_ed, lib_ed] {
+                if file.exists() {
+                    let is_lib = file.file_stem().unwrap() == "lib";
+
+                    let compile_args = CompilerArgs {
+                        input: file,
+                        output: if is_lib {
+                            let name = output.file_stem().unwrap().to_string_lossy().to_string();
+                            let name = format!("lib{name}");
+                            output
+                                .with_file_name(name)
+                                .with_extension(get_platform_library_ext())
+                        } else {
+                            output.clone()
+                        },
+                        release,
+                        optlevel: Some(profile.opt_level),
+                        debug_info: Some(profile.debug_info),
+                        library: is_lib,
+                        ast: false,
+                        ir: false,
+                        llvm: true,
+                        asm: false,
+                        object: true,
+                    };
+                    let object = compile(&compile_args)?;
+
+                    if compile_args.library {
+                        link_shared_lib(&[object], &compile_args.output)?;
+                    } else {
+                        link_binary(&[object], &compile_args.output)?;
+                    }
+                }
             }
 
             let elapsed = start.elapsed();
@@ -279,4 +295,14 @@ fn main() -> Result<()> {
     }
 
     Ok(())
+}
+
+pub fn get_platform_library_ext() -> &'static str {
+    if cfg!(target_os = "macos") {
+        "dylib"
+    } else if cfg!(target_os = "windows") {
+        "dll"
+    } else {
+        "so"
+    }
 }

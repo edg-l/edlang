@@ -149,8 +149,9 @@ fn lower_function(
                 let body = ctx.body.modules.get(&module_id).unwrap();
                 *body.symbols.functions.get(&func.name.name).unwrap()
             },
-            is_pub: func.is_public || func.name.name == "main",
+            is_pub: func.is_public,
             is_extern: func.is_extern,
+            is_exported: func.is_exported || func.name.name == "main",
             fn_span: func.span,
         },
         local_module: module_id,

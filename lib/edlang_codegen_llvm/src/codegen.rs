@@ -247,7 +247,7 @@ fn compile_fn_signature(ctx: &ModuleCompileCtx<'_, '_>, fn_id: DefId, is_definit
     let fn_value = ctx.module.add_function(
         &body.get_mangled_name(),
         fn_type,
-        Some(if body.is_pub || body.is_extern {
+        Some(if body.is_extern || body.is_exported {
             inkwell::module::Linkage::External
         } else {
             inkwell::module::Linkage::Private
@@ -272,20 +272,23 @@ fn compile_fn_signature(ctx: &ModuleCompileCtx<'_, '_>, fn_id: DefId, is_definit
             DIFlagsConstants::PRIVATE
         },
     );
-    let subprogram = ctx.di_builder.create_function(
-        ctx.di_namespace,
-        &body.name,
-        Some(&body.get_mangled_name()),
-        ctx.di_unit.get_file(),
-        line as u32 + 1,
-        di_type,
-        !body.is_pub,
-        is_definition,
-        line as u32 + 1,
-        0,
-        false,
-    );
-    fn_value.set_subprogram(subprogram);
+
+    if fn_value.get_subprogram().is_none() {
+        let subprogram = ctx.di_builder.create_function(
+            ctx.di_namespace,
+            &body.name,
+            Some(&body.get_mangled_name()),
+            ctx.di_unit.get_file(),
+            line as u32 + 1,
+            di_type,
+            body.is_exported || body.is_extern,
+            is_definition && !body.is_extern,
+            line as u32 + 1,
+            0,
+            false,
+        );
+        fn_value.set_subprogram(subprogram);
+    }
 }
 
 fn compile_fn(ctx: &ModuleCompileCtx, fn_id: DefId) -> Result<(), BuilderError> {

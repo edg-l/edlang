@@ -28,6 +28,7 @@ extern {
     "in" => Token::KeywordIn,
     "extern" => Token::KeywordExtern,
     "as" => Token::KeywordAs,
+    "exported" => Token::KeywordExported,
 
     // literals
     "identifier" => Token::Identifier(<String>),
@@ -426,16 +427,18 @@ pub(crate) Function: ast::Function = {
         <return_type:("->" <Type>)?> ";" <hi:@R> => ast::Function {
         is_public: is_public.is_some(),
         is_extern: true,
+        is_exported: false,
         name,
         params,
         return_type,
         body: None,
         span: ast::Span::new(lo, hi),
     },
-    <lo:@L> <is_public:"pub"?> "fn" <name:Ident> "(" <params:Comma<FnParam>> ")"
+    <lo:@L> <is_public:"pub"?> <is_exported:"exported"?> "fn" <name:Ident> "(" <params:Comma<FnParam>> ")"
         <return_type:("->" <Type>)?> <body:Block> <hi:@R> => ast::Function {
         is_public: is_public.is_some(),
         is_extern: false,
+        is_exported: is_exported.is_some(),
         name,
         params,
         return_type,
@@ -478,13 +481,18 @@ pub(crate) Import: ast::Import = {
     }
 }
 
+pub(crate) ExternalModule: ast::Ident = {
+  "mod" <name:Ident> ";" => name
+}
+
 pub TopLevelModule: ast::Module = {
-  <lo:@L> <imports:List<Import>?> <contents:List<ModuleStatement>> <hi:@R> => ast::Module {
+  <lo:@L> <imports:List<Import>?> <external_modules:List<ExternalModule>?> <contents:List<ModuleStatement>> <hi:@R> => ast::Module {
         name: ast::Ident {
           name: module_name.to_string(),
           span: ast::Span::new(0, 0),
         },
         imports: imports.unwrap_or(vec![]),
+        external_modules: external_modules.unwrap_or(vec![]),
         contents,
         span: ast::Span::new(lo, hi),
     }
@@ -494,6 +502,7 @@ pub Module: ast::Module = {
     <lo:@L> "mod" <name:Ident> "{" <imports:List<Import>?> <contents:List<ModuleStatement>> "}" <hi:@R> => ast::Module {
         name,
         imports: imports.unwrap_or(vec![]),
+        external_modules: Vec::new(),
         contents,
         span: ast::Span::new(lo, hi),
     }

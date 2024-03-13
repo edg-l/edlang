@@ -6,6 +6,7 @@ pub use edlang_span::Span;
 pub struct Module {
     pub name: Ident,
     pub imports: Vec<Import>,
+    pub external_modules: Vec<Ident>,
     pub contents: Vec<ModuleStatement>,
     pub span: Span,
 }
@@ -138,6 +139,7 @@ pub struct Function {
     pub name: Ident,
     pub is_extern: bool,
     pub is_public: bool,
+    pub is_exported: bool,
     pub params: Vec<FnParam>,
     pub return_type: Option<Type>,
     pub body: Option<Block>,

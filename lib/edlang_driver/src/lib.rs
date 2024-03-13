@@ -3,9 +3,9 @@ use std::{path::PathBuf, time::Instant};
 use anyhow::Result;
 use ariadne::{sources, Source};
 use clap::Parser;
+use edlang_ast::Module;
 use edlang_lowering::lower_modules;
 use edlang_session::{DebugInfo, OptLevel, Session};
-use walkdir::WalkDir;
 
 use crate::linker::{link_binary, link_shared_lib};
 
@@ -77,44 +77,48 @@ pub fn main() -> Result<()> {
     Ok(())
 }
 
-pub fn compile(args: &CompilerArgs) -> Result<PathBuf> {
-    let mut files = Vec::new();
-    for entry in WalkDir::new(&args.input).sort_by_file_name() {
-        let entry = entry?;
-        if let Some(ext) = entry.path().extension() {
-            if ext.eq_ignore_ascii_case("ed") {
-                files.push(entry.path().to_path_buf());
-            }
+pub fn parse_file(modules: &mut Vec<(PathBuf, String, Module)>, mut path: PathBuf) -> Result<()> {
+    if path.is_dir() {
+        path = path.join("mod.ed");
+    }
+
+    let source = std::fs::read_to_string(&path)?;
+
+    let module_ast = edlang_parser::parse_ast(
+        &source,
+        &path.file_stem().expect("no file stem").to_string_lossy(),
+    );
+
+    let module_temp = match module_ast {
+        Ok(module) => module,
+        Err(error) => {
+            let path = path.display().to_string();
+            let report = edlang_parser::error_to_report(&path, &error)?;
+            edlang_parser::print_report(&path, &source, report)?;
+            std::process::exit(1)
         }
+    };
+
+    for ident in &module_temp.external_modules {
+        let module_path = path
+            .parent()
+            .unwrap()
+            .join(&ident.name)
+            .with_extension("ed");
+        // todo: fancy error if doesnt exist?
+        parse_file(modules, module_path)?;
     }
 
-    if files.is_empty() {
-        panic!("files is empty");
-    }
+    modules.push((path, source, module_temp));
 
+    Ok(())
+}
+
+pub fn compile(args: &CompilerArgs) -> Result<PathBuf> {
     let start_time = Instant::now();
 
     let mut modules = Vec::new();
-
-    for path in files {
-        let source = std::fs::read_to_string(&path)?;
-
-        let module_ast = edlang_parser::parse_ast(
-            &source,
-            &path.file_stem().expect("no file stem").to_string_lossy(),
-        );
-
-        let module_temp = match module_ast {
-            Ok(module) => module,
-            Err(error) => {
-                let path = path.display().to_string();
-                let report = edlang_parser::error_to_report(&path, &error)?;
-                edlang_parser::print_report(&path, &source, report)?;
-                std::process::exit(1)
-            }
-        };
-        modules.push((path, source, module_temp));
-    }
+    parse_file(&mut modules, args.input.clone())?;
 
     let session = Session {
         file_paths: modules.iter().map(|x| x.0.clone()).collect(),
@@ -181,7 +185,8 @@ pub fn compile(args: &CompilerArgs) -> Result<PathBuf> {
         )?;
     }
 
-    let object_path = edlang_codegen_llvm::compile(&session, &program_ir).unwrap();
+    let object_path =
+        edlang_codegen_llvm::compile(&session, &program_ir).expect("failed to compile");
 
     let elapsed = start_time.elapsed();
     tracing::debug!("Done in {:?}", elapsed);

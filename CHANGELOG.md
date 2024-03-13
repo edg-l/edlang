@@ -6,6 +6,18 @@ All notable changes to this project will be documented in this file.
 
 ### 🚀 Features
 
+- Module file declarations, fixes
+
+## [0.0.1-alpha.14] - 2024-03-11
+
+### 🐛 Bug Fixes
+
+- Fix wrong linking
+
+## [0.0.1-alpha.13] - 2024-03-11
+
+### 🚀 Features
+
 - More checks
 - More checks
 - Initial work on edb, the edlang project manager
@@ -16,6 +28,10 @@ All notable changes to this project will be documented in this file.
 
 - Fix span in lalrpop
 - Fix on type qualifier lowering
+
+### ⚙️ Miscellaneous Tasks
+
+- Upd changelog
 
 ## [0.0.1-alpha.12] - 2024-03-02
 

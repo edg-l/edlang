@@ -235,7 +235,7 @@ dependencies = [
 
 [[package]]
 name = "edb"
-version = "0.0.1-alpha.14"
+version = "0.0.1-alpha.15"
 dependencies = [
  "anyhow",
  "clap",
@@ -248,14 +248,14 @@ dependencies = [
 
 [[package]]
 name = "edlang_ast"
-version = "0.0.1-alpha.14"
+version = "0.0.1-alpha.15"
 dependencies = [
  "edlang_span",
 ]
 
 [[package]]
 name = "edlang_check"
-version = "0.0.1-alpha.14"
+version = "0.0.1-alpha.15"
 dependencies = [
  "ariadne",
  "edlang_ast",
@@ -266,7 +266,7 @@ dependencies = [
 
 [[package]]
 name = "edlang_codegen_llvm"
-version = "0.0.1-alpha.14"
+version = "0.0.1-alpha.15"
 dependencies = [
  "edlang_ir",
  "edlang_parser",
@@ -279,7 +279,7 @@ dependencies = [
 
 [[package]]
 name = "edlang_driver"
-version = "0.0.1-alpha.14"
+version = "0.0.1-alpha.15"
 dependencies = [
  "anyhow",
  "ariadne",
@@ -300,7 +300,7 @@ dependencies = [
 
 [[package]]
 name = "edlang_ir"
-version = "0.0.1-alpha.14"
+version = "0.0.1-alpha.15"
 dependencies = [
  "edlang_span",
  "educe",
@@ -309,7 +309,7 @@ dependencies = [
 
 [[package]]
 name = "edlang_lowering"
-version = "0.0.1-alpha.14"
+version = "0.0.1-alpha.15"
 dependencies = [
  "edlang_ast",
  "edlang_ir",
@@ -319,7 +319,7 @@ dependencies = [
 
 [[package]]
 name = "edlang_parser"
-version = "0.0.1-alpha.14"
+version = "0.0.1-alpha.15"
 dependencies = [
  "ariadne",
  "edlang_ast",
@@ -332,18 +332,18 @@ dependencies = [
 
 [[package]]
 name = "edlang_session"
-version = "0.0.1-alpha.14"
+version = "0.0.1-alpha.15"
 dependencies = [
  "ariadne",
 ]
 
 [[package]]
 name = "edlang_span"
-version = "0.0.1-alpha.14"
+version = "0.0.1-alpha.15"
 
 [[package]]
 name = "edlangc"
-version = "0.0.1-alpha.14"
+version = "0.0.1-alpha.15"
 dependencies = [
  "edlang_driver",
 ]

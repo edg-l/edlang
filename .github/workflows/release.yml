@@ -46,9 +46,9 @@ jobs:
         env:
           OUTPUT: CHANGES.md
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
-          body: ${{ steps.git-cliff.outputs.content }}
+          body_path: CHANGES.md
           files: |
             README.md
             LICENSE

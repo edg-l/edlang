@@ -1,6 +1,6 @@
 [package]
 name = "edlang_session"
-version = "0.0.1-alpha.14"
+version = "0.0.1-alpha.15"
 authors = ["Edgar Luque <edgar@edgarluque.com>"]
 description = "edlang session"
 edition = "2021"

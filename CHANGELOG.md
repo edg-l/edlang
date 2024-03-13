@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [unreleased]
+
+### ⚙️ Miscellaneous Tasks
+
+- Git cliff config
+
+## [0.0.1-alpha.16] - 2024-03-13
+
+### 🐛 Bug Fixes
+
+- Fix tests
+
+### ⚙️ Miscellaneous Tasks
+
+- Bump version
+
 ## [0.0.1-alpha.15] - 2024-03-13
 
 ### 🚀 Features
@@ -15,6 +31,17 @@ All notable changes to this project will be documented in this file.
 - Fix multi file function resolution
 
 - Fix scope
+
+
+### Other
+
+- *(other)* Improv cast
+
+- *(other)* Beter2
+
+- *(other)* Allow top level module
+
+- *(other)* Version
 
 
 ## [0.0.1-alpha.14] - 2024-03-11
@@ -38,6 +65,13 @@ All notable changes to this project will be documented in this file.
 - Fix span in lalrpop
 - Fix on type qualifier lowering
 - Fix ci2
+
+
+### Other
+
+- *(other)* Try release ci
+
+- *(other)* Try release ci
 
 
 ### ⚙️ Miscellaneous Tasks
@@ -73,6 +107,15 @@ All notable changes to this project will be documented in this file.
 
 - Debug type names
 
+### Other
+
+- *(other)* Changelog
+
+- *(other)* Try to fix release changelog
+
+- *(other)* Release
+
+
 ## [0.0.1-alpha.10] - 2024-02-28
 
 ### 🚀 Features
@@ -98,6 +141,11 @@ All notable changes to this project will be documented in this file.
 - More debug locations
 - Code checking in lowering
 
+### Other
+
+- *(other)* Upd
+
+
 ### ⚙️ Miscellaneous Tasks
 
 - Update version to 0.0.1-alpha.8
@@ -107,6 +155,29 @@ All notable changes to this project will be documented in this file.
 ### 🚀 Features
 
 - Struct support
+
+### Other
+
+- *(other)* Make main always pub
+
+- *(other)* Readme
+
+- *(other)* Gitattributes
+
+- *(other)* Cliff
+
+- *(other)* Better
+
+- *(other)* Basic struct
+
+- *(other)* Struct field
+
+- *(other)* Struct init parsing
+
+- *(other)* Nice
+
+- *(other)* Version
+
 
 ### 🧪 Testing
 
@@ -118,6 +189,15 @@ All notable changes to this project will be documented in this file.
 ### 🚀 Features
 
 - Compile unary op, compile asref, compile deref, reference arguments, avoid some temporaries on direct use
+
+### Other
+
+- *(other)* Changelog
+
+- *(other)* Refs
+
+- *(other)* Version and fix no return
+
 
 ## [0.0.1-alpha.6] - 2024-02-17
 
@@ -133,6 +213,13 @@ All notable changes to this project will be documented in this file.
 - Fixes
 
 
+### Other
+
+- *(other)* Optimize
+
+- *(other)* Vv0.0.1-alpha.6
+
+
 ## [0.0.1-alpha.5] - 2024-02-14
 
 ### 🐛 Bug Fixes
@@ -140,6 +227,13 @@ All notable changes to this project will be documented in this file.
 - *(linker)* Fix linker on distros like ubuntu
 - *(ci)* Ci improvements
 - Fix ci
+
+
+### Other
+
+- *(other)* Version
+
+- *(other)* Changelog
 
 
 ## [0.0.1-alpha.4] - 2024-02-14
@@ -181,6 +275,13 @@ All notable changes to this project will be documented in this file.
 - Fix
 
 
+### Other
+
+- *(other)* Fmt
+
+- *(other)* Readme
+
+
 ### 🎨 Styling
 
 - Format
@@ -202,6 +303,113 @@ All notable changes to this project will be documented in this file.
 - Fix
 
 - Fix
+
+
+### Other
+
+- *(other)* Initial
+
+- *(other)* Check
+
+- *(other)* Format
+
+- *(other)* Start logos
+
+- *(other)* Progress
+
+- *(other)* Progress
+
+- *(other)* Big progress
+
+- *(other)* Rly basic type inference
+
+- *(other)* Type info improvements
+
+- *(other)* Add rudimentary type inference, todo: args
+
+- *(other)* If else type analysis
+
+- *(other)* Idk
+
+- *(other)* Tmp
+
+- *(other)* Better
+
+- *(other)* Progress
+
+- *(other)* Require fully typed integers for now
+
+- *(other)* Progress
+
+- *(other)* V
+
+- *(other)* Spans
+
+- *(other)* Arns
+
+- *(other)* Padding
+
+- *(other)* Cleanup
+
+- *(other)* Ok
+
+- *(other)* Upd
+
+- *(other)* Upd
+
+- *(other)* New start
+
+- *(other)* Progress
+
+- *(other)* Parser
+
+- *(other)* Prog
+
+- *(other)* Ok
+
+- *(other)* Ok
+
+- *(other)* Upd
+
+- *(other)* Ok
+
+- *(other)* A
+
+- *(other)* Prog
+
+- *(other)* P
+
+- *(other)* Fn call
+
+- *(other)* Prog
+
+- *(other)* Nice
+
+- *(other)* Compile
+
+- *(other)* Handle unit return
+
+- *(other)* Basic binop
+
+- *(other)* More
+
+- *(other)* Prog
+
+- *(other)* .
+
+- *(other)* Todo
+
+- *(other)* Debug info
+
+- *(other)* A
+
+- *(other)* Rename
+
+- *(other)* Version
+
+- *(other)* Clippy
+
+- *(other)* Clippy
 
 
 ### 🎨 Styling

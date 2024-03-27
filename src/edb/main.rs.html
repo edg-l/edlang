@@ -308,6 +308,8 @@
 <a href="#306" id="306">306</a>
 <a href="#307" id="307">307</a>
 <a href="#308" id="308">308</a>
+<a href="#309" id="309">309</a>
+<a href="#310" id="310">310</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{collections::HashMap, fs::File, io::Read, path::PathBuf, time::Instant};
 
 <span class="kw">use </span>anyhow::{bail, Context, <span class="prelude-ty">Result</span>};
@@ -333,6 +335,7 @@
 <span class="attr">#[derive(Subcommand, Debug)]
 </span><span class="kw">enum </span>Commands {
     <span class="doccomment">/// Initialize a project
+    </span><span class="attr">#[clap(alias = <span class="string">"n"</span>)]
     </span>New {
         path: PathBuf,
 
@@ -349,6 +352,7 @@
         </span>lib: bool,
     },
     <span class="doccomment">/// Build a project
+    </span><span class="attr">#[clap(alias = <span class="string">"b"</span>)]
     </span>Build {
         <span class="doccomment">/// Build for release with all optimizations.
         </span><span class="attr">#[arg(short, long, default_value_t = <span class="bool-val">false</span>)]

@@ -23,6 +23,7 @@ pub struct Cli {
 #[derive(Subcommand, Debug)]
 enum Commands {
     /// Initialize a project
+    #[clap(alias = "n")]
     New {
         path: PathBuf,
 
@@ -39,6 +40,7 @@ enum Commands {
         lib: bool,
     },
     /// Build a project
+    #[clap(alias = "b")]
     Build {
         /// Build for release with all optimizations.
         #[arg(short, long, default_value_t = false)]

@@ -15,10 +15,10 @@ repository = "https://github.com/edg-l/edlang"
 [dependencies]
 ariadne = { version = "0.4.0", features = ["auto-color"] }
 edlang_ast = { version = "0.0.1-alpha.16", path = "../edlang_ast" }
-itertools = "0.12.0"
-lalrpop-util = { version = "0.20.0", features = ["lexer"] }
+itertools = "0.12.1"
+lalrpop-util = { version = "0.20.2", features = ["lexer"] }
 logos = "0.14.0"
 tracing = { workspace = true }
 
 [build-dependencies]
-lalrpop = "0.20.0"
+lalrpop = "0.20.2"

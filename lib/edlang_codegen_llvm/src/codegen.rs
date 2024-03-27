@@ -144,9 +144,7 @@ pub fn compile(session: &Session, program: &ProgramBody) -> Result<PathBuf, Box<
             "edlang-sdk",
         );
 
-        let di_namespace = di_builder
-            .create_namespace(di_unit.get_file().as_debug_info_scope(), &module.name, true)
-            .as_debug_info_scope();
+        let di_namespace = di_unit.get_file().as_debug_info_scope();
 
         let mut module_ctx = ModuleCompileCtx {
             ctx,
@@ -209,13 +207,28 @@ pub fn compile(session: &Session, program: &ProgramBody) -> Result<PathBuf, Box<
 fn compile_module(ctx: &mut ModuleCompileCtx, module_id: DefId) {
     let module = ctx.ctx.program.modules.get(&module_id).unwrap();
     trace!("compiling module: {:?}", module_id);
+
+    let di_namespace = ctx.di_namespace;
+    if module.name != "lib" {
+        ctx.di_namespace = ctx
+            .di_builder
+            .create_namespace(di_namespace, &module.name, true)
+            .as_debug_info_scope();
+    }
+
     for id in module.functions.iter() {
         compile_fn_signature(ctx, *id, true);
+    }
+
+    for id in module.modules.iter() {
+        compile_module(ctx, *id);
     }
 
     for id in module.functions.iter() {
         compile_fn(ctx, *id).unwrap();
     }
+
+    ctx.di_namespace = di_namespace;
 }
 
 fn compile_fn_signature(ctx: &ModuleCompileCtx<'_, '_>, fn_id: DefId, is_definition: bool) {

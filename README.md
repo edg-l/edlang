@@ -17,6 +17,12 @@ pub fn factorial(n: i32) -> i32 {
         return n * factorial(n - 1);
     }
 }
+
+mod hello {
+  pub fn world(ptr: *const u8) -> u8 {
+    return *ptr;
+  }
+}
 ```
 
 ## edb: The edlang builder

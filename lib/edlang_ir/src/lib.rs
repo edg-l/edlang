@@ -101,7 +101,7 @@ impl Body {
         }
 
         format!(
-            "{}@{}@{}",
+            "{}${}${}",
             self.name, self.def_id.program_id, self.def_id.id
         )
     }

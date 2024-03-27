@@ -1,17 +1,17 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Educe"><title>educe - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../" data-static-root-path="../static.files/" data-current-crate="educe" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../crates.js"></script><script defer src="../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc mod crate"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button></nav><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../educe/index.html">educe</a><span class="version">0.5.11</span></h2></div><div class="sidebar-elems"><ul class="block">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Educe"><title>educe - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../static.files/rustdoc-5bc39a1768837dd0.css"><meta name="rustdoc-vars" data-root-path="../" data-static-root-path="../static.files/" data-current-crate="educe" data-themes="" data-resource-suffix="" data-rustdoc-version="1.77.0 (aedd173a2 2024-03-17)" data-channel="1.77.0" data-search-js="search-dd67cee4cfa65049.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../static.files/storage-4c98445ec4002617.js"></script><script defer src="../crates.js"></script><script defer src="../static.files/main-48f368f3872407c8.js"></script><noscript><link rel="stylesheet" href="../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc mod crate"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button></nav><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../educe/index.html">educe</a><span class="version">0.5.11</span></h2></div><div class="sidebar-elems"><ul class="block">
             <li><a id="all-types" href="all.html">All Items</a></li></ul><section><ul class="block"><li><a href="#derives">Derive Macros</a></li></ul></section></div></nav><div class="sidebar-resizer"></div>
-    <main><div class="width-limiter"><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../educe/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="main-heading"><h1>Crate <a class="mod" href="#">educe</a><button id="copy-path" title="Copy item path to clipboard"><img src="../static.files/clipboard-7571035ce49a181d.svg" width="19" height="18" alt="Copy item path"></button></h1><span class="out-of-band"><a class="src" href="../src/educe/lib.rs.html#1-2019">source</a> · <button id="toggle-all-docs" title="collapse all docs">[<span>&#x2212;</span>]</button></span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><h2 id="educe"><a href="#educe">Educe</a></h2>
+    <main><div class="width-limiter"><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../educe/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="main-heading"><h1>Crate <a class="mod" href="#">educe</a><button id="copy-path" title="Copy item path to clipboard"><img src="../static.files/clipboard-7571035ce49a181d.svg" width="19" height="18" alt="Copy item path"></button></h1><span class="out-of-band"><a class="src" href="../src/educe/lib.rs.html#1-2019">source</a> · <button id="toggle-all-docs" title="collapse all docs">[<span>&#x2212;</span>]</button></span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><h2 id="educe"><a class="doc-anchor" href="#educe">§</a>Educe</h2>
 <p>This crate offers procedural macros designed to facilitate the swift implementation of Rust’s built-in traits.</p>
-<h3 id="features"><a href="#features">Features</a></h3>
+<h3 id="features"><a class="doc-anchor" href="#features">§</a>Features</h3>
 <p>By default, every trait this crate supports will be enabled. You can disable all of them by turning off the default features and enable only the traits that you want to use by adding them to the <code>features</code> explicitly.</p>
 <p>For example,</p>
 <div class="example-wrap"><pre class="language-toml"><code>[dependencies.educe]
 version = &quot;*&quot;
 features = [&quot;Debug&quot;, &quot;Clone&quot;, &quot;Copy&quot;, &quot;Hash&quot;, &quot;Default&quot;]
 default-features = false
-</code></pre></div><h3 id="traits"><a href="#traits">Traits</a></h3><h5 id="debug"><a href="#debug">Debug</a></h5>
+</code></pre></div><h3 id="traits"><a class="doc-anchor" href="#traits">§</a>Traits</h3><h5 id="debug"><a class="doc-anchor" href="#debug">§</a>Debug</h5>
 <p>Use <code>#[derive(Educe)]</code> and <code>#[educe(Debug)]</code> to implement the <code>Debug</code> trait for a struct, enum, or union. This allows you to modify the names of your types, variants, and fields. You can also choose to ignore specific fields or set a method to replace the <code>Debug</code> trait. Additionally, you have the option to format a struct as a tuple and vice versa.</p>
-<h6 id="basic-usage"><a href="#basic-usage">Basic Usage</a></h6>
+<h6 id="basic-usage"><a class="doc-anchor" href="#basic-usage">§</a>Basic Usage</h6>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>educe::Educe;
 
 <span class="attr">#[derive(Educe)]
@@ -29,7 +29,7 @@ default-features = false
     },
     V3(u8),
 }</code></pre></div>
-<h6 id="change-the-name-of-a-type-a-variant-or-a-field"><a href="#change-the-name-of-a-type-a-variant-or-a-field">Change the Name of a Type, a Variant or a Field</a></h6>
+<h6 id="change-the-name-of-a-type-a-variant-or-a-field"><a class="doc-anchor" href="#change-the-name-of-a-type-a-variant-or-a-field">§</a>Change the Name of a Type, a Variant or a Field</h6>
 <p>The <code>name</code> parameter can rename a type, a variant or a field. If you set it to <code>false</code>, the name can be ignored or forced to show otherwise.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>educe::Educe;
@@ -54,7 +54,7 @@ default-features = false
     <span class="attr">#[educe(Debug(name = <span class="bool-val">false</span>))]
     </span>V3(u8),
 }</code></pre></div>
-<h6 id="ignore-fields"><a href="#ignore-fields">Ignore Fields</a></h6>
+<h6 id="ignore-fields"><a class="doc-anchor" href="#ignore-fields">§</a>Ignore Fields</h6>
 <p>The <code>ignore</code> parameter can ignore a specific field.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>educe::Educe;
@@ -79,7 +79,7 @@ default-features = false
         </span>u8
     ),
 }</code></pre></div>
-<h6 id="fake-structs-and-tuples"><a href="#fake-structs-and-tuples">Fake Structs and Tuples</a></h6>
+<h6 id="fake-structs-and-tuples"><a class="doc-anchor" href="#fake-structs-and-tuples">§</a>Fake Structs and Tuples</h6>
 <p>With the <code>named_field</code> parameter, structs can be formatted as tuples and tuples can be formatted as structs.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>educe::Educe;
@@ -105,7 +105,7 @@ default-features = false
         </span>i32
     ),
 }</code></pre></div>
-<h6 id="use-another-method-to-handle-the-formatting"><a href="#use-another-method-to-handle-the-formatting">Use Another Method to Handle the Formatting</a></h6>
+<h6 id="use-another-method-to-handle-the-formatting"><a class="doc-anchor" href="#use-another-method-to-handle-the-formatting">§</a>Use Another Method to Handle the Formatting</h6>
 <p>The <code>method</code> parameter can be utilized to replace the implementation of the <code>Debug</code> trait for a field, eliminating the need to implement the <code>Debug</code> trait for the type of that field.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>educe::Educe;
@@ -131,7 +131,7 @@ default-features = false
         </span>T
     ),
 }</code></pre></div>
-<h6 id="generic-parameters-bound-to-the-debug-trait-or-others"><a href="#generic-parameters-bound-to-the-debug-trait-or-others">Generic Parameters Bound to the <code>Debug</code> Trait or Others</a></h6>
+<h6 id="generic-parameters-bound-to-the-debug-trait-or-others"><a class="doc-anchor" href="#generic-parameters-bound-to-the-debug-trait-or-others">§</a>Generic Parameters Bound to the <code>Debug</code> Trait or Others</h6>
 <p>Generic parameters will be automatically bound to the <code>Debug</code> trait if necessary.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>educe::Educe;
@@ -170,7 +170,7 @@ default-features = false
     ),
 }</code></pre></div>
 <p>In the above case, <code>T</code> is bound to the <code>Debug</code> trait, but <code>K</code> is not.</p>
-<h6 id="union"><a href="#union">Union</a></h6>
+<h6 id="union"><a class="doc-anchor" href="#union">§</a>Union</h6>
 <p>A union will be formatted as a <code>u8</code> slice because we don’t know its fields at runtime. The fields of a union cannot be ignored, renamed, or formatted with other methods. The implementation is <strong>unsafe</strong> because it may expose uninitialized memory.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>educe::Educe;
@@ -181,9 +181,9 @@ default-features = false
     f1: u8,
     f2: i32,
 }</code></pre></div>
-<h5 id="clone"><a href="#clone">Clone</a></h5>
+<h5 id="clone"><a class="doc-anchor" href="#clone">§</a>Clone</h5>
 <p>Use <code>#[derive(Educe)]</code> and <code>#[educe(Clone)]</code> to implement the <code>Clone</code> trait for a struct, an enum, or a union. You can set a method to replace the <code>Clone</code> trait.</p>
-<h6 id="basic-usage-1"><a href="#basic-usage-1">Basic Usage</a></h6>
+<h6 id="basic-usage-1"><a class="doc-anchor" href="#basic-usage-1">§</a>Basic Usage</h6>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>educe::Educe;
 
 <span class="attr">#[derive(Educe)]
@@ -201,7 +201,7 @@ default-features = false
     },
     V3(u8),
 }</code></pre></div>
-<h6 id="use-another-method-to-perform-cloning"><a href="#use-another-method-to-perform-cloning">Use Another Method to Perform Cloning</a></h6>
+<h6 id="use-another-method-to-perform-cloning"><a class="doc-anchor" href="#use-another-method-to-perform-cloning">§</a>Use Another Method to Perform Cloning</h6>
 <p>The <code>method</code> parameter can be utilized to replace the implementation of the <code>Clone</code> trait for a field, eliminating the need to implement the <code>Clone</code> trait for the type of that field.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>educe::Educe;
@@ -231,7 +231,7 @@ default-features = false
         </span>T
     ),
 }</code></pre></div>
-<h6 id="generic-parameters-bound-to-the-clone-trait-or-others"><a href="#generic-parameters-bound-to-the-clone-trait-or-others">Generic Parameters Bound to the <code>Clone</code> Trait or Others</a></h6>
+<h6 id="generic-parameters-bound-to-the-clone-trait-or-others"><a class="doc-anchor" href="#generic-parameters-bound-to-the-clone-trait-or-others">§</a>Generic Parameters Bound to the <code>Clone</code> Trait or Others</h6>
 <p>Generic parameters will be automatically bound to the <code>Clone</code> trait if necessary. If the <code>#[educe(Copy)]</code> attribute exists, they will be bound to the <code>Copy</code> trait.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>educe::Educe;
@@ -272,11 +272,11 @@ default-features = false
     ),
 }</code></pre></div>
 <p>In the above case, <code>T</code> is bound to the <code>Clone</code> trait, but <code>K</code> is not.</p>
-<h6 id="union-1"><a href="#union-1">Union</a></h6>
+<h6 id="union-1"><a class="doc-anchor" href="#union-1">§</a>Union</h6>
 <p>Refer to the introduction of the <code>#[educe(Copy)]</code> attribute.</p>
-<h5 id="copy"><a href="#copy">Copy</a></h5>
+<h5 id="copy"><a class="doc-anchor" href="#copy">§</a>Copy</h5>
 <p>Use <code>#[derive(Educe)]</code> and <code>#[educe(Copy)]</code> to implement the <code>Copy</code> trait for a struct, an enum, or a union.</p>
-<h6 id="basic-usage-2"><a href="#basic-usage-2">Basic Usage</a></h6>
+<h6 id="basic-usage-2"><a class="doc-anchor" href="#basic-usage-2">§</a>Basic Usage</h6>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>educe::Educe;
 
 <span class="attr">#[derive(Educe)]
@@ -294,7 +294,7 @@ default-features = false
     },
     V3(u8),
 }</code></pre></div>
-<h6 id="generic-parameters-bound-to-the-copy-trait-or-others"><a href="#generic-parameters-bound-to-the-copy-trait-or-others">Generic Parameters Bound to the <code>Copy</code> Trait or Others</a></h6>
+<h6 id="generic-parameters-bound-to-the-copy-trait-or-others"><a class="doc-anchor" href="#generic-parameters-bound-to-the-copy-trait-or-others">§</a>Generic Parameters Bound to the <code>Copy</code> Trait or Others</h6>
 <p>All generic parameters will be automatically bound to the <code>Copy</code> trait.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>educe::Educe;
@@ -335,7 +335,7 @@ default-features = false
     ),
 }</code></pre></div>
 <p>Note that utilizing custom cloning methods for a type that implements the <code>Copy</code> and <code>Clone</code> traits may not be entirely appropriate.</p>
-<h6 id="union-2"><a href="#union-2">Union</a></h6>
+<h6 id="union-2"><a class="doc-anchor" href="#union-2">§</a>Union</h6>
 <p>The <code>#[educe(Copy, Clone)]</code> attribute can be used for a union. The fields of a union cannot be cloned with other methods.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>educe::Educe;
@@ -345,9 +345,9 @@ default-features = false
 </span><span class="kw">union </span>Union {
     f1: u8,
 }</code></pre></div>
-<h5 id="partialeq"><a href="#partialeq">PartialEq</a></h5>
+<h5 id="partialeq"><a class="doc-anchor" href="#partialeq">§</a>PartialEq</h5>
 <p>Use <code>#[derive(Educe)]</code> and <code>#[educe(PartialEq)]</code> to implement the <code>PartialEq</code> trait for a struct, enum, or union. You can also choose to ignore specific fields or set a method to replace the <code>PartialEq</code> trait.</p>
-<h6 id="basic-usage-3"><a href="#basic-usage-3">Basic Usage</a></h6>
+<h6 id="basic-usage-3"><a class="doc-anchor" href="#basic-usage-3">§</a>Basic Usage</h6>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>educe::Educe;
 
 <span class="attr">#[derive(Educe)]
@@ -365,7 +365,7 @@ default-features = false
     },
     V3(u8),
 }</code></pre></div>
-<h6 id="ignore-fields-1"><a href="#ignore-fields-1">Ignore Fields</a></h6>
+<h6 id="ignore-fields-1"><a class="doc-anchor" href="#ignore-fields-1">§</a>Ignore Fields</h6>
 <p>The <code>ignore</code> parameter can ignore a specific field.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>educe::Educe;
@@ -390,7 +390,7 @@ default-features = false
         </span>u8
     ),
 }</code></pre></div>
-<h6 id="use-another-method-to-perform-comparison"><a href="#use-another-method-to-perform-comparison">Use Another Method to Perform Comparison</a></h6>
+<h6 id="use-another-method-to-perform-comparison"><a class="doc-anchor" href="#use-another-method-to-perform-comparison">§</a>Use Another Method to Perform Comparison</h6>
 <p>The <code>method</code> parameter can be utilized to replace the implementation of the <code>PartialEq</code> trait for a field, eliminating the need to implement the <code>PartialEq</code> trait for the type of that field.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>educe::Educe;
@@ -420,7 +420,7 @@ default-features = false
         </span>T
     ),
 }</code></pre></div>
-<h6 id="generic-parameters-bound-to-the-partialeq-trait-or-others"><a href="#generic-parameters-bound-to-the-partialeq-trait-or-others">Generic Parameters Bound to the <code>PartialEq</code> Trait or Others</a></h6>
+<h6 id="generic-parameters-bound-to-the-partialeq-trait-or-others"><a class="doc-anchor" href="#generic-parameters-bound-to-the-partialeq-trait-or-others">§</a>Generic Parameters Bound to the <code>PartialEq</code> Trait or Others</h6>
 <p>Generic parameters will be automatically bound to the <code>PartialEq</code> trait if necessary.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>educe::Educe;
@@ -460,7 +460,7 @@ default-features = false
         T
     ),
 }</code></pre></div>
-<h6 id="union-3"><a href="#union-3">Union</a></h6>
+<h6 id="union-3"><a class="doc-anchor" href="#union-3">§</a>Union</h6>
 <p>The <code>#[educe(PartialEq(unsafe))]</code> attribute can be used for a union. The fields of a union cannot be compared with other methods. The implementation is <strong>unsafe</strong> because it disregards the specific fields it utilizes.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>educe::Educe;
@@ -471,9 +471,9 @@ default-features = false
     f1: u8,
     f2: i32
 }</code></pre></div>
-<h5 id="eq"><a href="#eq">Eq</a></h5>
+<h5 id="eq"><a class="doc-anchor" href="#eq">§</a>Eq</h5>
 <p>Use <code>#[derive(Educe)]</code> and <code>#[educe(Eq)]</code> to implement the <code>Eq</code> trait for a struct, enum, or union. You can also choose to ignore specific fields or set a method to replace the <code>PartialEq</code> trait.</p>
-<h6 id="basic-usage-4"><a href="#basic-usage-4">Basic Usage</a></h6>
+<h6 id="basic-usage-4"><a class="doc-anchor" href="#basic-usage-4">§</a>Basic Usage</h6>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>educe::Educe;
 
 <span class="attr">#[derive(Educe)]
@@ -491,7 +491,7 @@ default-features = false
     },
     V3(u8),
 }</code></pre></div>
-<h6 id="ignore-fields-2"><a href="#ignore-fields-2">Ignore Fields</a></h6>
+<h6 id="ignore-fields-2"><a class="doc-anchor" href="#ignore-fields-2">§</a>Ignore Fields</h6>
 <p>The <code>ignore</code> parameter can ignore a specific field.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>educe::Educe;
@@ -516,7 +516,7 @@ default-features = false
         </span>u8
     ),
 }</code></pre></div>
-<h6 id="use-another-method-to-perform-comparison-1"><a href="#use-another-method-to-perform-comparison-1">Use Another Method to Perform Comparison</a></h6>
+<h6 id="use-another-method-to-perform-comparison-1"><a class="doc-anchor" href="#use-another-method-to-perform-comparison-1">§</a>Use Another Method to Perform Comparison</h6>
 <p>The <code>method</code> parameter can be utilized to replace the implementation of the <code>Eq</code> trait for a field, eliminating the need to implement the <code>PartialEq</code> trait for the type of that field.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>educe::Educe;
@@ -546,7 +546,7 @@ default-features = false
         </span>T
     ),
 }</code></pre></div>
-<h6 id="generic-parameters-bound-to-the-partialeq-trait-or-others-1"><a href="#generic-parameters-bound-to-the-partialeq-trait-or-others-1">Generic Parameters Bound to the <code>PartialEq</code> Trait or Others</a></h6>
+<h6 id="generic-parameters-bound-to-the-partialeq-trait-or-others-1"><a class="doc-anchor" href="#generic-parameters-bound-to-the-partialeq-trait-or-others-1">§</a>Generic Parameters Bound to the <code>PartialEq</code> Trait or Others</h6>
 <p>Generic parameters will be automatically bound to the <code>PartialEq</code> trait if necessary.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>educe::Educe;
@@ -586,7 +586,7 @@ default-features = false
         T
     ),
 }</code></pre></div>
-<h6 id="union-4"><a href="#union-4">Union</a></h6>
+<h6 id="union-4"><a class="doc-anchor" href="#union-4">§</a>Union</h6>
 <p>The <code>#[educe(PartialEq(unsafe), Eq)]</code> attribute can be used for a union. The fields of a union cannot be compared with other methods. The implementation is <strong>unsafe</strong> because it disregards the specific fields it utilizes.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>educe::Educe;
@@ -597,9 +597,9 @@ default-features = false
     f1: u8,
     f2: i32
 }</code></pre></div>
-<h5 id="partialord"><a href="#partialord">PartialOrd</a></h5>
+<h5 id="partialord"><a class="doc-anchor" href="#partialord">§</a>PartialOrd</h5>
 <p>Use <code>#[derive(Educe)]</code> and <code>#[educe(PartialOrd)]</code> to implement the <code>PartialOrd</code> trait for a struct or enum. You can also choose to ignore specific fields or set a method to replace the <code>PartialOrd</code> trait.</p>
-<h6 id="basic-usage-5"><a href="#basic-usage-5">Basic Usage</a></h6>
+<h6 id="basic-usage-5"><a class="doc-anchor" href="#basic-usage-5">§</a>Basic Usage</h6>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>educe::Educe;
 
 <span class="attr">#[derive(PartialEq, Educe)]
@@ -617,7 +617,7 @@ default-features = false
     },
     V3(u8),
 }</code></pre></div>
-<h6 id="ignore-fields-3"><a href="#ignore-fields-3">Ignore Fields</a></h6>
+<h6 id="ignore-fields-3"><a class="doc-anchor" href="#ignore-fields-3">§</a>Ignore Fields</h6>
 <p>The <code>ignore</code> parameter can ignore a specific field.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>educe::Educe;
@@ -642,7 +642,7 @@ default-features = false
         </span>u8
     ),
 }</code></pre></div>
-<h6 id="use-another-method-to-perform-comparison-2"><a href="#use-another-method-to-perform-comparison-2">Use Another Method to Perform Comparison</a></h6>
+<h6 id="use-another-method-to-perform-comparison-2"><a class="doc-anchor" href="#use-another-method-to-perform-comparison-2">§</a>Use Another Method to Perform Comparison</h6>
 <p>The <code>method</code> parameter can be utilized to replace the implementation of the <code>PartialOrd</code> trait for a field, eliminating the need to implement the <code>PartialOrd</code> trait for the type of that field.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>educe::Educe;
@@ -680,7 +680,7 @@ default-features = false
         </span>T
     ),
 }</code></pre></div>
-<h6 id="ranking"><a href="#ranking">Ranking</a></h6>
+<h6 id="ranking"><a class="doc-anchor" href="#ranking">§</a>Ranking</h6>
 <p>Each field can add a <code>#[educe(PartialOrd(rank = priority_value))]</code> attribute, where <code>priority_value</code> is an integer value indicating its comparison precedence (lower values indicate higher priority). The default <code>priority_value</code> for a field depends on its ordinal position (lower towards the front) and starts with <code>isize::MIN</code>.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>educe::Educe;
@@ -705,7 +705,7 @@ default-features = false
     Two(u8) = <span class="number">2</span>,
     One = <span class="number">1</span>,
 }</code></pre></div>
-<h6 id="generic-parameters-bound-to-the-partialord-trait-or-others"><a href="#generic-parameters-bound-to-the-partialord-trait-or-others">Generic Parameters Bound to the <code>PartialOrd</code> Trait or Others</a></h6>
+<h6 id="generic-parameters-bound-to-the-partialord-trait-or-others"><a class="doc-anchor" href="#generic-parameters-bound-to-the-partialord-trait-or-others">§</a>Generic Parameters Bound to the <code>PartialOrd</code> Trait or Others</h6>
 <p>Generic parameters will be automatically bound to the <code>PartialOrd</code> trait if necessary.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>educe::Educe;
@@ -747,9 +747,9 @@ default-features = false
         T
     ),
 }</code></pre></div>
-<h5 id="ord"><a href="#ord">Ord</a></h5>
+<h5 id="ord"><a class="doc-anchor" href="#ord">§</a>Ord</h5>
 <p>Use <code>#[derive(Educe)]</code> and <code>#[educe(Ord)]</code> to implement the <code>Ord</code> trait for a struct or enum. You can also choose to ignore specific fields or set a method to replace the <code>Ord</code> trait.</p>
-<h6 id="basic-usage-6"><a href="#basic-usage-6">Basic Usage</a></h6>
+<h6 id="basic-usage-6"><a class="doc-anchor" href="#basic-usage-6">§</a>Basic Usage</h6>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>educe::Educe;
 
 <span class="attr">#[derive(PartialEq, Eq, Educe)]
@@ -767,7 +767,7 @@ default-features = false
     },
     V3(u8),
 }</code></pre></div>
-<h6 id="ignore-fields-4"><a href="#ignore-fields-4">Ignore Fields</a></h6>
+<h6 id="ignore-fields-4"><a class="doc-anchor" href="#ignore-fields-4">§</a>Ignore Fields</h6>
 <p>The <code>ignore</code> parameter can ignore a specific field.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>educe::Educe;
@@ -792,7 +792,7 @@ default-features = false
         </span>u8
     ),
 }</code></pre></div>
-<h6 id="use-another-method-to-perform-comparison-3"><a href="#use-another-method-to-perform-comparison-3">Use Another Method to Perform Comparison</a></h6>
+<h6 id="use-another-method-to-perform-comparison-3"><a class="doc-anchor" href="#use-another-method-to-perform-comparison-3">§</a>Use Another Method to Perform Comparison</h6>
 <p>The <code>method</code> parameter can be utilized to replace the implementation of the <code>Ord</code> trait for a field, eliminating the need to implement the <code>Ord</code> trait for the type of that field.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>educe::Educe;
@@ -830,7 +830,7 @@ default-features = false
         </span>T
     ),
 }</code></pre></div>
-<h6 id="ranking-1"><a href="#ranking-1">Ranking</a></h6>
+<h6 id="ranking-1"><a class="doc-anchor" href="#ranking-1">§</a>Ranking</h6>
 <p>Each field can add a <code>#[educe(Ord(rank = priority_value))]</code> attribute, where <code>priority_value</code> is an integer value indicating its comparison precedence (lower values indicate higher priority). The default <code>priority_value</code> for a field depends on its ordinal position (lower towards the front) and starts with <code>isize::MIN</code>.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>educe::Educe;
@@ -855,7 +855,7 @@ default-features = false
     Two(u8) = <span class="number">2</span>,
     One = <span class="number">1</span>,
 }</code></pre></div>
-<h6 id="generic-parameters-bound-to-the-ord-trait-or-others"><a href="#generic-parameters-bound-to-the-ord-trait-or-others">Generic Parameters Bound to the <code>Ord</code> Trait or Others</a></h6>
+<h6 id="generic-parameters-bound-to-the-ord-trait-or-others"><a class="doc-anchor" href="#generic-parameters-bound-to-the-ord-trait-or-others">§</a>Generic Parameters Bound to the <code>Ord</code> Trait or Others</h6>
 <p>Generic parameters will be automatically bound to the <code>Ord</code> trait if necessary.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>educe::Educe;
@@ -897,9 +897,9 @@ default-features = false
         T
     ),
 }</code></pre></div>
-<h5 id="hash"><a href="#hash">Hash</a></h5>
+<h5 id="hash"><a class="doc-anchor" href="#hash">§</a>Hash</h5>
 <p>Use <code>#[derive(Educe)]</code> and <code>#[educe(Hash)]</code> to implement the <code>Hash</code> trait for a struct, enum, or union. You can also choose to ignore specific fields or set a method to replace the <code>Hash</code> trait.</p>
-<h6 id="basic-usage-7"><a href="#basic-usage-7">Basic Usage</a></h6>
+<h6 id="basic-usage-7"><a class="doc-anchor" href="#basic-usage-7">§</a>Basic Usage</h6>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>educe::Educe;
 
 <span class="attr">#[derive(Educe)]
@@ -917,7 +917,7 @@ default-features = false
     },
     V3(u8),
 }</code></pre></div>
-<h6 id="ignore-fields-5"><a href="#ignore-fields-5">Ignore Fields</a></h6>
+<h6 id="ignore-fields-5"><a class="doc-anchor" href="#ignore-fields-5">§</a>Ignore Fields</h6>
 <p>The <code>ignore</code> parameter can ignore a specific field.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>educe::Educe;
@@ -942,7 +942,7 @@ default-features = false
         </span>u8
     ),
 }</code></pre></div>
-<h6 id="use-another-method-for-hashing"><a href="#use-another-method-for-hashing">Use Another Method for Hashing</a></h6>
+<h6 id="use-another-method-for-hashing"><a class="doc-anchor" href="#use-another-method-for-hashing">§</a>Use Another Method for Hashing</h6>
 <p>The <code>method</code> parameter can be utilized to replace the implementation of the <code>Hash</code> trait for a field, eliminating the need to implement the <code>Hash</code> trait for the type of that field.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>educe::Educe;
@@ -970,7 +970,7 @@ default-features = false
         </span>T
     ),
 }</code></pre></div>
-<h6 id="generic-parameters-bound-to-the-hash-trait-or-others"><a href="#generic-parameters-bound-to-the-hash-trait-or-others">Generic Parameters Bound to the <code>Hash</code> Trait or Others</a></h6>
+<h6 id="generic-parameters-bound-to-the-hash-trait-or-others"><a class="doc-anchor" href="#generic-parameters-bound-to-the-hash-trait-or-others">§</a>Generic Parameters Bound to the <code>Hash</code> Trait or Others</h6>
 <p>Generic parameters will be automatically bound to the <code>Hash</code> trait if necessary.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>educe::Educe;
@@ -1012,7 +1012,7 @@ default-features = false
         T
     ),
 }</code></pre></div>
-<h6 id="union-5"><a href="#union-5">Union</a></h6>
+<h6 id="union-5"><a class="doc-anchor" href="#union-5">§</a>Union</h6>
 <p>The <code>#[educe(PartialEq(unsafe), Eq, Hash(unsafe))]</code> attribute can be used for a union. The fields of a union cannot be hashed with other methods. The implementation is <strong>unsafe</strong> because it disregards the specific fields it utilizes.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>educe::Educe;
@@ -1023,9 +1023,9 @@ default-features = false
     f1: u8,
     f2: i32
 }</code></pre></div>
-<h5 id="default"><a href="#default">Default</a></h5>
+<h5 id="default"><a class="doc-anchor" href="#default">§</a>Default</h5>
 <p>Use <code>#[derive(Educe)]</code> and <code>#[educe(Default)]</code> to implement the <code>Default</code> trait for a struct, enum, or union. You can also choose to ignore specific fields or set a method to replace the <code>Hash</code> trait.</p>
-<h6 id="basic-usage-8"><a href="#basic-usage-8">Basic Usage</a></h6>
+<h6 id="basic-usage-8"><a class="doc-anchor" href="#basic-usage-8">§</a>Basic Usage</h6>
 <p>For enums and unions, it is necessary to designate a default variant (for enums) and a default field (for unions) unless the enum has only one variant or the union has only one field.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>educe::Educe;
@@ -1054,7 +1054,7 @@ default-features = false
     <span class="attr">#[educe(Default)]
     </span>f2: f64,
 }</code></pre></div>
-<h6 id="the-default-value-for-the-entire-type"><a href="#the-default-value-for-the-entire-type">The Default Value for the Entire Type</a></h6>
+<h6 id="the-default-value-for-the-entire-type"><a class="doc-anchor" href="#the-default-value-for-the-entire-type">§</a>The Default Value for the Entire Type</h6>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>educe::Educe;
 
 <span class="attr">#[derive(Educe)]
@@ -1080,7 +1080,7 @@ default-features = false
     f2: f64,
 }</code></pre></div>
 <p>You may need to activate the <code>full</code> feature to enable support for advanced expressions.</p>
-<h6 id="the-default-values-for-specific-fields"><a href="#the-default-values-for-specific-fields">The Default Values for Specific Fields</a></h6>
+<h6 id="the-default-values-for-specific-fields"><a class="doc-anchor" href="#the-default-values-for-specific-fields">§</a>The Default Values for Specific Fields</h6>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>educe::Educe;
 
 <span class="attr">#[derive(Educe)]
@@ -1136,7 +1136,7 @@ default-features = false
     </span>f5: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
     f6: char,
 }</code></pre></div>
-<h6 id="generic-parameters-bound-to-the-default-trait-or-others"><a href="#generic-parameters-bound-to-the-default-trait-or-others">Generic Parameters Bound to the <code>Default</code> Trait or Others</a></h6>
+<h6 id="generic-parameters-bound-to-the-default-trait-or-others"><a class="doc-anchor" href="#generic-parameters-bound-to-the-default-trait-or-others">§</a>Generic Parameters Bound to the <code>Default</code> Trait or Others</h6>
 <p>Generic parameters will be automatically bound to the <code>Default</code> trait if necessary.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>educe::Educe;
@@ -1165,7 +1165,7 @@ default-features = false
     },
     Tuple(T),
 }</code></pre></div>
-<h6 id="the-new-associated-function"><a href="#the-new-associated-function">The <code>new</code> Associated Function</a></h6>
+<h6 id="the-new-associated-function"><a class="doc-anchor" href="#the-new-associated-function">§</a>The <code>new</code> Associated Function</h6>
 <p>With the <code>#[educe(Default(new))]</code> attribute, your type will include an additional associated function called <code>new</code>. This function can be utilized to invoke the <code>default</code> method of the <code>Default</code> trait.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>educe::Educe;
@@ -1175,9 +1175,9 @@ default-features = false
 </span><span class="kw">struct </span>Struct {
     f1: u8
 }</code></pre></div>
-<h5 id="deref"><a href="#deref">Deref</a></h5>
+<h5 id="deref"><a class="doc-anchor" href="#deref">§</a>Deref</h5>
 <p>Use <code>#[derive(Educe)]</code> and <code>#[educe(Deref)]</code> to implement the <code>Deref</code> trait for a struct or enum.</p>
-<h6 id="basic-usage-9"><a href="#basic-usage-9">Basic Usage</a></h6>
+<h6 id="basic-usage-9"><a class="doc-anchor" href="#basic-usage-9">§</a>Basic Usage</h6>
 <p>You must designate a field as the default for obtaining an immutable reference unless the number of fields is exactly one.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>educe::Educe;
@@ -1208,9 +1208,9 @@ default-features = false
         </span>u8
     ),
 }</code></pre></div>
-<h5 id="derefmut"><a href="#derefmut">DerefMut</a></h5>
+<h5 id="derefmut"><a class="doc-anchor" href="#derefmut">§</a>DerefMut</h5>
 <p>Use <code>#[derive(Educe)]</code> and <code>#[educe(DerefMut)]</code> to implement the <code>DerefMut</code> trait for a struct or enum.</p>
-<h6 id="basic-usage-10"><a href="#basic-usage-10">Basic Usage</a></h6>
+<h6 id="basic-usage-10"><a class="doc-anchor" href="#basic-usage-10">§</a>Basic Usage</h6>
 <p>You must designate a field as the default for obtaining an mutable reference unless the number of fields is exactly one.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>educe::Educe;
@@ -1243,9 +1243,9 @@ default-features = false
     ),
 }</code></pre></div>
 <p>The mutable dereferencing fields do not need to be the same as the immutable dereferencing fields, but their types must be consistent.</p>
-<h5 id="into"><a href="#into">Into</a></h5>
+<h5 id="into"><a class="doc-anchor" href="#into">§</a>Into</h5>
 <p>Use <code>#[derive(Educe)]</code> and <code>#[educe(Into(type))]</code> to implement the <code>Into&lt;type&gt;</code> trait for a struct or enum.</p>
-<h6 id="basic-usage-11"><a href="#basic-usage-11">Basic Usage</a></h6>
+<h6 id="basic-usage-11"><a class="doc-anchor" href="#basic-usage-11">§</a>Basic Usage</h6>
 <p>You need to designate a field as the default for <code>Into&lt;type&gt;</code> conversion unless the number of fields is exactly one. If you don’t, educe will automatically try to find a proper one.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>educe::Educe;
@@ -1269,7 +1269,7 @@ default-features = false
         u8
     ),
 }</code></pre></div>
-<h6 id="use-another-method-to-perform-into-conversion"><a href="#use-another-method-to-perform-into-conversion">Use Another Method to Perform Into Conversion</a></h6>
+<h6 id="use-another-method-to-perform-into-conversion"><a class="doc-anchor" href="#use-another-method-to-perform-into-conversion">§</a>Use Another Method to Perform Into Conversion</h6>
 <p>The <code>method</code> parameter can be utilized to replace the implementation of the <code>Into</code> trait for a field, eliminating the need to implement the <code>Into</code> trait for the type of that field.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>educe::Educe;
@@ -1289,7 +1289,7 @@ default-features = false
         u8
     ),
 }</code></pre></div>
-<h6 id="generic-parameters-bound-to-the-into-trait-or-others"><a href="#generic-parameters-bound-to-the-into-trait-or-others">Generic Parameters Bound to the <code>Into</code> Trait or Others</a></h6>
+<h6 id="generic-parameters-bound-to-the-into-trait-or-others"><a class="doc-anchor" href="#generic-parameters-bound-to-the-into-trait-or-others">§</a>Generic Parameters Bound to the <code>Into</code> Trait or Others</h6>
 <p>Generic parameters will be automatically bound to the <code>Into&lt;type&gt;</code> trait if necessary.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>educe::Educe;
@@ -1323,4 +1323,4 @@ default-features = false
         </span>T
     ),
 }</code></pre></div>
-</div></details><h2 id="derives" class="section-header"><a href="#derives">Derive Macros</a></h2><ul class="item-table"><li><div class="item-name"><a class="derive" href="derive.Educe.html" title="derive educe::Educe">Educe</a></div></li></ul></section></div></main></body></html>
+</div></details><h2 id="derives" class="section-header">Derive Macros<a href="#derives" class="anchor">§</a></h2><ul class="item-table"><li><div class="item-name"><a class="derive" href="derive.Educe.html" title="derive educe::Educe">Educe</a></div></li></ul></section></div></main></body></html>

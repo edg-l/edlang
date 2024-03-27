@@ -1,7 +1,7 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="A dead simple ANSI terminal color painting library."><title>yansi - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../static.files/rustdoc-ac92e1bbe349e143.css"><meta name="rustdoc-vars" data-root-path="../" data-static-root-path="../static.files/" data-current-crate="yansi" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0 (07dca489a 2024-02-04)" data-channel="1.76.0" data-search-js="search-2b6ce74ff89ae146.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../static.files/storage-f2adc0d6ca4d09fb.js"></script><script defer src="../crates.js"></script><script defer src="../static.files/main-305769736d49e732.js"></script><noscript><link rel="stylesheet" href="../static.files/noscript-feafe1bb7466e4bd.css"></noscript><link rel="alternate icon" type="image/png" href="../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc mod crate"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button></nav><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../yansi/index.html">yansi</a><span class="version">0.5.1</span></h2></div><div class="sidebar-elems"><ul class="block">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="A dead simple ANSI terminal color painting library."><title>yansi - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../static.files/rustdoc-5bc39a1768837dd0.css"><meta name="rustdoc-vars" data-root-path="../" data-static-root-path="../static.files/" data-current-crate="yansi" data-themes="" data-resource-suffix="" data-rustdoc-version="1.77.0 (aedd173a2 2024-03-17)" data-channel="1.77.0" data-search-js="search-dd67cee4cfa65049.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../static.files/storage-4c98445ec4002617.js"></script><script defer src="../crates.js"></script><script defer src="../static.files/main-48f368f3872407c8.js"></script><noscript><link rel="stylesheet" href="../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc mod crate"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle" title="show sidebar"></button></nav><nav class="sidebar"><div class="sidebar-crate"><h2><a href="../yansi/index.html">yansi</a><span class="version">0.5.1</span></h2></div><div class="sidebar-elems"><ul class="block">
             <li><a id="all-types" href="all.html">All Items</a></li></ul><section><ul class="block"><li><a href="#structs">Structs</a></li><li><a href="#enums">Enums</a></li></ul></section></div></nav><div class="sidebar-resizer"></div>
     <main><div class="width-limiter"><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../yansi/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="main-heading"><h1>Crate <a class="mod" href="#">yansi</a><button id="copy-path" title="Copy item path to clipboard"><img src="../static.files/clipboard-7571035ce49a181d.svg" width="19" height="18" alt="Copy item path"></button></h1><span class="out-of-band"><a class="src" href="../src/yansi/lib.rs.html#1-214">source</a> · <button id="toggle-all-docs" title="collapse all docs">[<span>&#x2212;</span>]</button></span></div><details class="toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>A dead simple ANSI terminal color painting library.</p>
-<h2 id="usage"><a href="#usage">Usage</a></h2>
+<h2 id="usage"><a class="doc-anchor" href="#usage">§</a>Usage</h2>
 <p>Usage is best illustrated via a quick example:</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>yansi::{Paint, Color};
@@ -10,10 +10,10 @@
     Paint::red(<span class="number">1</span>),
     Paint::green(<span class="number">2</span>).bold().underline(),
     Paint::blue(<span class="string">"3"</span>).bg(Color::White).italic());</code></pre></div>
-<h3 id="paint"><a href="#paint">Paint</a></h3>
+<h3 id="paint"><a class="doc-anchor" href="#paint">§</a>Paint</h3>
 <p>The main entry point into this library is the <a href="struct.Paint.html" title="struct yansi::Paint"><code>Paint</code></a> type. <code>Paint</code>
-encapsulates a value of any type that implements the <a href="https://doc.rust-lang.org/1.76.0/core/fmt/trait.Display.html" title="trait core::fmt::Display"><code>Display</code></a> or
-<a href="https://doc.rust-lang.org/1.76.0/core/fmt/trait.Debug.html" title="trait core::fmt::Debug"><code>Debug</code></a> trait. When a <code>Paint</code> is <code>Display</code>ed or <code>Debug</code>ed, the appropriate
+encapsulates a value of any type that implements the <a href="https://doc.rust-lang.org/1.77.0/core/fmt/trait.Display.html" title="trait core::fmt::Display"><code>Display</code></a> or
+<a href="https://doc.rust-lang.org/1.77.0/core/fmt/trait.Debug.html" title="trait core::fmt::Debug"><code>Debug</code></a> trait. When a <code>Paint</code> is <code>Display</code>ed or <code>Debug</code>ed, the appropriate
 ANSI escape characters are emitted before and after the wrapped type’s <code>fmt</code>
 implementation.</p>
 <p><code>Paint</code> can be constructed via <a href="struct.Paint.html#unstyled-constructors">a myriad of methods</a>. In addition to these
@@ -26,7 +26,7 @@ approaches are shown below:</p>
 
 <span class="macro">println!</span>(<span class="string">"I'm {}!"</span>, Paint::red(<span class="string">"red"</span>).bold());
 <span class="macro">println!</span>(<span class="string">"I'm also {}!"</span>, Red.paint(<span class="string">"red"</span>).bold());</code></pre></div>
-<h3 id="styling"><a href="#styling">Styling</a></h3>
+<h3 id="styling"><a class="doc-anchor" href="#styling">§</a>Styling</h3>
 <p>Modifications to the styling of an item can be made via <a href="struct.Paint.html#setters">a number of
 chainable methods</a> on <code>Paint</code>.</p>
 
@@ -49,7 +49,7 @@ Paint::new(<span class="string">"hi"</span>).underline().invert().italic().dimme
 
 <span class="comment">// Using `paint.with_style()`.
 </span><span class="macro">println!</span>(<span class="string">"Alert! {}"</span>, Paint::new(<span class="string">"Yet another."</span>).with_style(alert));</code></pre></div>
-<h2 id="disabling"><a href="#disabling">Disabling</a></h2>
+<h2 id="disabling"><a class="doc-anchor" href="#disabling">§</a>Disabling</h2>
 <p>Painting can be disabled globally via the <a href="struct.Paint.html#method.disable" title="associated function yansi::Paint::disable"><code>Paint::disable()</code></a> method. When
 painting is disabled, the <code>Display</code> and <code>Debug</code> implementations for <code>Paint</code>
 will emit the <code>Display</code> or <code>Debug</code> of the contained object and nothing else.
@@ -63,7 +63,7 @@ via an environment variable. For instance, to disable coloring if the
 <span class="kw">if let </span><span class="prelude-val">Ok</span>(<span class="bool-val">true</span>) = std::env::var(<span class="string">"CLICOLOR"</span>).map(|v| v == <span class="string">"0"</span>) {
     Paint::disable();
 }</code></pre></div>
-<h3 id="masking"><a href="#masking">Masking</a></h3>
+<h3 id="masking"><a class="doc-anchor" href="#masking">§</a>Masking</h3>
 <p>Items can be arbitrarily <em>masked</em>. When an item is masked and painting is
 disabled, the <code>Display</code> and <code>Debug</code> implementations of <code>Paint</code> write
 nothing. This allows you to selectively omit output when painting is
@@ -79,7 +79,7 @@ the emoji:</p>
 <span class="macro">println!</span>(<span class="string">"I like colors!{}"</span>, Paint::masked(<span class="string">" 🎨"</span>));</code></pre></div>
 <p>This will print “I like colors! 🎨” when painting is enabled and “I like
 colors!” when painting is disabled.</p>
-<h3 id="wrapping"><a href="#wrapping">Wrapping</a></h3>
+<h3 id="wrapping"><a class="doc-anchor" href="#wrapping">§</a>Wrapping</h3>
 <p>Styling can be set to <em>wrap</em> existing styles using either the
 <a href="struct.Paint.html#method.wrapping" title="associated function yansi::Paint::wrapping"><code>Paint::wrapping()</code></a> constructor or the <a href="struct.Paint.html#method.wrap" title="method yansi::Paint::wrap"><code>paint.wrap()</code></a> and
 <a href="struct.Style.html#method.wrap" title="method yansi::Style::wrap"><code>style.wrap()</code></a> style setters. When a style is <em>wrapping</em>, all color
@@ -99,7 +99,7 @@ across items that may already be styled, such as when logging.</p>
 <p>This will print ‘Hey!’ unstyled, “Stop” in red, “and” in blue, and “Go” in
 green. Without wrapping, “and” would be unstyled as <code>Paint::red()</code> resets
 the style after printing the internal item.</p>
-<h2 id="windows"><a href="#windows">Windows</a></h2>
+<h2 id="windows"><a class="doc-anchor" href="#windows">§</a>Windows</h2>
 <p>Coloring is supported on Windows beginning with the Windows 10 anniversary
 update. Since this update, Windows consoles support ANSI escape sequences.
 This support, however, must be explicitly enabled. <code>yansi</code> provides the
@@ -118,7 +118,7 @@ emitting unrecognized ASCII escape sequences:</p>
 <span class="kw">if </span><span class="macro">cfg!</span>(windows) &amp;&amp; !Paint::enable_windows_ascii() {
     Paint::disable();
 }</code></pre></div>
-<h2 id="why"><a href="#why">Why?</a></h2>
+<h2 id="why"><a class="doc-anchor" href="#why">§</a>Why?</h2>
 <p>Several terminal coloring libraries exist (<a href="https://crates.io/crates/ansi_term"><code>ansi_term</code></a>, <a href="https://crates.io/crates/colored"><code>colored</code></a>,
 <a href="https://crates.io/crates/term-painter"><code>term_painter</code></a>, to name a few), begging the question: why yet another?
 Here are a few reasons:</p>
@@ -135,4 +135,4 @@ or <code>Debug</code> can be stylized, not only strings.</li>
 </ul>
 <p>All that being said, this library borrows API ideas from the three libraries
 as well as implementation details from <a href="https://crates.io/crates/ansi_term"><code>ansi_term</code></a>.</p>
-</div></details><h2 id="structs" class="section-header"><a href="#structs">Structs</a></h2><ul class="item-table"><li><div class="item-name"><a class="struct" href="struct.Paint.html" title="struct yansi::Paint">Paint</a></div><div class="desc docblock-short">A structure encapsulating an item and styling.</div></li><li><div class="item-name"><a class="struct" href="struct.Style.html" title="struct yansi::Style">Style</a></div><div class="desc docblock-short">Represents a set of styling options.</div></li></ul><h2 id="enums" class="section-header"><a href="#enums">Enums</a></h2><ul class="item-table"><li><div class="item-name"><a class="enum" href="enum.Color.html" title="enum yansi::Color">Color</a></div><div class="desc docblock-short">An enum representing an ANSI color code.</div></li></ul></section></div></main></body></html>
+</div></details><h2 id="structs" class="section-header">Structs<a href="#structs" class="anchor">§</a></h2><ul class="item-table"><li><div class="item-name"><a class="struct" href="struct.Paint.html" title="struct yansi::Paint">Paint</a></div><div class="desc docblock-short">A structure encapsulating an item and styling.</div></li><li><div class="item-name"><a class="struct" href="struct.Style.html" title="struct yansi::Style">Style</a></div><div class="desc docblock-short">Represents a set of styling options.</div></li></ul><h2 id="enums" class="section-header">Enums<a href="#enums" class="anchor">§</a></h2><ul class="item-table"><li><div class="item-name"><a class="enum" href="enum.Color.html" title="enum yansi::Color">Color</a></div><div class="desc docblock-short">An enum representing an ANSI color code.</div></li></ul></section></div></main></body></html>

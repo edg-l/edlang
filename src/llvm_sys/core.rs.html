@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/llvm-sys-170.0.1/src/core.rs`."><title>core.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-5bc39a1768837dd0.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="llvm_sys" data-themes="" data-resource-suffix="" data-rustdoc-version="1.77.1 (7cf61ebde 2024-03-27)" data-channel="1.77.1" data-search-js="search-dd67cee4cfa65049.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-48f368f3872407c8.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/llvm-sys-180.0.0/src/core.rs`."><title>core.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-5bc39a1768837dd0.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="llvm_sys" data-themes="" data-resource-suffix="" data-rustdoc-version="1.77.1 (7cf61ebde 2024-03-27)" data-channel="1.77.1" data-search-js="search-dd67cee4cfa65049.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-48f368f3872407c8.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
             <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
     <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../llvm_sys/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
@@ -2033,6 +2033,125 @@
 <a href="#2031" id="2031">2031</a>
 <a href="#2032" id="2032">2032</a>
 <a href="#2033" id="2033">2033</a>
+<a href="#2034" id="2034">2034</a>
+<a href="#2035" id="2035">2035</a>
+<a href="#2036" id="2036">2036</a>
+<a href="#2037" id="2037">2037</a>
+<a href="#2038" id="2038">2038</a>
+<a href="#2039" id="2039">2039</a>
+<a href="#2040" id="2040">2040</a>
+<a href="#2041" id="2041">2041</a>
+<a href="#2042" id="2042">2042</a>
+<a href="#2043" id="2043">2043</a>
+<a href="#2044" id="2044">2044</a>
+<a href="#2045" id="2045">2045</a>
+<a href="#2046" id="2046">2046</a>
+<a href="#2047" id="2047">2047</a>
+<a href="#2048" id="2048">2048</a>
+<a href="#2049" id="2049">2049</a>
+<a href="#2050" id="2050">2050</a>
+<a href="#2051" id="2051">2051</a>
+<a href="#2052" id="2052">2052</a>
+<a href="#2053" id="2053">2053</a>
+<a href="#2054" id="2054">2054</a>
+<a href="#2055" id="2055">2055</a>
+<a href="#2056" id="2056">2056</a>
+<a href="#2057" id="2057">2057</a>
+<a href="#2058" id="2058">2058</a>
+<a href="#2059" id="2059">2059</a>
+<a href="#2060" id="2060">2060</a>
+<a href="#2061" id="2061">2061</a>
+<a href="#2062" id="2062">2062</a>
+<a href="#2063" id="2063">2063</a>
+<a href="#2064" id="2064">2064</a>
+<a href="#2065" id="2065">2065</a>
+<a href="#2066" id="2066">2066</a>
+<a href="#2067" id="2067">2067</a>
+<a href="#2068" id="2068">2068</a>
+<a href="#2069" id="2069">2069</a>
+<a href="#2070" id="2070">2070</a>
+<a href="#2071" id="2071">2071</a>
+<a href="#2072" id="2072">2072</a>
+<a href="#2073" id="2073">2073</a>
+<a href="#2074" id="2074">2074</a>
+<a href="#2075" id="2075">2075</a>
+<a href="#2076" id="2076">2076</a>
+<a href="#2077" id="2077">2077</a>
+<a href="#2078" id="2078">2078</a>
+<a href="#2079" id="2079">2079</a>
+<a href="#2080" id="2080">2080</a>
+<a href="#2081" id="2081">2081</a>
+<a href="#2082" id="2082">2082</a>
+<a href="#2083" id="2083">2083</a>
+<a href="#2084" id="2084">2084</a>
+<a href="#2085" id="2085">2085</a>
+<a href="#2086" id="2086">2086</a>
+<a href="#2087" id="2087">2087</a>
+<a href="#2088" id="2088">2088</a>
+<a href="#2089" id="2089">2089</a>
+<a href="#2090" id="2090">2090</a>
+<a href="#2091" id="2091">2091</a>
+<a href="#2092" id="2092">2092</a>
+<a href="#2093" id="2093">2093</a>
+<a href="#2094" id="2094">2094</a>
+<a href="#2095" id="2095">2095</a>
+<a href="#2096" id="2096">2096</a>
+<a href="#2097" id="2097">2097</a>
+<a href="#2098" id="2098">2098</a>
+<a href="#2099" id="2099">2099</a>
+<a href="#2100" id="2100">2100</a>
+<a href="#2101" id="2101">2101</a>
+<a href="#2102" id="2102">2102</a>
+<a href="#2103" id="2103">2103</a>
+<a href="#2104" id="2104">2104</a>
+<a href="#2105" id="2105">2105</a>
+<a href="#2106" id="2106">2106</a>
+<a href="#2107" id="2107">2107</a>
+<a href="#2108" id="2108">2108</a>
+<a href="#2109" id="2109">2109</a>
+<a href="#2110" id="2110">2110</a>
+<a href="#2111" id="2111">2111</a>
+<a href="#2112" id="2112">2112</a>
+<a href="#2113" id="2113">2113</a>
+<a href="#2114" id="2114">2114</a>
+<a href="#2115" id="2115">2115</a>
+<a href="#2116" id="2116">2116</a>
+<a href="#2117" id="2117">2117</a>
+<a href="#2118" id="2118">2118</a>
+<a href="#2119" id="2119">2119</a>
+<a href="#2120" id="2120">2120</a>
+<a href="#2121" id="2121">2121</a>
+<a href="#2122" id="2122">2122</a>
+<a href="#2123" id="2123">2123</a>
+<a href="#2124" id="2124">2124</a>
+<a href="#2125" id="2125">2125</a>
+<a href="#2126" id="2126">2126</a>
+<a href="#2127" id="2127">2127</a>
+<a href="#2128" id="2128">2128</a>
+<a href="#2129" id="2129">2129</a>
+<a href="#2130" id="2130">2130</a>
+<a href="#2131" id="2131">2131</a>
+<a href="#2132" id="2132">2132</a>
+<a href="#2133" id="2133">2133</a>
+<a href="#2134" id="2134">2134</a>
+<a href="#2135" id="2135">2135</a>
+<a href="#2136" id="2136">2136</a>
+<a href="#2137" id="2137">2137</a>
+<a href="#2138" id="2138">2138</a>
+<a href="#2139" id="2139">2139</a>
+<a href="#2140" id="2140">2140</a>
+<a href="#2141" id="2141">2141</a>
+<a href="#2142" id="2142">2142</a>
+<a href="#2143" id="2143">2143</a>
+<a href="#2144" id="2144">2144</a>
+<a href="#2145" id="2145">2145</a>
+<a href="#2146" id="2146">2146</a>
+<a href="#2147" id="2147">2147</a>
+<a href="#2148" id="2148">2148</a>
+<a href="#2149" id="2149">2149</a>
+<a href="#2150" id="2150">2150</a>
+<a href="#2151" id="2151">2151</a>
+<a href="#2152" id="2152">2152</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! The LLVM intermediate representation.
 
 </span><span class="kw">use super</span>::<span class="kw-2">*</span>;
@@ -2253,15 +2372,44 @@
     );
     <span class="kw">pub fn </span>LLVMGetInlineAsm(
         Ty: LLVMTypeRef,
-        AsmString: <span class="kw-2">*mut </span>::libc::c_char,
+        AsmString: <span class="kw-2">*const </span>::libc::c_char,
         AsmStringSize: ::libc::size_t,
-        Constraints: <span class="kw-2">*mut </span>::libc::c_char,
+        Constraints: <span class="kw-2">*const </span>::libc::c_char,
         ConstraintsSize: ::libc::size_t,
         HasSideEffects: LLVMBool,
         IsAlignStack: LLVMBool,
         Dialect: LLVMInlineAsmDialect,
         CanThrow: LLVMBool,
     ) -&gt; LLVMValueRef;
+
+    <span class="doccomment">/// Get the template string used for an inline assembly snippet.
+    </span><span class="kw">pub fn </span>LLVMGetInlineAsmAsmString(
+        InlineAsmVal: LLVMValueRef,
+        Len: <span class="kw-2">*mut </span>::libc::size_t,
+    ) -&gt; <span class="kw-2">*const </span>::libc::c_char;
+
+    <span class="doccomment">/// Get the raw constraint string for an inline assembly snippet.
+    </span><span class="kw">pub fn </span>LLVMGetInlineAsmConstraintString(
+        InlineAsmVal: LLVMValueRef,
+        Len: <span class="kw-2">*mut </span>::libc::size_t,
+    ) -&gt; <span class="kw-2">*const </span>::libc::c_char;
+
+    <span class="doccomment">/// Get the dialect used by the inline asm snippet.
+    </span><span class="kw">pub fn </span>LLVMGetInlineAsmDialect(InlineAsmVal: LLVMValueRef) -&gt; LLVMInlineAsmDialect;
+
+    <span class="doccomment">/// Get the function type of the inline assembly snippet.
+    ///
+    /// This is the same type that was passed into LLVMGetInlineAsm originally.
+    </span><span class="kw">pub fn </span>LLVMGetInlineAsmFunctionType(InlineAsmVal: LLVMValueRef) -&gt; LLVMTypeRef;
+
+    <span class="doccomment">/// Get if the inline asm snippet has side effects
+    </span><span class="kw">pub fn </span>LLVMGetInlineAsmHasSideEffects(InlineAsmVal: LLVMValueRef) -&gt; LLVMBool;
+
+    <span class="doccomment">/// Get if the inline asm snippet needs an aligned stack
+    </span><span class="kw">pub fn </span>LLVMGetInlineAsmNeedsAlignedStack(InlineAsmVal: LLVMValueRef) -&gt; LLVMBool;
+
+    <span class="doccomment">/// Get if the inline asm snippet may unwind the stack
+    </span><span class="kw">pub fn </span>LLVMGetInlineAsmCanUnwind(InlineAsmVal: LLVMValueRef) -&gt; LLVMBool;
 
     <span class="kw">pub fn </span>LLVMGetModuleContext(M: LLVMModuleRef) -&gt; LLVMContextRef;
     <span class="attr">#[deprecated(since = <span class="string">"12.0.0"</span>, note = <span class="string">"Use LLVMGetTypeByName2 instead"</span>)]
@@ -2632,8 +2780,6 @@
     <span class="kw">pub fn </span>LLVMConstMul(LHSConstant: LLVMValueRef, RHSConstant: LLVMValueRef) -&gt; LLVMValueRef;
     <span class="kw">pub fn </span>LLVMConstNSWMul(LHSConstant: LLVMValueRef, RHSConstant: LLVMValueRef) -&gt; LLVMValueRef;
     <span class="kw">pub fn </span>LLVMConstNUWMul(LHSConstant: LLVMValueRef, RHSConstant: LLVMValueRef) -&gt; LLVMValueRef;
-    <span class="kw">pub fn </span>LLVMConstAnd(LHSConstant: LLVMValueRef, RHSConstant: LLVMValueRef) -&gt; LLVMValueRef;
-    <span class="kw">pub fn </span>LLVMConstOr(LHSConstant: LLVMValueRef, RHSConstant: LLVMValueRef) -&gt; LLVMValueRef;
     <span class="kw">pub fn </span>LLVMConstXor(LHSConstant: LLVMValueRef, RHSConstant: LLVMValueRef) -&gt; LLVMValueRef;
     <span class="kw">pub fn </span>LLVMConstICmp(
         Predicate: LLVMIntPredicate,
@@ -2646,8 +2792,6 @@
         RHSConstant: LLVMValueRef,
     ) -&gt; LLVMValueRef;
     <span class="kw">pub fn </span>LLVMConstShl(LHSConstant: LLVMValueRef, RHSConstant: LLVMValueRef) -&gt; LLVMValueRef;
-    <span class="kw">pub fn </span>LLVMConstLShr(LHSConstant: LLVMValueRef, RHSConstant: LLVMValueRef) -&gt; LLVMValueRef;
-    <span class="kw">pub fn </span>LLVMConstAShr(LHSConstant: LLVMValueRef, RHSConstant: LLVMValueRef) -&gt; LLVMValueRef;
     <span class="kw">pub fn </span>LLVMConstGEP2(
         Ty: LLVMTypeRef,
         ConstantVal: LLVMValueRef,
@@ -2661,28 +2805,12 @@
         NumIndices: ::libc::c_uint,
     ) -&gt; LLVMValueRef;
     <span class="kw">pub fn </span>LLVMConstTrunc(ConstantVal: LLVMValueRef, ToType: LLVMTypeRef) -&gt; LLVMValueRef;
-    <span class="kw">pub fn </span>LLVMConstSExt(ConstantVal: LLVMValueRef, ToType: LLVMTypeRef) -&gt; LLVMValueRef;
-    <span class="kw">pub fn </span>LLVMConstZExt(ConstantVal: LLVMValueRef, ToType: LLVMTypeRef) -&gt; LLVMValueRef;
-    <span class="kw">pub fn </span>LLVMConstFPTrunc(ConstantVal: LLVMValueRef, ToType: LLVMTypeRef) -&gt; LLVMValueRef;
-    <span class="kw">pub fn </span>LLVMConstFPExt(ConstantVal: LLVMValueRef, ToType: LLVMTypeRef) -&gt; LLVMValueRef;
-    <span class="kw">pub fn </span>LLVMConstUIToFP(ConstantVal: LLVMValueRef, ToType: LLVMTypeRef) -&gt; LLVMValueRef;
-    <span class="kw">pub fn </span>LLVMConstSIToFP(ConstantVal: LLVMValueRef, ToType: LLVMTypeRef) -&gt; LLVMValueRef;
-    <span class="kw">pub fn </span>LLVMConstFPToUI(ConstantVal: LLVMValueRef, ToType: LLVMTypeRef) -&gt; LLVMValueRef;
-    <span class="kw">pub fn </span>LLVMConstFPToSI(ConstantVal: LLVMValueRef, ToType: LLVMTypeRef) -&gt; LLVMValueRef;
     <span class="kw">pub fn </span>LLVMConstPtrToInt(ConstantVal: LLVMValueRef, ToType: LLVMTypeRef) -&gt; LLVMValueRef;
     <span class="kw">pub fn </span>LLVMConstIntToPtr(ConstantVal: LLVMValueRef, ToType: LLVMTypeRef) -&gt; LLVMValueRef;
     <span class="kw">pub fn </span>LLVMConstBitCast(ConstantVal: LLVMValueRef, ToType: LLVMTypeRef) -&gt; LLVMValueRef;
     <span class="kw">pub fn </span>LLVMConstAddrSpaceCast(ConstantVal: LLVMValueRef, ToType: LLVMTypeRef) -&gt; LLVMValueRef;
-    <span class="kw">pub fn </span>LLVMConstZExtOrBitCast(ConstantVal: LLVMValueRef, ToType: LLVMTypeRef) -&gt; LLVMValueRef;
-    <span class="kw">pub fn </span>LLVMConstSExtOrBitCast(ConstantVal: LLVMValueRef, ToType: LLVMTypeRef) -&gt; LLVMValueRef;
     <span class="kw">pub fn </span>LLVMConstTruncOrBitCast(ConstantVal: LLVMValueRef, ToType: LLVMTypeRef) -&gt; LLVMValueRef;
     <span class="kw">pub fn </span>LLVMConstPointerCast(ConstantVal: LLVMValueRef, ToType: LLVMTypeRef) -&gt; LLVMValueRef;
-    <span class="kw">pub fn </span>LLVMConstIntCast(
-        ConstantVal: LLVMValueRef,
-        ToType: LLVMTypeRef,
-        isSigned: LLVMBool,
-    ) -&gt; LLVMValueRef;
-    <span class="kw">pub fn </span>LLVMConstFPCast(ConstantVal: LLVMValueRef, ToType: LLVMTypeRef) -&gt; LLVMValueRef;
     <span class="kw">pub fn </span>LLVMConstExtractElement(
         VectorConstant: LLVMValueRef,
         IndexConstant: LLVMValueRef,
@@ -2931,6 +3059,43 @@
     <span class="attr">#[deprecated(since = <span class="string">"LLVM 9.0"</span>, note = <span class="string">"Use LLVMMDNodeInContext2 instead."</span>)]
     </span><span class="kw">pub fn </span>LLVMMDNode(Vals: <span class="kw-2">*mut </span>LLVMValueRef, Count: ::libc::c_uint) -&gt; LLVMValueRef;
 
+    <span class="doccomment">/// Create a new operand bundle.
+    ///
+    /// Every invocation should be paired with LLVMDisposeOperandBundle() or memory
+    /// will be leaked.
+    </span><span class="kw">pub fn </span>LLVMCreateOperandBundle(
+        Tag: <span class="kw-2">*const </span>::libc::c_char,
+        TagLen: ::libc::size_t,
+        Args: <span class="kw-2">*mut </span>LLVMValueRef,
+        NumArgs: ::libc::c_uint,
+    ) -&gt; LLVMOperandBundleRef;
+
+    <span class="doccomment">/// Destroy an operand bundle.
+    ///
+    /// This must be called for every created operand bundle or memory will be
+    /// leaked.
+    </span><span class="kw">pub fn </span>LLVMDisposeOperandBundle(Bundle: LLVMOperandBundleRef);
+
+    <span class="doccomment">/// Obtain the tag of an operand bundle as a string.
+    ///
+    /// @param Bundle Operand bundle to obtain tag of.
+    /// @param Len Out parameter which holds the length of the returned string.
+    /// @return The tag name of Bundle.
+    /// @see OperandBundleDef::getTag()
+    </span><span class="kw">pub fn </span>LLVMGetOperandBundleTag(
+        Bundle: LLVMOperandBundleRef,
+        Len: <span class="kw-2">*mut </span>::libc::size_t,
+    ) -&gt; <span class="kw-2">*const </span>::libc::c_char;
+
+    <span class="doccomment">/// Obtain the number of operands for an operand bundle.
+    </span><span class="kw">pub fn </span>LLVMGetNumOperandBundleArgs(Bundle: LLVMOperandBundleRef) -&gt; ::libc::c_uint;
+
+    <span class="doccomment">/// Obtain the operand for an operand bundle at the given index.
+    </span><span class="kw">pub fn </span>LLVMGetOperandBundleArgAtIndex(
+        Bundle: LLVMOperandBundleRef,
+        Index: ::libc::c_uint,
+    ) -&gt; LLVMValueRef;
+
     <span class="doccomment">/// Add a global indirect function to a module under a specified name.
     </span><span class="kw">pub fn </span>LLVMAddGlobalIFunc(
         M: LLVMModuleRef,
@@ -3132,9 +3297,23 @@
     ///
     /// The provided value should be a CallInst or InvokeInst.
     </span><span class="kw">pub fn </span>LLVMGetCalledValue(Instr: LLVMValueRef) -&gt; LLVMValueRef;
+    <span class="doccomment">/// Get the number of operand bundles attached to this instruction.
+    ///
+    /// Only works with CallInst and InvokeInst instructions.
+    </span><span class="kw">pub fn </span>LLVMGetNumOperandBundles(C: LLVMValueRef) -&gt; ::libc::c_uint;
+    <span class="doccomment">/// Get the operand bundle attached to this instruction at the given index.
+    ///
+    /// Use LLVMDisposeOperandBundle to free the operand bundle. This only works
+    /// on CallInst and InvokeInst instructions.
+    </span><span class="kw">pub fn </span>LLVMGetOperandBundleAtIndex(
+        C: LLVMValueRef,
+        Index: ::libc::c_uint,
+    ) -&gt; LLVMOperandBundleRef;
     <span class="doccomment">/// Get whether a call instruction is a tail call.
     </span><span class="kw">pub fn </span>LLVMIsTailCall(CallInst: LLVMValueRef) -&gt; LLVMBool;
     <span class="kw">pub fn </span>LLVMSetTailCall(CallInst: LLVMValueRef, IsTailCall: LLVMBool);
+    <span class="kw">pub fn </span>LLVMGetTailCallKind(CallInst: LLVMValueRef) -&gt; LLVMTailCallKind;
+    <span class="kw">pub fn </span>LLVMSetTailCallKind(CallInst: LLVMValueRef, kind: LLVMTailCallKind);
     <span class="doccomment">/// Return the normal destination basic block of an invoke instruction.
     </span><span class="kw">pub fn </span>LLVMGetNormalDest(InvokeInst: LLVMValueRef) -&gt; LLVMBasicBlockRef;
     <span class="doccomment">/// Return the unwind destination basic block.
@@ -3356,6 +3535,18 @@
         NumArgs: ::libc::c_uint,
         Then: LLVMBasicBlockRef,
         Catch: LLVMBasicBlockRef,
+        Name: <span class="kw-2">*const </span>::libc::c_char,
+    ) -&gt; LLVMValueRef;
+    <span class="kw">pub fn </span>LLVMBuildInvokeWithOperandBundles(
+        arg1: LLVMBuilderRef,
+        Ty: LLVMTypeRef,
+        Fn: LLVMValueRef,
+        Args: <span class="kw-2">*mut </span>LLVMValueRef,
+        NumArgs: ::libc::c_uint,
+        Then: LLVMBasicBlockRef,
+        Catch: LLVMBasicBlockRef,
+        Bundles: <span class="kw-2">*mut </span>LLVMOperandBundleRef,
+        NumBundles: ::libc::c_uint,
         Name: <span class="kw-2">*const </span>::libc::c_char,
     ) -&gt; LLVMValueRef;
     <span class="kw">pub fn </span>LLVMBuildUnreachable(B: LLVMBuilderRef) -&gt; LLVMValueRef;
@@ -3645,6 +3836,43 @@
     <span class="kw">pub fn </span>LLVMGetExact(DivOrShrInst: LLVMValueRef) -&gt; LLVMBool;
     <span class="kw">pub fn </span>LLVMSetExact(DivOrShrInst: LLVMValueRef, IsExact: LLVMBool);
 
+    <span class="doccomment">/// Gets if the instruction has the non-negative flag set.
+    ///
+    /// Only valid for zext instructions.
+    </span><span class="kw">pub fn </span>LLVMGetNNeg(NonNegInst: LLVMValueRef) -&gt; LLVMBool;
+
+    <span class="doccomment">/// Sets the non-negative flag for the instruction.
+    ///
+    /// Only valid for zext instructions.
+    </span><span class="kw">pub fn </span>LLVMSetNNeg(NonNegInst: LLVMValueRef, IsNonNeg: LLVMBool);
+
+    <span class="doccomment">/// Get the flags for which fast-math-style optimizations are allowed for this value.
+    ///
+    /// Only valid on floating point instructions.
+    </span><span class="kw">pub fn </span>LLVMGetFastMathFlags(FPMathInst: LLVMValueRef) -&gt; LLVMFastMathFlags;
+
+    <span class="doccomment">/// Sets the flags for which fast-math-style optimizations are allowed for this value.
+    ///
+    /// Only valid on floating point instructions.
+    </span><span class="kw">pub fn </span>LLVMSetFastMathFlags(FPMathInst: LLVMValueRef, FMF: LLVMFastMathFlags);
+
+    <span class="doccomment">/// Check if a given value can potentially have fast math flags.
+    ///
+    /// Will return true for floating point arithmetic instructions, and for select,
+    /// phi, and call instructions whose type is a floating point type, or a vector
+    /// or array thereof. See https://llvm.org/docs/LangRef.html#fast-math-flags
+    </span><span class="kw">pub fn </span>LLVMCanValueUseFastMathFlags(Inst: LLVMValueRef) -&gt; LLVMBool;
+
+    <span class="doccomment">/// Gets whether the instruction has the disjoint flag set.
+    ///
+    /// Only valid for or instructions.
+    </span><span class="kw">pub fn </span>LLVMGetIsDisjoint(Inst: LLVMValueRef) -&gt; LLVMBool;
+
+    <span class="doccomment">/// Sets the disjoint flag for the instruction.
+    ///
+    /// Only valid for or instructions.
+    </span><span class="kw">pub fn </span>LLVMSetIsDisjoint(Inst: LLVMValueRef, IsDisjoint: LLVMBool);
+
     <span class="comment">// Memory
     </span><span class="kw">pub fn </span>LLVMBuildMalloc(
         arg1: LLVMBuilderRef,
@@ -3909,6 +4137,16 @@
         Fn: LLVMValueRef,
         Args: <span class="kw-2">*mut </span>LLVMValueRef,
         NumArgs: ::libc::c_uint,
+        Name: <span class="kw-2">*const </span>::libc::c_char,
+    ) -&gt; LLVMValueRef;
+    <span class="kw">pub fn </span>LLVMBuildCallWithOperandBundles(
+        arg1: LLVMBuilderRef,
+        arg2: LLVMTypeRef,
+        Fn: LLVMValueRef,
+        Args: <span class="kw-2">*mut </span>LLVMValueRef,
+        NumArgs: ::libc::c_uint,
+        Bundles: <span class="kw-2">*mut </span>LLVMOperandBundleRef,
+        NumBundles: ::libc::c_uint,
         Name: <span class="kw-2">*const </span>::libc::c_char,
     ) -&gt; LLVMValueRef;
     <span class="kw">pub fn </span>LLVMBuildSelect(

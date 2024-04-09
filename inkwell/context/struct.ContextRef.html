@@ -98,7 +98,7 @@ builder.position_at_end(basic_block);
     builder.build_call(callable_value, params, <span class="string">"exit"</span>).unwrap();
 }
 
-<span class="attr">#[cfg(any(feature = <span class="string">"llvm15-0"</span>, feature = <span class="string">"llvm16-0"</span>, feature = <span class="string">"llvm17-0"</span>))]
+<span class="attr">#[cfg(any(feature = <span class="string">"llvm15-0"</span>, feature = <span class="string">"llvm16-0"</span>, feature = <span class="string">"llvm17-0"</span>, feature = <span class="string">"llvm18-0"</span>))]
 </span>builder.build_indirect_call(asm_fn, asm, params, <span class="string">"exit"</span>).unwrap();
 
 builder.build_return(<span class="prelude-val">None</span>).unwrap();</code></pre></div>

@@ -15,7 +15,7 @@ jobs:
             LLVM_SYS_180_PREFIX: /usr/lib/llvm-18/
             TABLEGEN_180_PREFIX: /usr/lib/llvm-18/
         steps:
-        - uses: actions/checkout@v3
+        - uses: actions/checkout@v4
         - uses: dtolnay/rust-toolchain@stable
           with:
             components: rustfmt, clippy
@@ -49,7 +49,7 @@ jobs:
             TABLEGEN_180_PREFIX: /usr/lib/llvm-18/
             RUST_LOG: debug
         steps:
-        - uses: actions/checkout@v3
+        - uses: actions/checkout@v4
         - name: free HDD space
           run: |
             # deleting space

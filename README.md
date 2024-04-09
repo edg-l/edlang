@@ -47,4 +47,4 @@ Options:
 ## Dependencies
 
 - Rust
-- LLVM 17
+- LLVM 18

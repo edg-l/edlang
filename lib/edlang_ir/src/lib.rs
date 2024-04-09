@@ -16,6 +16,7 @@ pub struct SymbolTable {
     pub symbols: BTreeMap<DefId, String>,
     pub modules: BTreeMap<String, DefId>,
     pub functions: BTreeMap<String, DefId>,
+    pub methods: BTreeMap<DefId, BTreeMap<String, DefId>>,
     pub constants: BTreeMap<String, DefId>,
     pub structs: BTreeMap<String, DefId>,
     pub types: BTreeMap<String, DefId>,

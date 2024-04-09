@@ -71,12 +71,19 @@ pub fn prepass_module(
                     );
                 }
                 ast::ModuleStatement::Struct(info) => {
-                    let next_id = gen.next_defid();
-                    current_module
+                    if current_module
                         .symbols
                         .structs
-                        .insert(info.name.name.clone(), next_id);
-                    current_module.structs.insert(next_id);
+                        .get(&info.name.name)
+                        .is_none()
+                    {
+                        let next_id = gen.next_defid();
+                        current_module
+                            .symbols
+                            .structs
+                            .insert(info.name.name.clone(), next_id);
+                        current_module.structs.insert(next_id);
+                    }
                 }
                 /*
                 ast::ModuleStatement::Type(info) => {
@@ -95,6 +102,39 @@ pub fn prepass_module(
                         .modules
                         .insert(info.name.name.clone(), next_id);
                     current_module.modules.insert(next_id);
+                }
+                ast::ModuleStatement::StructImpl(info) => {
+                    if current_module
+                        .symbols
+                        .structs
+                        .get(&info.name.name)
+                        .is_none()
+                    {
+                        let next_id = gen.next_defid();
+                        current_module
+                            .symbols
+                            .structs
+                            .insert(info.name.name.clone(), next_id);
+                        current_module.structs.insert(next_id);
+                    }
+
+                    let struct_id = *current_module.symbols.structs.get(&info.name.name).unwrap();
+
+                    for method in &info.methods {
+                        let next_id = gen.next_defid();
+                        let struct_methods =
+                            current_module.symbols.methods.entry(struct_id).or_default();
+                        current_module.functions.insert(next_id);
+                        struct_methods.insert(method.name.name.clone(), next_id);
+
+                        ctx.unresolved_function_signatures.insert(
+                            next_id,
+                            (
+                                method.params.iter().map(|x| &x.arg_type).cloned().collect(),
+                                method.return_type.clone(),
+                            ),
+                        );
+                    }
                 }
             }
         }
@@ -172,12 +212,14 @@ pub fn prepass_sub_module(
                     );
                 }
                 ast::ModuleStatement::Struct(info) => {
-                    let next_id = gen.next_defid();
-                    submodule
-                        .symbols
-                        .structs
-                        .insert(info.name.name.clone(), next_id);
-                    submodule.structs.insert(next_id);
+                    if submodule.symbols.structs.get(&info.name.name).is_none() {
+                        let next_id = gen.next_defid();
+                        submodule
+                            .symbols
+                            .structs
+                            .insert(info.name.name.clone(), next_id);
+                        submodule.structs.insert(next_id);
+                    }
                 }
                 /*
                 ast::ModuleStatement::Type(info) => {
@@ -196,6 +238,34 @@ pub fn prepass_sub_module(
                         .modules
                         .insert(info.name.name.clone(), next_id);
                     submodule.modules.insert(next_id);
+                }
+                ast::ModuleStatement::StructImpl(info) => {
+                    if submodule.symbols.structs.get(&info.name.name).is_none() {
+                        let next_id = gen.next_defid();
+                        submodule
+                            .symbols
+                            .structs
+                            .insert(info.name.name.clone(), next_id);
+                        submodule.structs.insert(next_id);
+                    }
+
+                    let struct_id = *submodule.symbols.structs.get(&info.name.name).unwrap();
+
+                    for method in &info.methods {
+                        let next_id = gen.next_defid();
+                        let struct_methods =
+                            submodule.symbols.methods.entry(struct_id).or_default();
+                        submodule.functions.insert(next_id);
+                        struct_methods.insert(method.name.name.clone(), next_id);
+
+                        ctx.unresolved_function_signatures.insert(
+                            next_id,
+                            (
+                                method.params.iter().map(|x| &x.arg_type).cloned().collect(),
+                                method.return_type.clone(),
+                            ),
+                        );
+                    }
                 }
             }
         }

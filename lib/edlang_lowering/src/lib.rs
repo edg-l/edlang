@@ -60,35 +60,104 @@ fn lower_module(
 
     // fill fn sigs
     for content in &module.contents {
-        if let ModuleStatement::Function(fn_def) = content {
-            let body = ctx.body.modules.get(&id).unwrap();
-            let fn_id = *body.symbols.functions.get(&fn_def.name.name).unwrap();
+        match content {
+            ModuleStatement::Function(fn_def) => {
+                let body = ctx.body.modules.get(&id).unwrap();
+                let fn_id = *body.symbols.functions.get(&fn_def.name.name).unwrap();
 
-            let mut args = Vec::new();
-            let ret_type;
+                let mut args = Vec::new();
+                let ret_type;
 
-            for arg in &fn_def.params {
-                let ty = lower_type(&ctx, &arg.arg_type, id)?;
-                args.push(ty);
+                for arg in &fn_def.params {
+                    let ty = lower_type(&ctx, &arg.arg_type, id)?;
+                    args.push(ty);
+                }
+
+                if let Some(ty) = &fn_def.return_type {
+                    ret_type = lower_type(&ctx, ty, id)?;
+                } else {
+                    ret_type = TypeInfo {
+                        span: None,
+                        kind: ir::TypeKind::Unit,
+                    };
+                }
+
+                ctx.body.function_signatures.insert(fn_id, (args, ret_type));
             }
+            ModuleStatement::StructImpl(info) => {
+                // todo: handle generics
+                assert!(info.generics.is_empty(), "generics not yet implemented");
 
-            if let Some(ty) = &fn_def.return_type {
-                ret_type = lower_type(&ctx, ty, id)?;
-            } else {
-                ret_type = TypeInfo {
-                    span: None,
-                    kind: ir::TypeKind::Unit,
+                let struct_id = {
+                    let body = ctx.body.modules.get(&id).unwrap();
+                    *body.symbols.structs.get(&info.name.name).unwrap()
                 };
-            }
 
-            ctx.body.function_signatures.insert(fn_id, (args, ret_type));
+                for fn_def in &info.methods {
+                    let body = ctx.body.modules.get(&id).unwrap();
+
+                    let fn_id = *body
+                        .symbols
+                        .methods
+                        .get(&struct_id)
+                        .expect("struct id not found")
+                        .get(&fn_def.name.name)
+                        .expect("struct method not found");
+
+                    let mut args = Vec::new();
+                    let ret_type;
+
+                    for arg in &fn_def.params {
+                        let ty = lower_type(&ctx, &arg.arg_type, id)?;
+                        args.push(ty);
+                    }
+
+                    if let Some(ty) = &fn_def.return_type {
+                        ret_type = lower_type(&ctx, ty, id)?;
+                    } else {
+                        ret_type = TypeInfo {
+                            span: None,
+                            kind: ir::TypeKind::Unit,
+                        };
+                    }
+
+                    ctx.body.function_signatures.insert(fn_id, (args, ret_type));
+                }
+            }
+            _ => {}
         }
     }
 
     for content in &module.contents {
         match content {
             ModuleStatement::Function(fn_def) => {
-                ctx = lower_function(ctx, fn_def, id)?;
+                let fn_id = {
+                    let body = ctx.body.modules.get(&id).unwrap();
+                    *body.symbols.functions.get(&fn_def.name.name).unwrap()
+                };
+                ctx = lower_function(ctx, fn_def, id, fn_id)?;
+            }
+            ModuleStatement::StructImpl(info) => {
+                let struct_id = {
+                    let body = ctx.body.modules.get(&id).unwrap();
+                    *body.symbols.structs.get(&info.name.name).unwrap()
+                };
+
+                for fn_def in &info.methods {
+                    // todo: handle generics
+                    assert!(info.generics.is_empty(), "generics not yet implemented");
+                    let fn_id = {
+                        let body = ctx.body.modules.get(&id).unwrap();
+                        *body
+                            .symbols
+                            .methods
+                            .get(&struct_id)
+                            .unwrap()
+                            .get(&fn_def.name.name)
+                            .unwrap()
+                    };
+                    ctx = lower_function(ctx, fn_def, id, fn_id)?;
+                }
             }
             // ModuleStatement::Type(_) => todo!(),
             ModuleStatement::Module(mod_def) => {
@@ -139,16 +208,14 @@ fn lower_function(
     ctx: BuildCtx,
     func: &ast::Function,
     module_id: DefId,
+    fn_id: DefId,
 ) -> Result<BuildCtx, LoweringError> {
     let mut builder = BodyBuilder {
         body: Body {
             blocks: Default::default(),
             locals: Default::default(),
             name: func.name.name.clone(),
-            def_id: {
-                let body = ctx.body.modules.get(&module_id).unwrap();
-                *body.symbols.functions.get(&func.name.name).unwrap()
-            },
+            def_id: fn_id,
             is_pub: func.is_public,
             is_extern: func.is_extern,
             is_exported: func.is_exported || func.name.name == "main",

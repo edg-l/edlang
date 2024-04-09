@@ -29,6 +29,7 @@ extern {
     "extern" => Token::KeywordExtern,
     "as" => Token::KeywordAs,
     "exported" => Token::KeywordExported,
+    "impl" => Token::KeywordImpl,
 
     // literals
     "identifier" => Token::Identifier(<String>),
@@ -473,6 +474,15 @@ pub(crate) Struct: ast::Struct = {
     }
 }
 
+pub StructImpl: ast::StructImpl = {
+    <lo:@L> "impl" <name:Ident> <generics:("<" <Comma<Type>> ">")?> "{" <methods:List<Function>?> "}" <hi:@R> => ast::StructImpl {
+        name,
+        methods: methods.unwrap_or(vec![]),
+        generics: generics.unwrap_or(vec![]),
+        span: ast::Span::new(lo, hi),
+    }
+}
+
 pub(crate) Import: ast::Import = {
     <lo:@L> "use" <module:DoubleColon<Ident>> <symbols:("{" <Comma<Ident>> "}")?> ";" <hi:@R> => ast::Import {
         module,
@@ -512,5 +522,6 @@ pub(crate) ModuleStatement: ast::ModuleStatement = {
     <Function> => ast::ModuleStatement::Function(<>),
     <Constant> => ast::ModuleStatement::Constant(<>),
     <Struct> => ast::ModuleStatement::Struct(<>),
+    <StructImpl> => ast::ModuleStatement::StructImpl(<>),
     <Module> => ast::ModuleStatement::Module(<>),
 }

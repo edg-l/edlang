@@ -16,6 +16,7 @@ pub enum ModuleStatement {
     Function(Function),
     Constant(Constant),
     Struct(Struct),
+    StructImpl(StructImpl),
     Module(Module),
 }
 
@@ -166,6 +167,14 @@ pub struct Struct {
     pub name: Ident,
     pub generics: Vec<Type>,
     pub fields: Vec<StructField>,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct StructImpl {
+    pub name: Ident,
+    pub generics: Vec<Type>,
+    pub methods: Vec<Function>,
     pub span: Span,
 }
 

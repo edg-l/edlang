@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["BinaryFirstLvlOpParser","BinarySecondLvlOpParser","BinaryThirdLvlOpParser","ModuleParser","PathSegmentsParser","TopLevelModuleParser","UnaryOpParser"],"trait":["__ToTriple"]};
+window.SIDEBAR_ITEMS = {"struct":["BinaryFirstLvlOpParser","BinarySecondLvlOpParser","BinaryThirdLvlOpParser","ModuleParser","PathSegmentsParser","StructImplParser","TopLevelModuleParser","UnaryOpParser"],"trait":["__ToTriple"]};

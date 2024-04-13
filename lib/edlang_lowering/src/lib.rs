@@ -288,14 +288,12 @@ fn lower_function(
             lower_statement(&mut builder, stmt, &ret_ty)?;
         }
 
-        if !builder.statements.is_empty() {
-            let statements = std::mem::take(&mut builder.statements);
-            builder.body.blocks.push(BasicBlock {
-                statements: statements.into(),
-                terminator: Terminator::Return,
-                terminator_span: None,
-            });
-        }
+        let statements = std::mem::take(&mut builder.statements);
+        builder.body.blocks.push(BasicBlock {
+            statements: statements.into(),
+            terminator: Terminator::Return,
+            terminator_span: None,
+        });
     }
     let (mut ctx, body) = (builder.ctx, builder.body);
     ctx.unresolved_function_signatures.remove(&body.def_id);
@@ -366,10 +364,7 @@ fn lower_while(
     }
 
     // keet idx to change terminator if there is no return
-    let last_then_block_idx = if !matches!(
-        builder.body.blocks.last().unwrap().terminator,
-        Terminator::Return
-    ) {
+    let last_then_block_idx = {
         builder.body.blocks.len();
         let statements = std::mem::take(&mut builder.statements);
         let idx = builder.body.blocks.len();
@@ -379,8 +374,6 @@ fn lower_while(
             terminator_span: Some(Span::new(info.block.span.hi, info.block.span.hi)),
         });
         Some(idx)
-    } else {
-        None
     };
 
     let otherwise_block_idx = builder.body.blocks.len();
@@ -447,10 +440,7 @@ fn lower_if_stmt(
     }
 
     // keet idx to change terminator
-    let last_then_block_idx = if !matches!(
-        builder.body.blocks.last().unwrap().terminator,
-        Terminator::Return
-    ) {
+    let last_then_block_idx = {
         let idx = builder.body.blocks.len();
         let statements = std::mem::take(&mut builder.statements);
         builder.body.blocks.push(BasicBlock {
@@ -459,8 +449,6 @@ fn lower_if_stmt(
             terminator_span: Some(Span::new(info.then_block.span.hi, info.then_block.span.hi)),
         });
         Some(idx)
-    } else {
-        None
     };
 
     let first_else_block_idx = builder.body.blocks.len();
@@ -471,10 +459,7 @@ fn lower_if_stmt(
         }
     }
 
-    let last_else_block_idx = if !matches!(
-        builder.body.blocks.last().unwrap().terminator,
-        Terminator::Return
-    ) {
+    let last_else_block_idx = {
         let idx = builder.body.blocks.len();
         let statements = std::mem::take(&mut builder.statements);
         builder.body.blocks.push(BasicBlock {
@@ -486,8 +471,6 @@ fn lower_if_stmt(
                 .map(|x| Span::new(x.span.hi, x.span.hi)),
         });
         Some(idx)
-    } else {
-        None
     };
 
     let targets = SwitchTarget {

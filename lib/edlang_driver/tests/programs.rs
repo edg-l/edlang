@@ -20,6 +20,8 @@ mod common;
 #[test_case(TEST_IF_BOTH, "test_if_both", false, 2, &["a"] ; "test_if_both_args")]
 #[test_case(TEST_IF_NO_ELSE, "test_if_no_else", false, 1, &[] ; "test_if_no_else")]
 #[test_case(TEST_IF_NO_ELSE, "test_if_no_else", false, 2, &["a"] ; "test_if_no_else_args")]
+#[test_case(include_str!("programs/while_if_false.ed"), "while_if_false", false, 7, &[] ; "while_if_false")]
+#[test_case(include_str!("programs/if_if_false.ed"), "if_if_false", false, 7, &[] ; "if_if_false")]
 fn example_tests(source: &str, name: &str, is_library: bool, status_code: i32, args: &[&str]) {
     let program = compile_program(source, name, is_library).unwrap();
 

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `lib/edlang_lowering/src/lib.rs`."><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-5bc39a1768837dd0.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="edlang_lowering" data-themes="" data-resource-suffix="" data-rustdoc-version="1.77.1 (7cf61ebde 2024-03-27)" data-channel="1.77.1" data-search-js="search-dd67cee4cfa65049.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-48f368f3872407c8.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `lib/edlang_lowering/src/lib.rs`."><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-5bc39a1768837dd0.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="edlang_lowering" data-themes="" data-resource-suffix="" data-rustdoc-version="1.77.2 (25ef9e3d8 2024-04-09)" data-channel="1.77.2" data-search-js="search-dd67cee4cfa65049.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-48f368f3872407c8.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
             <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
     <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../edlang_lowering/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
@@ -1362,23 +1362,6 @@
 <a href="#1360" id="1360">1360</a>
 <a href="#1361" id="1361">1361</a>
 <a href="#1362" id="1362">1362</a>
-<a href="#1363" id="1363">1363</a>
-<a href="#1364" id="1364">1364</a>
-<a href="#1365" id="1365">1365</a>
-<a href="#1366" id="1366">1366</a>
-<a href="#1367" id="1367">1367</a>
-<a href="#1368" id="1368">1368</a>
-<a href="#1369" id="1369">1369</a>
-<a href="#1370" id="1370">1370</a>
-<a href="#1371" id="1371">1371</a>
-<a href="#1372" id="1372">1372</a>
-<a href="#1373" id="1373">1373</a>
-<a href="#1374" id="1374">1374</a>
-<a href="#1375" id="1375">1375</a>
-<a href="#1376" id="1376">1376</a>
-<a href="#1377" id="1377">1377</a>
-<a href="#1378" id="1378">1378</a>
-<a href="#1379" id="1379">1379</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::HashMap;
 
 <span class="kw">use </span>ast::{BinaryOp, ModuleStatement, Span, WhileStmt};
@@ -1669,14 +1652,12 @@
             lower_statement(<span class="kw-2">&amp;mut </span>builder, stmt, <span class="kw-2">&amp;</span>ret_ty)<span class="question-mark">?</span>;
         }
 
-        <span class="kw">if </span>!builder.statements.is_empty() {
-            <span class="kw">let </span>statements = std::mem::take(<span class="kw-2">&amp;mut </span>builder.statements);
-            builder.body.blocks.push(BasicBlock {
-                statements: statements.into(),
-                terminator: Terminator::Return,
-                terminator_span: <span class="prelude-val">None</span>,
-            });
-        }
+        <span class="kw">let </span>statements = std::mem::take(<span class="kw-2">&amp;mut </span>builder.statements);
+        builder.body.blocks.push(BasicBlock {
+            statements: statements.into(),
+            terminator: Terminator::Return,
+            terminator_span: <span class="prelude-val">None</span>,
+        });
     }
     <span class="kw">let </span>(<span class="kw-2">mut </span>ctx, body) = (builder.ctx, builder.body);
     ctx.unresolved_function_signatures.remove(<span class="kw-2">&amp;</span>body.def_id);
@@ -1747,10 +1728,7 @@
     }
 
     <span class="comment">// keet idx to change terminator if there is no return
-    </span><span class="kw">let </span>last_then_block_idx = <span class="kw">if </span>!<span class="macro">matches!</span>(
-        builder.body.blocks.last().unwrap().terminator,
-        Terminator::Return
-    ) {
+    </span><span class="kw">let </span>last_then_block_idx = {
         builder.body.blocks.len();
         <span class="kw">let </span>statements = std::mem::take(<span class="kw-2">&amp;mut </span>builder.statements);
         <span class="kw">let </span>idx = builder.body.blocks.len();
@@ -1760,9 +1738,7 @@
             terminator_span: <span class="prelude-val">Some</span>(Span::new(info.block.span.hi, info.block.span.hi)),
         });
         <span class="prelude-val">Some</span>(idx)
-    } <span class="kw">else </span>{
-        <span class="prelude-val">None
-    </span>};
+    };
 
     <span class="kw">let </span>otherwise_block_idx = builder.body.blocks.len();
 
@@ -1828,10 +1804,7 @@
     }
 
     <span class="comment">// keet idx to change terminator
-    </span><span class="kw">let </span>last_then_block_idx = <span class="kw">if </span>!<span class="macro">matches!</span>(
-        builder.body.blocks.last().unwrap().terminator,
-        Terminator::Return
-    ) {
+    </span><span class="kw">let </span>last_then_block_idx = {
         <span class="kw">let </span>idx = builder.body.blocks.len();
         <span class="kw">let </span>statements = std::mem::take(<span class="kw-2">&amp;mut </span>builder.statements);
         builder.body.blocks.push(BasicBlock {
@@ -1840,9 +1813,7 @@
             terminator_span: <span class="prelude-val">Some</span>(Span::new(info.then_block.span.hi, info.then_block.span.hi)),
         });
         <span class="prelude-val">Some</span>(idx)
-    } <span class="kw">else </span>{
-        <span class="prelude-val">None
-    </span>};
+    };
 
     <span class="kw">let </span>first_else_block_idx = builder.body.blocks.len();
 
@@ -1852,10 +1823,7 @@
         }
     }
 
-    <span class="kw">let </span>last_else_block_idx = <span class="kw">if </span>!<span class="macro">matches!</span>(
-        builder.body.blocks.last().unwrap().terminator,
-        Terminator::Return
-    ) {
+    <span class="kw">let </span>last_else_block_idx = {
         <span class="kw">let </span>idx = builder.body.blocks.len();
         <span class="kw">let </span>statements = std::mem::take(<span class="kw-2">&amp;mut </span>builder.statements);
         builder.body.blocks.push(BasicBlock {
@@ -1867,9 +1835,7 @@
                 .map(|x| Span::new(x.span.hi, x.span.hi)),
         });
         <span class="prelude-val">Some</span>(idx)
-    } <span class="kw">else </span>{
-        <span class="prelude-val">None
-    </span>};
+    };
 
     <span class="kw">let </span>targets = SwitchTarget {
         values: <span class="macro">vec!</span>[condition_ty.get_falsy_value()],

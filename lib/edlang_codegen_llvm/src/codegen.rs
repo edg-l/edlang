@@ -95,7 +95,7 @@ pub fn compile(session: &Session, program: &ProgramBody) -> Result<PathBuf, Box<
             if session.library {
                 inkwell::targets::RelocMode::DynamicNoPic
             } else {
-                inkwell::targets::RelocMode::Default
+                inkwell::targets::RelocMode::PIC
             },
             inkwell::targets::CodeModel::Default,
         )
@@ -1238,9 +1238,9 @@ fn compile_load_place<'ctx>(
 fn compile_value<'ctx>(
     ctx: &ModuleCompileCtx<'ctx, '_>,
     val: &ValueTree,
-    ty: &ir::TypeInfo,
+    type_info: &ir::TypeInfo,
 ) -> Result<BasicValueEnum<'ctx>, BuilderError> {
-    let ty = compile_basic_type(ctx, ty);
+    let ty = compile_basic_type(ctx, type_info);
     Ok(match val {
         ValueTree::Leaf(const_val) => match const_val {
             ir::ConstValue::Bool(x) => ty
@@ -1298,6 +1298,23 @@ fn compile_value<'ctx>(
                 .into_int_type()
                 .const_int((*x) as u64, true)
                 .as_basic_value_enum(),
+            ir::ConstValue::Str(x) => {
+                let inner_ty = match &type_info.kind {
+                    ir::TypeKind::Ref(_, inner) => &**inner,
+                    _ => unreachable!(),
+                };
+                let inner_ty = compile_basic_type(ctx, inner_ty);
+                let x = &x[1..x.len() - 1];
+                let ptr = ctx.builder.build_global_string_ptr(x, "")?;
+                let len = ctx.ctx.context.i64_type().const_int(x.len() as u64, false);
+                let value = inner_ty
+                    .into_struct_type()
+                    .const_named_struct(&[ptr.as_basic_value_enum(), len.as_basic_value_enum()])
+                    .as_basic_value_enum();
+                let ptr = ctx.builder.build_alloca(inner_ty, "")?;
+                ctx.builder.build_store(ptr, value)?;
+                ptr.as_basic_value_enum()
+            }
         },
         ValueTree::Branch(_) => todo!(),
     })
@@ -1393,7 +1410,35 @@ fn compile_basic_type<'ctx>(
                 .struct_type(&fields, false)
                 .as_basic_type_enum()
         }
-        ir::TypeKind::Str => todo!(),
+        ir::TypeKind::Str => {
+            let fields = [
+                compile_basic_type(
+                    ctx,
+                    &ir::TypeInfo {
+                        span: None,
+                        kind: ir::TypeKind::Ptr(
+                            true,
+                            Box::new(ir::TypeInfo {
+                                span: None,
+                                kind: ir::TypeKind::Uint(ir::UintTy::U8),
+                            }),
+                        ),
+                    },
+                ),
+                compile_basic_type(
+                    ctx,
+                    &ir::TypeInfo {
+                        span: None,
+                        kind: ir::TypeKind::Uint(ir::UintTy::U64),
+                    },
+                ),
+            ];
+
+            ctx.ctx
+                .context
+                .struct_type(&fields, false)
+                .as_basic_type_enum()
+        }
     }
 }
 
@@ -1545,6 +1590,48 @@ fn compile_debug_type<'ctx>(ctx: &ModuleCompileCtx<'ctx, '_>, ty: &ir::TypeInfo)
                 )
                 .as_type()
         }
-        ir::TypeKind::Str => todo!(),
+        ir::TypeKind::Str => {
+            let fields = [
+                compile_debug_type(
+                    ctx,
+                    &ir::TypeInfo {
+                        span: None,
+                        kind: ir::TypeKind::Ptr(
+                            true,
+                            Box::new(ir::TypeInfo {
+                                span: None,
+                                kind: ir::TypeKind::Uint(ir::UintTy::U8),
+                            }),
+                        ),
+                    },
+                ),
+                compile_debug_type(
+                    ctx,
+                    &ir::TypeInfo {
+                        span: None,
+                        kind: ir::TypeKind::Uint(ir::UintTy::U64),
+                    },
+                ),
+            ];
+
+            let real_ty = compile_basic_type(ctx, ty);
+
+            ctx.di_builder
+                .create_struct_type(
+                    ctx.di_namespace,
+                    "str",
+                    ctx.di_unit.get_file(),
+                    0,
+                    ctx.target_data.get_bit_size(&real_ty),
+                    ctx.target_data.get_abi_alignment(&real_ty),
+                    0,
+                    None,
+                    &fields,
+                    0,
+                    None,
+                    "str",
+                )
+                .as_type()
+        }
     }
 }

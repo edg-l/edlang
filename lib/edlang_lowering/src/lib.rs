@@ -1171,7 +1171,32 @@ fn lower_value(
             },
             None => todo!(),
         },
-        ast::ValueExpr::Str { value: _, span: _ } => todo!(),
+        ast::ValueExpr::Str { value, span } => {
+            let ty = match type_hint {
+                Some(ty) => ty.clone(),
+                None => ir::TypeInfo {
+                    span: None,
+                    kind: ir::TypeKind::Ref(
+                        false,
+                        Box::new(ir::TypeInfo {
+                            span: None,
+                            kind: ir::TypeKind::Str,
+                        }),
+                    ),
+                },
+            };
+            (
+                ir::Operand::Constant(ir::ConstData {
+                    span: Some(*span),
+                    type_info: ty.clone(),
+                    kind: ir::ConstKind::Value(ir::ValueTree::Leaf(ir::ConstValue::Str(
+                        value.clone(),
+                    ))),
+                }),
+                ty.kind,
+                *span,
+            )
+        }
         ast::ValueExpr::Path(info) => {
             let (place, ty, span) = lower_path(builder, info)?;
             (Operand::Move(place), ty, span)

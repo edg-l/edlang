@@ -406,6 +406,7 @@ impl ValueTree {
                 ConstValue::F64(_) => TypeKind::Float(FloatTy::F64),
                 ConstValue::Char(_) => TypeKind::Char,
                 ConstValue::Isize(_) => TypeKind::Int(IntTy::Isize),
+                ConstValue::Str(_) => TypeKind::Str,
             },
             ValueTree::Branch(_) => todo!(),
         }
@@ -534,7 +535,7 @@ pub enum UnOp {
     Neg,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub enum ConstValue {
     Bool(bool),
     Char(char),
@@ -551,4 +552,5 @@ pub enum ConstValue {
     U128(u128),
     F32(f32),
     F64(f64),
+    Str(String),
 }

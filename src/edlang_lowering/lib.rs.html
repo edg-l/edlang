@@ -1362,6 +1362,31 @@
 <a href="#1360" id="1360">1360</a>
 <a href="#1361" id="1361">1361</a>
 <a href="#1362" id="1362">1362</a>
+<a href="#1363" id="1363">1363</a>
+<a href="#1364" id="1364">1364</a>
+<a href="#1365" id="1365">1365</a>
+<a href="#1366" id="1366">1366</a>
+<a href="#1367" id="1367">1367</a>
+<a href="#1368" id="1368">1368</a>
+<a href="#1369" id="1369">1369</a>
+<a href="#1370" id="1370">1370</a>
+<a href="#1371" id="1371">1371</a>
+<a href="#1372" id="1372">1372</a>
+<a href="#1373" id="1373">1373</a>
+<a href="#1374" id="1374">1374</a>
+<a href="#1375" id="1375">1375</a>
+<a href="#1376" id="1376">1376</a>
+<a href="#1377" id="1377">1377</a>
+<a href="#1378" id="1378">1378</a>
+<a href="#1379" id="1379">1379</a>
+<a href="#1380" id="1380">1380</a>
+<a href="#1381" id="1381">1381</a>
+<a href="#1382" id="1382">1382</a>
+<a href="#1383" id="1383">1383</a>
+<a href="#1384" id="1384">1384</a>
+<a href="#1385" id="1385">1385</a>
+<a href="#1386" id="1386">1386</a>
+<a href="#1387" id="1387">1387</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::HashMap;
 
 <span class="kw">use </span>ast::{BinaryOp, ModuleStatement, Span, WhileStmt};
@@ -2535,7 +2560,32 @@
             },
             <span class="prelude-val">None </span>=&gt; <span class="macro">todo!</span>(),
         },
-        ast::ValueExpr::Str { value: <span class="kw">_</span>, span: <span class="kw">_ </span>} =&gt; <span class="macro">todo!</span>(),
+        ast::ValueExpr::Str { value, span } =&gt; {
+            <span class="kw">let </span>ty = <span class="kw">match </span>type_hint {
+                <span class="prelude-val">Some</span>(ty) =&gt; ty.clone(),
+                <span class="prelude-val">None </span>=&gt; ir::TypeInfo {
+                    span: <span class="prelude-val">None</span>,
+                    kind: ir::TypeKind::Ref(
+                        <span class="bool-val">false</span>,
+                        Box::new(ir::TypeInfo {
+                            span: <span class="prelude-val">None</span>,
+                            kind: ir::TypeKind::Str,
+                        }),
+                    ),
+                },
+            };
+            (
+                ir::Operand::Constant(ir::ConstData {
+                    span: <span class="prelude-val">Some</span>(<span class="kw-2">*</span>span),
+                    type_info: ty.clone(),
+                    kind: ir::ConstKind::Value(ir::ValueTree::Leaf(ir::ConstValue::Str(
+                        value.clone(),
+                    ))),
+                }),
+                ty.kind,
+                <span class="kw-2">*</span>span,
+            )
+        }
         ast::ValueExpr::Path(info) =&gt; {
             <span class="kw">let </span>(place, ty, span) = lower_path(builder, info)<span class="question-mark">?</span>;
             (Operand::Move(place), ty, span)

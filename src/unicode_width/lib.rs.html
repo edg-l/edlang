@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/unicode-width-0.1.11/src/lib.rs`."><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-5bc39a1768837dd0.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="unicode_width" data-themes="" data-resource-suffix="" data-rustdoc-version="1.77.2 (25ef9e3d8 2024-04-09)" data-channel="1.77.2" data-search-js="search-dd67cee4cfa65049.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-48f368f3872407c8.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="icon" href="https://unicode-rs.github.io/unicode-rs_sm.png"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/unicode-width-0.1.12/src/lib.rs`."><title>lib.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="unicode_width" data-themes="" data-resource-suffix="" data-rustdoc-version="1.78.0 (9b00956e5 2024-04-29)" data-channel="1.78.0" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="icon" href="https://unicode-rs.github.io/unicode-rs_sm.png"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
             <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
     <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../unicode_width/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
@@ -129,6 +129,54 @@
 <a href="#127" id="127">127</a>
 <a href="#128" id="128">128</a>
 <a href="#129" id="129">129</a>
+<a href="#130" id="130">130</a>
+<a href="#131" id="131">131</a>
+<a href="#132" id="132">132</a>
+<a href="#133" id="133">133</a>
+<a href="#134" id="134">134</a>
+<a href="#135" id="135">135</a>
+<a href="#136" id="136">136</a>
+<a href="#137" id="137">137</a>
+<a href="#138" id="138">138</a>
+<a href="#139" id="139">139</a>
+<a href="#140" id="140">140</a>
+<a href="#141" id="141">141</a>
+<a href="#142" id="142">142</a>
+<a href="#143" id="143">143</a>
+<a href="#144" id="144">144</a>
+<a href="#145" id="145">145</a>
+<a href="#146" id="146">146</a>
+<a href="#147" id="147">147</a>
+<a href="#148" id="148">148</a>
+<a href="#149" id="149">149</a>
+<a href="#150" id="150">150</a>
+<a href="#151" id="151">151</a>
+<a href="#152" id="152">152</a>
+<a href="#153" id="153">153</a>
+<a href="#154" id="154">154</a>
+<a href="#155" id="155">155</a>
+<a href="#156" id="156">156</a>
+<a href="#157" id="157">157</a>
+<a href="#158" id="158">158</a>
+<a href="#159" id="159">159</a>
+<a href="#160" id="160">160</a>
+<a href="#161" id="161">161</a>
+<a href="#162" id="162">162</a>
+<a href="#163" id="163">163</a>
+<a href="#164" id="164">164</a>
+<a href="#165" id="165">165</a>
+<a href="#166" id="166">166</a>
+<a href="#167" id="167">167</a>
+<a href="#168" id="168">168</a>
+<a href="#169" id="169">169</a>
+<a href="#170" id="170">170</a>
+<a href="#171" id="171">171</a>
+<a href="#172" id="172">172</a>
+<a href="#173" id="173">173</a>
+<a href="#174" id="174">174</a>
+<a href="#175" id="175">175</a>
+<a href="#176" id="176">176</a>
+<a href="#177" id="177">177</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright 2012-2015 The Rust Project Developers. See the COPYRIGHT
 // file at the top-level directory of this distribution and at
 // http://rust-lang.org/COPYRIGHT.
@@ -140,60 +188,83 @@
 // except according to those terms.
 
 </span><span class="doccomment">//! Determine displayed width of `char` and `str` types according to
-//! [Unicode Standard Annex #11](http://www.unicode.org/reports/tr11/)
-//! rules.
+//! [Unicode Standard Annex #11](http://www.unicode.org/reports/tr11/),
+//! other portions of the Unicode standard, and common implementations of
+//! POSIX [`wcwidth()`](https://pubs.opengroup.org/onlinepubs/9699919799/).
+//! See the [Rules for determining width](#rules-for-determining-width) section
+//! for the exact rules.
+//!
+//! This crate is `#![no_std]`.
 //!
 //! ```rust
-//! extern crate unicode_width;
-//!
 //! use unicode_width::UnicodeWidthStr;
 //!
-//! fn main() {
-//!     let teststr = "Ｈｅｌｌｏ, ｗｏｒｌｄ!";
-//!     let width = UnicodeWidthStr::width(teststr);
-//!     println!("{}", teststr);
-//!     println!("The above string is {} columns wide.", width);
-//!     let width = teststr.width_cjk();
-//!     println!("The above string is {} columns wide (CJK).", width);
-//! }
+//! let teststr = "Ｈｅｌｌｏ, ｗｏｒｌｄ!";
+//! let width = UnicodeWidthStr::width(teststr);
+//! println!("{}", teststr);
+//! println!("The above string is {} columns wide.", width);
+//! let width = teststr.width_cjk();
+//! println!("The above string is {} columns wide (CJK).", width);
 //! ```
 //!
-//! # features
+//! # Rules for determining width
 //!
-//! unicode-width supports a `no_std` feature. This eliminates dependence
-//! on std, and instead uses equivalent functions from core.
+//! This crate currently uses the following rules to determine the width of a
+//! character or string, in order of decreasing precedence. These may be tweaked in the future.
 //!
-//! # crates.io
+//! 1. [Emoji presentation sequences](https://unicode.org/reports/tr51/#def_emoji_presentation_sequence)
+//!    have width 2. (The width of a string may therefore differ from the sum of the widths of its characters.)
+//! 2. [`'\u{00AD}'` SOFT HYPHEN](https://util.unicode.org/UnicodeJsps/character.jsp?a=00AD) has width 1.
+//! 3. [`'\u{115F}'` HANGUL CHOSEONG FILLER](https://util.unicode.org/UnicodeJsps/character.jsp?a=115F) has width 2.
+//! 4. The following have width 0:
+//!    - [Characters](https://util.unicode.org/UnicodeJsps/list-unicodeset.jsp?a=%5Cp%7BDefault_Ignorable_Code_Point%7D)
+//!       with the [`Default_Ignorable_Code_Point`](https://www.unicode.org/versions/Unicode15.0.0/ch05.pdf#G40095) property.
+//!    - [Characters](https://util.unicode.org/UnicodeJsps/list-unicodeset.jsp?a=%5Cp%7BGrapheme_Extend%7D)
+//!       with the [`Grapheme_Extend`] property.
+//!    - The following 8 characters, all of which have NFD decompositions consisting of two [`Grapheme_Extend`] chracters:
+//!      - [`'\u{0CC0}'` KANNADA VOWEL SIGN II](https://util.unicode.org/UnicodeJsps/character.jsp?a=0CC0),
+//!      - [`'\u{0CC7}'` KANNADA VOWEL SIGN EE](https://util.unicode.org/UnicodeJsps/character.jsp?a=0CC7),
+//!      - [`'\u{0CC8}'` KANNADA VOWEL SIGN AI](https://util.unicode.org/UnicodeJsps/character.jsp?a=0CC8),
+//!      - [`'\u{0CCA}'` KANNADA VOWEL SIGN O](https://util.unicode.org/UnicodeJsps/character.jsp?a=0CCA),
+//!      - [`'\u{0CCB}'` KANNADA VOWEL SIGN OO](https://util.unicode.org/UnicodeJsps/character.jsp?a=0CCB),
+//!      - [`'\u{1B3B}'` BALINESE VOWEL SIGN RA REPA TEDUNG](https://util.unicode.org/UnicodeJsps/character.jsp?a=1B3B),
+//!      - [`'\u{1B3D}'` BALINESE VOWEL SIGN LA LENGA TEDUNG](https://util.unicode.org/UnicodeJsps/character.jsp?a=1B3D), and
+//!      - [`'\u{1B43}'` BALINESE VOWEL SIGN PEPET TEDUNG](https://util.unicode.org/UnicodeJsps/character.jsp?a=1B43).
+//!    - [Characters](https://util.unicode.org/UnicodeJsps/list-unicodeset.jsp?a=%5Cp%7BHangul_Syllable_Type%3DV%7D%5Cp%7BHangul_Syllable_Type%3DT%7D)
+//!       with a [`Hangul_Syllable_Type`](https://www.unicode.org/versions/Unicode15.0.0/ch03.pdf#G45593)
+//!       of `Vowel_Jamo` (`V`) or `Trailing_Jamo` (`T`).
+//!    - [`'\0'` NUL](https://util.unicode.org/UnicodeJsps/character.jsp?a=0000).
+//! 5. The [control characters](https://util.unicode.org/UnicodeJsps/list-unicodeset.jsp?a=%5Cp%7BCc%7D)
+//!    have no defined width, and are ignored when determining the width of a string.
+//! 6. [Characters](https://util.unicode.org/UnicodeJsps/list-unicodeset.jsp?a=%5Cp%7BEast_Asian_Width%3DF%7D%5Cp%7BEast_Asian_Width%3DW%7D)
+//!    with an [`East_Asian_Width`] of [`Fullwidth` (`F`)](https://www.unicode.org/reports/tr11/#ED2)
+//!    or [`Wide` (`W`)](https://www.unicode.org/reports/tr11/#ED4) have width 2.
+//! 7. [Characters](https://util.unicode.org/UnicodeJsps/list-unicodeset.jsp?a=%5Cp%7BEast_Asian_Width%3DA%7D)
+//!    with an [`East_Asian_Width`] of [`Ambiguous` (`A`)](https://www.unicode.org/reports/tr11/#ED6)
+//!    have width 2 in an East Asian context, and width 1 otherwise.
+//! 8. All other characters have width 1.
 //!
-//! You can use this package in your project by adding the following
-//! to your `Cargo.toml`:
-//!
-//! ```toml
-//! [dependencies]
-//! unicode-width = "0.1.5"
-//! ```
+//! [`East_Asian_Width`]: https://www.unicode.org/reports/tr11/#ED1
+//! [`Grapheme_Extend`]: https://www.unicode.org/versions/Unicode15.0.0/ch03.pdf#G52443
 
-</span><span class="attr">#![deny(missing_docs, unsafe_code)]
-#![doc(html_logo_url = <span class="string">"https://unicode-rs.github.io/unicode-rs_sm.png"</span>,
-       html_favicon_url = <span class="string">"https://unicode-rs.github.io/unicode-rs_sm.png"</span>)]
+//!
+//! ## Canonical equivalence
+//!
+//! The non-CJK width methods guarantee that canonically equivalent strings are assigned the same width.
+//! However, this guarantee does not currently hold for the CJK width variants.
 
-#![cfg_attr(feature = <span class="string">"bench"</span>, feature(test))]
+</span><span class="attr">#![forbid(unsafe_code)]
+#![deny(missing_docs)]
+#![doc(
+    html_logo_url = <span class="string">"https://unicode-rs.github.io/unicode-rs_sm.png"</span>,
+    html_favicon_url = <span class="string">"https://unicode-rs.github.io/unicode-rs_sm.png"
+</span>)]
 #![no_std]
 
-#[cfg(test)]
-#[macro_use]
-</span><span class="kw">extern crate </span>std;
-
-<span class="attr">#[cfg(feature = <span class="string">"bench"</span>)]
-</span><span class="kw">extern crate </span>test;
-
-<span class="kw">use </span>tables::charwidth <span class="kw">as </span>cw;
+</span><span class="kw">use </span>tables::charwidth <span class="kw">as </span>cw;
 <span class="kw">pub use </span>tables::UNICODE_VERSION;
 
 <span class="kw">mod </span>tables;
-
-<span class="attr">#[cfg(test)]
-</span><span class="kw">mod </span>tests;
 
 <span class="doccomment">/// Methods for determining displayed width of Unicode characters.
 </span><span class="kw">pub trait </span>UnicodeWidthChar {
@@ -218,44 +289,69 @@
 
 <span class="kw">impl </span>UnicodeWidthChar <span class="kw">for </span>char {
     <span class="attr">#[inline]
-    </span><span class="kw">fn </span>width(<span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; { cw::width(<span class="self">self</span>, <span class="bool-val">false</span>) }
+    </span><span class="kw">fn </span>width(<span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
+        cw::width(<span class="self">self</span>, <span class="bool-val">false</span>)
+    }
 
     <span class="attr">#[inline]
-    </span><span class="kw">fn </span>width_cjk(<span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; { cw::width(<span class="self">self</span>, <span class="bool-val">true</span>) }
+    </span><span class="kw">fn </span>width_cjk(<span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
+        cw::width(<span class="self">self</span>, <span class="bool-val">true</span>)
+    }
 }
 
 <span class="doccomment">/// Methods for determining displayed width of Unicode strings.
 </span><span class="kw">pub trait </span>UnicodeWidthStr {
     <span class="doccomment">/// Returns the string's displayed width in columns.
     ///
-    /// Control characters are treated as having zero width.
+    /// Control characters are treated as having zero width,
+    /// and [emoji presentation sequences](https://unicode.org/reports/tr51/#def_emoji_presentation_sequence)
+    /// are assigned width 2.
     ///
     /// This function treats characters in the Ambiguous category according
     /// to [Unicode Standard Annex #11](http://www.unicode.org/reports/tr11/)
     /// as 1 column wide. This is consistent with the recommendations for
     /// non-CJK contexts, or when the context cannot be reliably determined.
-    </span><span class="kw">fn </span>width&lt;<span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">self</span>) -&gt; usize;
+    </span><span class="kw">fn </span>width(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize;
 
     <span class="doccomment">/// Returns the string's displayed width in columns.
     ///
-    /// Control characters are treated as having zero width.
+    /// Control characters are treated as having zero width,
+    /// and [emoji presentation sequences](https://unicode.org/reports/tr51/#def_emoji_presentation_sequence)
+    /// are assigned width 2.
     ///
     /// This function treats characters in the Ambiguous category according
     /// to [Unicode Standard Annex #11](http://www.unicode.org/reports/tr11/)
     /// as 2 column wide. This is consistent with the recommendations for
     /// CJK contexts.
-    </span><span class="kw">fn </span>width_cjk&lt;<span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="self">self</span>) -&gt; usize;
+    </span><span class="kw">fn </span>width_cjk(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize;
 }
 
 <span class="kw">impl </span>UnicodeWidthStr <span class="kw">for </span>str {
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>width(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
-        <span class="self">self</span>.chars().map(|c| cw::width(c, <span class="bool-val">false</span>).unwrap_or(<span class="number">0</span>)).sum()
+        str_width(<span class="self">self</span>, <span class="bool-val">false</span>)
     }
 
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>width_cjk(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
-        <span class="self">self</span>.chars().map(|c| cw::width(c, <span class="bool-val">true</span>).unwrap_or(<span class="number">0</span>)).sum()
+        str_width(<span class="self">self</span>, <span class="bool-val">true</span>)
     }
 }
+
+<span class="kw">fn </span>str_width(s: <span class="kw-2">&amp;</span>str, is_cjk: bool) -&gt; usize {
+    s.chars()
+        .rfold((<span class="number">0</span>, <span class="bool-val">false</span>), |(sum, was_fe0f), c| {
+            <span class="kw">if </span>c == <span class="string">'\u{FE0F}' </span>{
+                (sum, <span class="bool-val">true</span>)
+            } <span class="kw">else </span>{
+                <span class="kw">let </span>add = <span class="kw">if </span>was_fe0f &amp;&amp; cw::starts_emoji_presentation_seq(c) {
+                    <span class="number">2
+                </span>} <span class="kw">else </span>{
+                    cw::width(c, is_cjk).unwrap_or(<span class="number">0</span>)
+                };
+                (sum + add, <span class="bool-val">false</span>)
+            }
+        })
+        .<span class="number">0
+</span>}
 </code></pre></div></section></main></body></html>

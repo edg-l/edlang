@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/inkwell-946411d814d2c9f8/d916c66/src/types/ptr_type.rs`."><title>ptr_type.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-5bc39a1768837dd0.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="inkwell" data-themes="" data-resource-suffix="" data-rustdoc-version="1.77.2 (25ef9e3d8 2024-04-09)" data-channel="1.77.2" data-search-js="search-dd67cee4cfa65049.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-48f368f3872407c8.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/inkwell-946411d814d2c9f8/5d5a531/src/types/ptr_type.rs`."><title>ptr_type.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="inkwell" data-themes="" data-resource-suffix="" data-rustdoc-version="1.78.0 (9b00956e5 2024-04-29)" data-channel="1.78.0" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
             <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
     <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../inkwell/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
@@ -337,7 +337,70 @@
 <a href="#335" id="335">335</a>
 <a href="#336" id="336">336</a>
 <a href="#337" id="337">337</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>llvm_sys::core::{LLVMConstArray, LLVMGetPointerAddressSpace};
+<a href="#338" id="338">338</a>
+<a href="#339" id="339">339</a>
+<a href="#340" id="340">340</a>
+<a href="#341" id="341">341</a>
+<a href="#342" id="342">342</a>
+<a href="#343" id="343">343</a>
+<a href="#344" id="344">344</a>
+<a href="#345" id="345">345</a>
+<a href="#346" id="346">346</a>
+<a href="#347" id="347">347</a>
+<a href="#348" id="348">348</a>
+<a href="#349" id="349">349</a>
+<a href="#350" id="350">350</a>
+<a href="#351" id="351">351</a>
+<a href="#352" id="352">352</a>
+<a href="#353" id="353">353</a>
+<a href="#354" id="354">354</a>
+<a href="#355" id="355">355</a>
+<a href="#356" id="356">356</a>
+<a href="#357" id="357">357</a>
+<a href="#358" id="358">358</a>
+<a href="#359" id="359">359</a>
+<a href="#360" id="360">360</a>
+<a href="#361" id="361">361</a>
+<a href="#362" id="362">362</a>
+<a href="#363" id="363">363</a>
+<a href="#364" id="364">364</a>
+<a href="#365" id="365">365</a>
+<a href="#366" id="366">366</a>
+<a href="#367" id="367">367</a>
+<a href="#368" id="368">368</a>
+<a href="#369" id="369">369</a>
+<a href="#370" id="370">370</a>
+<a href="#371" id="371">371</a>
+<a href="#372" id="372">372</a>
+<a href="#373" id="373">373</a>
+<a href="#374" id="374">374</a>
+<a href="#375" id="375">375</a>
+<a href="#376" id="376">376</a>
+<a href="#377" id="377">377</a>
+<a href="#378" id="378">378</a>
+<a href="#379" id="379">379</a>
+<a href="#380" id="380">380</a>
+<a href="#381" id="381">381</a>
+<a href="#382" id="382">382</a>
+<a href="#383" id="383">383</a>
+<a href="#384" id="384">384</a>
+<a href="#385" id="385">385</a>
+<a href="#386" id="386">386</a>
+<a href="#387" id="387">387</a>
+<a href="#388" id="388">388</a>
+<a href="#389" id="389">389</a>
+<a href="#390" id="390">390</a>
+<a href="#391" id="391">391</a>
+<a href="#392" id="392">392</a>
+<a href="#393" id="393">393</a>
+<a href="#394" id="394">394</a>
+<a href="#395" id="395">395</a>
+<a href="#396" id="396">396</a>
+<a href="#397" id="397">397</a>
+<a href="#398" id="398">398</a>
+</pre></div><pre class="rust"><code><span class="attr">#[llvm_versions(<span class="number">15.0</span>..=latest)]
+</span><span class="kw">use </span>llvm_sys::core::LLVMPointerTypeIsOpaque;
+<span class="kw">use </span>llvm_sys::core::{LLVMConstArray, LLVMGetPointerAddressSpace};
 <span class="kw">use </span>llvm_sys::prelude::{LLVMTypeRef, LLVMValueRef};
 
 <span class="kw">use </span><span class="kw">crate</span>::context::ContextRef;
@@ -381,7 +444,10 @@
     ///
     /// let context = Context::create();
     /// let f32_type = context.f32_type();
+    /// #[cfg(not(any(feature = "llvm15-0", feature = "llvm16-0", feature = "llvm17-0", feature = "llvm18-0")))]
     /// let f32_ptr_type = f32_type.ptr_type(AddressSpace::default());
+    /// #[cfg(any(feature = "llvm15-0", feature = "llvm16-0", feature = "llvm17-0", feature = "llvm18-0"))]
+    /// let f32_ptr_type = context.ptr_type(AddressSpace::default());
     /// let f32_ptr_type_size = f32_ptr_type.size_of();
     /// ```
     </span><span class="kw">pub fn </span>size_of(<span class="self">self</span>) -&gt; IntValue&lt;<span class="lifetime">'ctx</span>&gt; {
@@ -398,7 +464,10 @@
     ///
     /// let context = Context::create();
     /// let f32_type = context.f32_type();
+    /// #[cfg(not(any(feature = "llvm15-0", feature = "llvm16-0", feature = "llvm17-0", feature = "llvm18-0")))]
     /// let f32_ptr_type = f32_type.ptr_type(AddressSpace::default());
+    /// #[cfg(any(feature = "llvm15-0", feature = "llvm16-0", feature = "llvm17-0", feature = "llvm18-0"))]
+    /// let f32_ptr_type = context.ptr_type(AddressSpace::default());
     /// let f32_ptr_type_alignment = f32_ptr_type.get_alignment();
     /// ```
     </span><span class="kw">pub fn </span>get_alignment(<span class="self">self</span>) -&gt; IntValue&lt;<span class="lifetime">'ctx</span>&gt; {
@@ -415,7 +484,10 @@
     ///
     /// let context = Context::create();
     /// let f32_type = context.f32_type();
+    /// #[cfg(not(any(feature = "llvm15-0", feature = "llvm16-0", feature = "llvm17-0", feature = "llvm18-0")))]
     /// let f32_ptr_type = f32_type.ptr_type(AddressSpace::default());
+    /// #[cfg(any(feature = "llvm15-0", feature = "llvm16-0", feature = "llvm17-0", feature = "llvm18-0"))]
+    /// let f32_ptr_type = context.ptr_type(AddressSpace::default());
     /// let f32_ptr_ptr_type = f32_ptr_type.ptr_type(AddressSpace::default());
     ///
     /// #[cfg(any(
@@ -433,6 +505,17 @@
     /// ))]
     /// assert_eq!(f32_ptr_ptr_type.get_element_type().into_pointer_type(), f32_ptr_type);
     /// ```
+    </span><span class="attr">#[cfg_attr(
+        any(
+            feature = <span class="string">"llvm15-0"</span>,
+            feature = <span class="string">"llvm16-0"</span>,
+            feature = <span class="string">"llvm17-0"</span>,
+            feature = <span class="string">"llvm18-0"
+        </span>),
+        deprecated(
+            note = <span class="string">"Starting from version 15.0, LLVM doesn't differentiate between pointer types. Use Context::ptr_type instead."
+        </span>)
+    )]
     </span><span class="kw">pub fn </span>ptr_type(<span class="self">self</span>, address_space: AddressSpace) -&gt; PointerType&lt;<span class="lifetime">'ctx</span>&gt; {
         <span class="self">self</span>.ptr_type.ptr_type(address_space)
     }
@@ -447,7 +530,10 @@
     ///
     /// let context = Context::create();
     /// let f32_type = context.f32_type();
+    /// #[cfg(not(any(feature = "llvm15-0", feature = "llvm16-0", feature = "llvm17-0", feature = "llvm18-0")))]
     /// let f32_ptr_type = f32_type.ptr_type(AddressSpace::default());
+    /// #[cfg(any(feature = "llvm15-0", feature = "llvm16-0", feature = "llvm17-0", feature = "llvm18-0"))]
+    /// let f32_ptr_type = context.ptr_type(AddressSpace::default());
     ///
     /// assert_eq!(f32_ptr_type.get_context(), context);
     /// ```
@@ -466,7 +552,10 @@
     ///
     /// let context = Context::create();
     /// let f32_type = context.f32_type();
+    /// #[cfg(not(any(feature = "llvm15-0", feature = "llvm16-0", feature = "llvm17-0", feature = "llvm18-0")))]
     /// let f32_ptr_type = f32_type.ptr_type(AddressSpace::default());
+    /// #[cfg(any(feature = "llvm15-0", feature = "llvm16-0", feature = "llvm17-0", feature = "llvm18-0"))]
+    /// let f32_ptr_type = context.ptr_type(AddressSpace::default());
     /// let fn_type = f32_ptr_type.fn_type(&amp;[], false);
     /// ```
     </span><span class="kw">pub fn </span>fn_type(<span class="self">self</span>, param_types: <span class="kw-2">&amp;</span>[BasicMetadataTypeEnum&lt;<span class="lifetime">'ctx</span>&gt;], is_var_args: bool) -&gt; FunctionType&lt;<span class="lifetime">'ctx</span>&gt; {
@@ -483,7 +572,10 @@
     ///
     /// let context = Context::create();
     /// let f32_type = context.f32_type();
+    /// #[cfg(not(any(feature = "llvm15-0", feature = "llvm16-0", feature = "llvm17-0", feature = "llvm18-0")))]
     /// let f32_ptr_type = f32_type.ptr_type(AddressSpace::default());
+    /// #[cfg(any(feature = "llvm15-0", feature = "llvm16-0", feature = "llvm17-0", feature = "llvm18-0"))]
+    /// let f32_ptr_type = context.ptr_type(AddressSpace::default());
     /// let f32_ptr_array_type = f32_ptr_type.array_type(3);
     ///
     /// assert_eq!(f32_ptr_array_type.len(), 3);
@@ -503,7 +595,10 @@
     ///
     /// let context = Context::create();
     /// let f32_type = context.f32_type();
+    /// #[cfg(not(any(feature = "llvm15-0", feature = "llvm16-0", feature = "llvm17-0", feature = "llvm18-0")))]
     /// let f32_ptr_type = f32_type.ptr_type(AddressSpace::default());
+    /// #[cfg(any(feature = "llvm15-0", feature = "llvm16-0", feature = "llvm17-0", feature = "llvm18-0"))]
+    /// let f32_ptr_type = context.ptr_type(AddressSpace::default());
     ///
     /// assert_eq!(f32_ptr_type.get_address_space(), AddressSpace::default());
     /// ```
@@ -529,7 +624,10 @@
     /// // Local Context
     /// let context = Context::create();
     /// let f32_type = context.f32_type();
+    /// #[cfg(not(any(feature = "llvm15-0", feature = "llvm16-0", feature = "llvm17-0", feature = "llvm18-0")))]
     /// let f32_ptr_type = f32_type.ptr_type(AddressSpace::default());
+    /// #[cfg(any(feature = "llvm15-0", feature = "llvm16-0", feature = "llvm17-0", feature = "llvm18-0"))]
+    /// let f32_ptr_type = context.ptr_type(AddressSpace::default());
     /// let f32_ptr_null = f32_ptr_type.const_null();
     ///
     /// assert!(f32_ptr_null.is_null());
@@ -551,7 +649,10 @@
     ///
     /// let context = Context::create();
     /// let f32_type = context.f32_type();
+    /// #[cfg(not(any(feature = "llvm15-0", feature = "llvm16-0", feature = "llvm17-0", feature = "llvm18-0")))]
     /// let f32_ptr_type = f32_type.ptr_type(AddressSpace::default());
+    /// #[cfg(any(feature = "llvm15-0", feature = "llvm16-0", feature = "llvm17-0", feature = "llvm18-0"))]
+    /// let f32_ptr_type = context.ptr_type(AddressSpace::default());
     /// let f32_ptr_zero = f32_ptr_type.const_zero();
     /// ```
     </span><span class="kw">pub fn </span>const_zero(<span class="self">self</span>) -&gt; PointerValue&lt;<span class="lifetime">'ctx</span>&gt; {
@@ -567,7 +668,10 @@
     ///
     /// let context = Context::create();
     /// let f32_type = context.f32_type();
+    /// #[cfg(not(any(feature = "llvm15-0", feature = "llvm16-0", feature = "llvm17-0", feature = "llvm18-0")))]
     /// let f32_ptr_type = f32_type.ptr_type(AddressSpace::default());
+    /// #[cfg(any(feature = "llvm15-0", feature = "llvm16-0", feature = "llvm17-0", feature = "llvm18-0"))]
+    /// let f32_ptr_type = context.ptr_type(AddressSpace::default());
     /// let f32_ptr_undef = f32_ptr_type.get_undef();
     ///
     /// assert!(f32_ptr_undef.is_undef());
@@ -586,7 +690,10 @@
     ///
     /// let context = Context::create();
     /// let f32_type = context.f32_type();
+    /// #[cfg(not(any(feature = "llvm15-0", feature = "llvm16-0", feature = "llvm17-0", feature = "llvm18-0")))]
     /// let f32_ptr_type = f32_type.ptr_type(AddressSpace::default());
+    /// #[cfg(any(feature = "llvm15-0", feature = "llvm16-0", feature = "llvm17-0", feature = "llvm18-0"))]
+    /// let f32_ptr_type = context.ptr_type(AddressSpace::default());
     /// let f32_ptr_undef = f32_ptr_type.get_poison();
     ///
     /// assert!(f32_ptr_undef.is_poison());
@@ -606,7 +713,10 @@
     ///
     /// let context = Context::create();
     /// let f32_type = context.f32_type();
+    /// #[cfg(not(any(feature = "llvm15-0", feature = "llvm16-0", feature = "llvm17-0", feature = "llvm18-0")))]
     /// let f32_ptr_type = f32_type.ptr_type(AddressSpace::default());
+    /// #[cfg(any(feature = "llvm15-0", feature = "llvm16-0", feature = "llvm17-0", feature = "llvm18-0"))]
+    /// let f32_ptr_type = context.ptr_type(AddressSpace::default());
     /// let f32_ptr_vec_type = f32_ptr_type.vec_type(3);
     ///
     /// assert_eq!(f32_ptr_vec_type.get_size(), 3);
@@ -627,7 +737,10 @@
     ///
     /// let context = Context::create();
     /// let f32_type = context.f32_type();
+    /// #[cfg(not(any(feature = "llvm15-0", feature = "llvm16-0", feature = "llvm17-0", feature = "llvm18-0")))]
     /// let f32_ptr_type = f32_type.ptr_type(AddressSpace::default());
+    /// #[cfg(any(feature = "llvm15-0", feature = "llvm16-0", feature = "llvm17-0", feature = "llvm18-0"))]
+    /// let f32_ptr_type = context.ptr_type(AddressSpace::default());
     ///
     /// assert_eq!(f32_ptr_type.get_element_type().into_float_type(), f32_type);
     /// ```
@@ -645,7 +758,10 @@
     ///
     /// let context = Context::create();
     /// let f32_type = context.f32_type();
+    /// #[cfg(not(any(feature = "llvm15-0", feature = "llvm16-0", feature = "llvm17-0", feature = "llvm18-0")))]
     /// let f32_ptr_type = f32_type.ptr_type(AddressSpace::default());
+    /// #[cfg(any(feature = "llvm15-0", feature = "llvm16-0", feature = "llvm17-0", feature = "llvm18-0"))]
+    /// let f32_ptr_type = context.ptr_type(AddressSpace::default());
     /// let f32_ptr_val = f32_ptr_type.const_null();
     /// let f32_ptr_array = f32_ptr_type.const_array(&amp;[f32_ptr_val, f32_ptr_val]);
     ///
@@ -660,6 +776,12 @@
                 values.len() <span class="kw">as </span>u32,
             ))
         }
+    }
+
+    <span class="doccomment">/// Determine whether this pointer is opaque.
+    </span><span class="attr">#[llvm_versions(<span class="number">15.0</span>..=latest)]
+    </span><span class="kw">pub fn </span>is_opaque(<span class="self">self</span>) -&gt; bool {
+        <span class="kw">unsafe </span>{ LLVMPointerTypeIsOpaque(<span class="self">self</span>.ptr_type.ty) != <span class="number">0 </span>}
     }
 }
 

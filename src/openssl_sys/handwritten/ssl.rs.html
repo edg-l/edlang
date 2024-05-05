@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/openssl-sys-0.9.102/src/./handwritten/ssl.rs`."><title>ssl.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-5bc39a1768837dd0.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="openssl_sys" data-themes="" data-resource-suffix="" data-rustdoc-version="1.77.2 (25ef9e3d8 2024-04-09)" data-channel="1.77.2" data-search-js="search-dd67cee4cfa65049.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-48f368f3872407c8.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/openssl-sys-0.9.102/src/./handwritten/ssl.rs`."><title>ssl.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="openssl_sys" data-themes="" data-resource-suffix="" data-rustdoc-version="1.78.0 (9b00956e5 2024-04-29)" data-channel="1.78.0" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
             <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
     <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../openssl_sys/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
@@ -958,7 +958,7 @@
 
 <span class="kw">pub enum </span>SSL_METHOD {}
 <span class="kw">pub enum </span>SSL_CIPHER {}
-<span class="macro">cfg_if! </span>{
+<span class="macro">cfg_if!</span> {
     <span class="kw">if </span><span class="attr">#[cfg(any(ossl110, libressl280))] </span>{
         <span class="kw">pub enum </span>SSL_SESSION {}
     } <span class="kw">else if </span><span class="attr">#[cfg(libressl251)] </span>{
@@ -1149,7 +1149,7 @@
     ) -&gt; c_int,
 &gt;;
 
-<span class="macro">cfg_if! </span>{
+<span class="macro">cfg_if!</span> {
     <span class="kw">if </span><span class="attr">#[cfg(ossl300)] </span>{
         <span class="kw">extern </span><span class="string">"C" </span>{
             <span class="kw">pub fn </span>SSL_CTX_get_options(ctx: <span class="kw-2">*const </span>SSL_CTX) -&gt; u64;
@@ -1178,7 +1178,7 @@
         remove_session_cb: <span class="prelude-ty">Option</span>&lt;<span class="kw">unsafe extern </span><span class="string">"C" </span><span class="kw">fn</span>(<span class="kw-2">*mut </span>SSL_CTX, <span class="kw-2">*mut </span>SSL_SESSION)&gt;,
     );
 }
-<span class="macro">cfg_if! </span>{
+<span class="macro">cfg_if!</span> {
     <span class="comment">// const change in passed function pointer signature
     </span><span class="kw">if </span><span class="attr">#[cfg(any(ossl110, libressl280))] </span>{
         <span class="kw">extern </span><span class="string">"C" </span>{
@@ -1210,7 +1210,7 @@
     );
 }
 
-<span class="macro">cfg_if! </span>{
+<span class="macro">cfg_if!</span> {
     <span class="comment">// const change in passed function pointer signature
     </span><span class="kw">if </span><span class="attr">#[cfg(any(ossl110, libressl280))] </span>{
         <span class="kw">extern </span><span class="string">"C" </span>{
@@ -1384,14 +1384,14 @@
     <span class="kw">pub fn </span>SSL_get_verify_mode(s: <span class="kw-2">*const </span>SSL) -&gt; c_int;
 }
 
-<span class="macro">const_ptr_api! </span>{
+<span class="macro">const_ptr_api!</span> {
     <span class="kw">extern </span><span class="string">"C" </span>{
         <span class="attr">#[cfg(ossl110)]
         </span><span class="kw">pub fn </span>SSL_is_init_finished(s: <span class="attr">#[const_ptr_if(ossl111)] </span>SSL) -&gt; c_int;
     }
 }
 
-<span class="macro">cfg_if! </span>{
+<span class="macro">cfg_if!</span> {
     <span class="kw">if </span><span class="attr">#[cfg(libressl261)] </span>{
         <span class="kw">extern </span><span class="string">"C" </span>{
             <span class="kw">pub fn </span>SSL_CTX_set_min_proto_version(ctx: <span class="kw-2">*mut </span>SSL_CTX, version: u16) -&gt; c_int;
@@ -1402,7 +1402,7 @@
     }
 }
 
-<span class="macro">cfg_if! </span>{
+<span class="macro">cfg_if!</span> {
     <span class="kw">if </span><span class="attr">#[cfg(libressl270)] </span>{
         <span class="kw">extern </span><span class="string">"C" </span>{
             <span class="kw">pub fn </span>SSL_CTX_get_min_proto_version(ctx: <span class="kw-2">*mut </span>SSL_CTX) -&gt; c_int;
@@ -1425,7 +1425,7 @@
     <span class="kw">pub fn </span>SSL_get_current_cipher(ssl: <span class="kw-2">*const </span>SSL) -&gt; <span class="kw-2">*const </span>SSL_CIPHER;
     <span class="kw">pub fn </span>SSL_CIPHER_get_bits(cipher: <span class="kw-2">*const </span>SSL_CIPHER, alg_bits: <span class="kw-2">*mut </span>c_int) -&gt; c_int;
 }
-<span class="macro">const_ptr_api! </span>{
+<span class="macro">const_ptr_api!</span> {
     <span class="kw">extern </span><span class="string">"C" </span>{
         <span class="kw">pub fn </span>SSL_CIPHER_get_version(cipher: <span class="kw-2">*const </span>SSL_CIPHER) -&gt; <span class="attr">#[const_ptr_if(any(ossl110, libressl280))] </span>c_char;
     }
@@ -1501,7 +1501,7 @@
     </span><span class="kw">pub fn </span>SSL_SESSION_up_ref(ses: <span class="kw-2">*mut </span>SSL_SESSION) -&gt; c_int;
     <span class="kw">pub fn </span>SSL_SESSION_free(s: <span class="kw-2">*mut </span>SSL_SESSION);
 }
-<span class="macro">const_ptr_api! </span>{
+<span class="macro">const_ptr_api!</span> {
     <span class="kw">extern </span><span class="string">"C" </span>{
         <span class="kw">pub fn </span>i2d_SSL_SESSION(s: <span class="attr">#[const_ptr_if(ossl300)] </span>SSL_SESSION, pp: <span class="kw-2">*mut *mut </span>c_uchar) -&gt; c_int;
     }
@@ -1646,7 +1646,7 @@
     ) -&gt; c_long;
 }
 
-<span class="macro">cfg_if! </span>{
+<span class="macro">cfg_if!</span> {
     <span class="kw">if </span><span class="attr">#[cfg(any(ossl110, libressl291))] </span>{
         <span class="kw">extern </span><span class="string">"C" </span>{
             <span class="kw">pub fn </span>TLS_method() -&gt; <span class="kw-2">*const </span>SSL_METHOD;
@@ -1701,7 +1701,7 @@
     ) -&gt; c_int;
 }
 
-<span class="macro">const_ptr_api! </span>{
+<span class="macro">const_ptr_api!</span> {
     <span class="kw">extern </span><span class="string">"C" </span>{
         <span class="kw">pub fn </span>SSL_get_ssl_method(ssl: <span class="attr">#[const_ptr_if(ossl111b)] </span>SSL) -&gt; <span class="kw-2">*const </span>SSL_METHOD;
     }
@@ -1722,7 +1722,7 @@
 
     <span class="kw">pub fn </span>SSL_get_certificate(ssl: <span class="kw-2">*const </span>SSL) -&gt; <span class="kw-2">*mut </span>X509;
 }
-<span class="macro">const_ptr_api! </span>{
+<span class="macro">const_ptr_api!</span> {
     <span class="kw">extern </span><span class="string">"C" </span>{
         <span class="kw">pub fn </span>SSL_get_privatekey(ssl: <span class="attr">#[const_ptr_if(any(ossl102, libressl280))] </span>SSL) -&gt; <span class="kw-2">*mut </span>EVP_PKEY;
     }
@@ -1818,20 +1818,20 @@
     );
 }
 
-<span class="macro">cfg_if! </span>{
+<span class="macro">cfg_if!</span> {
     <span class="kw">if </span><span class="attr">#[cfg(libressl)] </span>{
         <span class="kw">extern </span><span class="string">"C" </span>{
             <span class="kw">pub fn </span>SSL_get_current_compression(ssl: <span class="kw-2">*mut </span>SSL) -&gt; <span class="kw-2">*const </span>libc::c_void;
         }
     } <span class="kw">else if </span><span class="attr">#[cfg(not(osslconf = <span class="string">"OPENSSL_NO_COMP"</span>))] </span>{
-        <span class="macro">const_ptr_api! </span>{
+        <span class="macro">const_ptr_api!</span> {
             <span class="kw">extern </span><span class="string">"C" </span>{
                 <span class="kw">pub fn </span>SSL_get_current_compression(ssl: <span class="attr">#[const_ptr_if(ossl111b)] </span>SSL) -&gt; <span class="kw-2">*const </span>COMP_METHOD;
             }
         }
     }
 }
-<span class="macro">cfg_if! </span>{
+<span class="macro">cfg_if!</span> {
     <span class="kw">if </span><span class="attr">#[cfg(libressl)] </span>{
         <span class="kw">extern </span><span class="string">"C" </span>{
             <span class="kw">pub fn </span>SSL_COMP_get_name(comp: <span class="kw-2">*const </span>libc::c_void) -&gt; <span class="kw-2">*const </span>c_char;
@@ -1856,14 +1856,14 @@
     </span><span class="kw">pub fn </span>SSL_CIPHER_get_digest_nid(c: <span class="kw-2">*const </span>SSL_CIPHER) -&gt; c_int;
 }
 
-<span class="macro">const_ptr_api! </span>{
+<span class="macro">const_ptr_api!</span> {
     <span class="kw">extern </span><span class="string">"C" </span>{
         <span class="attr">#[cfg(ossl110)]
         </span><span class="kw">pub fn </span>SSL_session_reused(ssl: <span class="attr">#[const_ptr_if(ossl111c)] </span>SSL) -&gt; c_int;
     }
 }
 
-<span class="macro">const_ptr_api! </span>{
+<span class="macro">const_ptr_api!</span> {
     <span class="kw">extern </span><span class="string">"C" </span>{
         <span class="attr">#[cfg(any(ossl102, libressl273))]
         </span><span class="kw">pub fn </span>SSL_is_server(s: <span class="attr">#[const_ptr_if(any(ossl110f, libressl273))] </span>SSL) -&gt; c_int;

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/syn-2.0.58/src/gen/fold.rs`."><title>fold.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-5bc39a1768837dd0.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="syn" data-themes="" data-resource-suffix="" data-rustdoc-version="1.77.2 (25ef9e3d8 2024-04-09)" data-channel="1.77.2" data-search-js="search-dd67cee4cfa65049.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-48f368f3872407c8.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/syn-2.0.60/src/gen/fold.rs`."><title>fold.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="syn" data-themes="" data-resource-suffix="" data-rustdoc-version="1.78.0 (9b00956e5 2024-04-29)" data-channel="1.78.0" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
             <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
     <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../syn/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
@@ -3760,6 +3760,19 @@
 <a href="#3758" id="3758">3758</a>
 <a href="#3759" id="3759">3759</a>
 <a href="#3760" id="3760">3760</a>
+<a href="#3761" id="3761">3761</a>
+<a href="#3762" id="3762">3762</a>
+<a href="#3763" id="3763">3763</a>
+<a href="#3764" id="3764">3764</a>
+<a href="#3765" id="3765">3765</a>
+<a href="#3766" id="3766">3766</a>
+<a href="#3767" id="3767">3767</a>
+<a href="#3768" id="3768">3768</a>
+<a href="#3769" id="3769">3769</a>
+<a href="#3770" id="3770">3770</a>
+<a href="#3771" id="3771">3771</a>
+<a href="#3772" id="3772">3772</a>
+<a href="#3773" id="3773">3773</a>
 </pre></div><pre class="rust"><code><span class="comment">// This file is @generated by syn-internal-codegen.
 // It is not intended for manual editing.
 
@@ -3772,13 +3785,13 @@
 #[cfg(any(feature = <span class="string">"full"</span>, feature = <span class="string">"derive"</span>))]
 </span><span class="kw">use </span><span class="kw">crate</span>::gen::helper::fold::FoldHelper;
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
-</span><span class="macro">macro_rules! </span>full {
+</span><span class="macro">macro_rules!</span> full {
     (<span class="macro-nonterminal">$e</span>:expr) =&gt; {
         <span class="macro-nonterminal">$e
     </span>};
 }
 <span class="attr">#[cfg(all(feature = <span class="string">"derive"</span>, not(feature = <span class="string">"full"</span>)))]
-</span><span class="macro">macro_rules! </span>full {
+</span><span class="macro">macro_rules!</span> full {
     (<span class="macro-nonterminal">$e</span>:expr) =&gt; {
         <span class="macro">unreachable!</span>()
     };
@@ -4342,6 +4355,9 @@
     }
     <span class="kw">fn </span>fold_lit_byte_str(<span class="kw-2">&amp;mut </span><span class="self">self</span>, i: <span class="kw">crate</span>::LitByteStr) -&gt; <span class="kw">crate</span>::LitByteStr {
         fold_lit_byte_str(<span class="self">self</span>, i)
+    }
+    <span class="kw">fn </span>fold_lit_cstr(<span class="kw-2">&amp;mut </span><span class="self">self</span>, i: <span class="kw">crate</span>::LitCStr) -&gt; <span class="kw">crate</span>::LitCStr {
+        fold_lit_cstr(<span class="self">self</span>, i)
     }
     <span class="kw">fn </span>fold_lit_char(<span class="kw-2">&amp;mut </span><span class="self">self</span>, i: <span class="kw">crate</span>::LitChar) -&gt; <span class="kw">crate</span>::LitChar {
         fold_lit_char(<span class="self">self</span>, i)
@@ -6390,6 +6406,7 @@
         <span class="kw">crate</span>::Lit::ByteStr(_binding_0) =&gt; {
             <span class="kw">crate</span>::Lit::ByteStr(f.fold_lit_byte_str(_binding_0))
         }
+        <span class="kw">crate</span>::Lit::CStr(_binding_0) =&gt; <span class="kw">crate</span>::Lit::CStr(f.fold_lit_cstr(_binding_0)),
         <span class="kw">crate</span>::Lit::Byte(_binding_0) =&gt; <span class="kw">crate</span>::Lit::Byte(f.fold_lit_byte(_binding_0)),
         <span class="kw">crate</span>::Lit::Char(_binding_0) =&gt; <span class="kw">crate</span>::Lit::Char(f.fold_lit_char(_binding_0)),
         <span class="kw">crate</span>::Lit::Int(_binding_0) =&gt; <span class="kw">crate</span>::Lit::Int(f.fold_lit_int(_binding_0)),
@@ -6417,6 +6434,15 @@
     node
 }
 <span class="kw">pub fn </span>fold_lit_byte_str&lt;F&gt;(f: <span class="kw-2">&amp;mut </span>F, node: <span class="kw">crate</span>::LitByteStr) -&gt; <span class="kw">crate</span>::LitByteStr
+<span class="kw">where
+    </span>F: Fold + <span class="question-mark">?</span>Sized,
+{
+    <span class="kw">let </span>span = f.fold_span(node.span());
+    <span class="kw">let </span><span class="kw-2">mut </span>node = node;
+    node.set_span(span);
+    node
+}
+<span class="kw">pub fn </span>fold_lit_cstr&lt;F&gt;(f: <span class="kw-2">&amp;mut </span>F, node: <span class="kw">crate</span>::LitCStr) -&gt; <span class="kw">crate</span>::LitCStr
 <span class="kw">where
     </span>F: Fold + <span class="question-mark">?</span>Sized,
 {

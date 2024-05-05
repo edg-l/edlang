@@ -111,6 +111,7 @@ impl Body {
 #[derive(Debug, Clone)]
 pub struct AdtBody {
     pub def_id: DefId,
+    pub mod_id: DefId,
     pub is_pub: bool,
     pub name: String,
     pub variants: Vec<AdtVariant>,

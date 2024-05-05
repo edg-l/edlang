@@ -39,6 +39,7 @@ pub struct PathExpr {
 pub enum PathSegment {
     Field(Ident),
     Index { value: Expression, span: Span },
+    Method { value: FnCallExpr, span: Span },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]

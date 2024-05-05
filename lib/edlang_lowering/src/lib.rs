@@ -182,6 +182,7 @@ fn lower_struct(
             let body = ctx.body.modules.get(&module_id).unwrap();
             *body.symbols.structs.get(&info.name.name).unwrap()
         },
+        mod_id: module_id,
         is_pub: true, // todo struct pub
         name: info.name.name.clone(),
         variants: Vec::new(),
@@ -591,6 +592,7 @@ fn find_expr_type(builder: &mut BodyBuilder, info: &ast::Expression) -> Option<T
                             }
                         }
                         ast::PathSegment::Index { .. } => todo!(),
+                        ast::PathSegment::Method { .. } => todo!(),
                     }
                 }
 
@@ -1000,6 +1002,8 @@ fn lower_fn_call(
 
     let mut args = Vec::new();
 
+    assert_eq!(args_ty.len(), info.params.len(), "param length mismatch");
+
     for (arg, arg_ty) in info.params.iter().zip(args_ty) {
         let (rvalue, _rvalue_ty, _span) = lower_expr(builder, arg, Some(&arg_ty))?;
         args.push(rvalue);
@@ -1256,36 +1260,138 @@ fn lower_path(
     )?;
 
     let mut ty = builder.body.locals[local].ty.kind.clone();
-    let mut projection = Vec::new();
+    let mut place = Place {
+        local,
+        projection: Default::default(),
+    };
 
     for extra in &info.extra {
         match extra {
             ast::PathSegment::Field(name) => {
                 // is while fine? auto deref
                 while let TypeKind::Ref(_, inner) = ty {
-                    projection.push(PlaceElem::Deref);
+                    place.projection.push(PlaceElem::Deref);
                     ty = inner.kind;
                 }
 
                 if let TypeKind::Struct(id, _name) = ty {
                     let struct_body = builder.ctx.body.structs.get(&id).unwrap();
                     let idx = *struct_body.name_to_idx.get(&name.name).unwrap();
-                    projection.push(PlaceElem::Field { field_idx: idx });
+                    place.projection.push(PlaceElem::Field { field_idx: idx });
                     ty = struct_body.variants[idx].ty.kind.clone();
+                } else {
+                    unimplemented!()
                 }
             }
             ast::PathSegment::Index { .. } => todo!(),
+            ast::PathSegment::Method { value, span } => {
+                // is while fine? auto deref
+                while let TypeKind::Ref(_, inner) = ty {
+                    place.projection.push(PlaceElem::Deref);
+                    ty = inner.kind;
+                }
+
+                if let TypeKind::Struct(id, _name) = &ty {
+                    let struct_body = builder.ctx.body.structs.get(id).unwrap();
+                    let fn_id = *builder
+                        .ctx
+                        .body
+                        .modules
+                        .get(&struct_body.mod_id)
+                        .unwrap()
+                        .symbols
+                        .methods
+                        .get(id)
+                        .unwrap()
+                        .get(&value.name.name)
+                        .expect("couldn't find method");
+
+                    let (args_ty, ret_ty) = {
+                        if let Some(x) = builder.ctx.body.function_signatures.get(&fn_id).cloned() {
+                            x
+                        } else {
+                            let (args, ret) = builder
+                                .ctx
+                                .unresolved_function_signatures
+                                .get(&fn_id)
+                                .unwrap();
+
+                            let args: Vec<_> = args
+                                .iter()
+                                .map(|x| lower_type(&builder.ctx, x, builder.local_module))
+                                .collect::<Result<Vec<_>, LoweringError>>()?;
+                            let ret = ret
+                                .as_ref()
+                                .map(|x| lower_type(&builder.ctx, x, builder.local_module))
+                                .unwrap_or(Ok(TypeInfo {
+                                    span: None,
+                                    kind: TypeKind::Unit,
+                                }))?;
+                            builder
+                                .ctx
+                                .body
+                                .function_signatures
+                                .insert(fn_id, (args.clone(), ret.clone()));
+                            (args, ret)
+                        }
+                    };
+
+                    let mut args = Vec::new();
+
+                    assert_eq!(
+                        args_ty.len() - 1,
+                        value.params.len(),
+                        "param length mismatch"
+                    );
+
+                    for (arg, arg_ty) in value.params.iter().zip(&args_ty[1..]) {
+                        let (rvalue, _rvalue_ty, _span) = lower_expr(builder, arg, Some(arg_ty))?;
+                        args.push(rvalue);
+                    }
+
+                    // insert self
+
+                    match &args_ty[0].kind {
+                        TypeKind::Ptr(is_mut, _) | TypeKind::Ref(is_mut, _) => {
+                            args.insert(0, RValue::Ref(*is_mut, Operand::Move(place), *span));
+                        }
+                        _ => {
+                            args.insert(0, RValue::Use(Operand::Move(place), *span));
+                        }
+                    }
+
+                    let dest_local = builder.add_local(Local::temp(ret_ty.kind.clone()));
+
+                    place = Place {
+                        local: dest_local,
+                        projection: Default::default(),
+                    };
+
+                    let target_block = builder.body.blocks.len() + 1;
+
+                    // todo: check if function is diverging such as exit().
+                    let kind = Terminator::Call {
+                        func: fn_id,
+                        args,
+                        destination: place.clone(),
+                        target: Some(target_block),
+                    };
+
+                    let statements = std::mem::take(&mut builder.statements);
+                    builder.body.blocks.push(BasicBlock {
+                        statements: statements.into(),
+                        terminator: kind,
+                        terminator_span: Some(*span),
+                    });
+                    ty = ret_ty.kind;
+                } else {
+                    unimplemented!()
+                }
+            }
         }
     }
 
-    Ok((
-        Place {
-            local,
-            projection: projection.into(), // todo, array
-        },
-        ty,
-        info.span,
-    ))
+    Ok((place, ty, info.span))
 }
 
 #[allow(clippy::only_used_in_recursion)]

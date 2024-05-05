@@ -199,6 +199,10 @@ pub PathSegments: Vec<ast::PathSegment> = {
 
 pub(crate) PathSegment: ast::PathSegment = {
   "." <Ident> => ast::PathSegment::Field(<>),
+  <lo:@L> "." <value:FnCallExpr> <hi:@R> => ast::PathSegment::Method {
+    value,
+    span: ast::Span::new(lo, hi),
+  },
   <lo:@L> "[" <value:Expression> "]" <hi:@R> => ast::PathSegment::Index {
     value,
     span: ast::Span::new(lo, hi),

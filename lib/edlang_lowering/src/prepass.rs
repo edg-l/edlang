@@ -71,12 +71,7 @@ pub fn prepass_module(
                     );
                 }
                 ast::ModuleStatement::Struct(info) => {
-                    if current_module
-                        .symbols
-                        .structs
-                        .get(&info.name.name)
-                        .is_none()
-                    {
+                    if !current_module.symbols.structs.contains_key(&info.name.name) {
                         let next_id = gen.next_defid();
                         current_module
                             .symbols
@@ -104,12 +99,7 @@ pub fn prepass_module(
                     current_module.modules.insert(next_id);
                 }
                 ast::ModuleStatement::StructImpl(info) => {
-                    if current_module
-                        .symbols
-                        .structs
-                        .get(&info.name.name)
-                        .is_none()
-                    {
+                    if !current_module.symbols.structs.contains_key(&info.name.name) {
                         let next_id = gen.next_defid();
                         current_module
                             .symbols
@@ -212,7 +202,7 @@ pub fn prepass_sub_module(
                     );
                 }
                 ast::ModuleStatement::Struct(info) => {
-                    if submodule.symbols.structs.get(&info.name.name).is_none() {
+                    if !submodule.symbols.structs.contains_key(&info.name.name) {
                         let next_id = gen.next_defid();
                         submodule
                             .symbols
@@ -240,7 +230,7 @@ pub fn prepass_sub_module(
                     submodule.modules.insert(next_id);
                 }
                 ast::ModuleStatement::StructImpl(info) => {
-                    if submodule.symbols.structs.get(&info.name.name).is_none() {
+                    if !submodule.symbols.structs.contains_key(&info.name.name) {
                         let next_id = gen.next_defid();
                         submodule
                             .symbols

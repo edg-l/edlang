@@ -500,7 +500,7 @@ fn compile_fn(ctx: &ModuleCompileCtx, fn_id: DefId) -> Result<(), BuilderError> 
                         };
                         di_locals.insert(*local_idx, var);
                         ctx.di_builder.insert_declare_at_end(
-                            locals[&local_idx],
+                            locals[local_idx],
                             Some(var),
                             None,
                             debug_loc,
@@ -1386,13 +1386,11 @@ fn compile_basic_type<'ctx>(
         ir::TypeKind::Ptr(_is_mut, _pointee) => ctx
             .ctx
             .context
-            .ptr_sized_int_type(&ctx.target_data, None)
             .ptr_type(AddressSpace::default())
             .as_basic_type_enum(),
         ir::TypeKind::Ref(_, _) => ctx
             .ctx
             .context
-            .ptr_sized_int_type(&ctx.target_data, None)
             .ptr_type(AddressSpace::default())
             .as_basic_type_enum(),
         ir::TypeKind::Struct(id, _) => {

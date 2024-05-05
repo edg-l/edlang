@@ -1,6 +1,4 @@
 use std::{
-    borrow::Cow,
-    fmt,
     path::{Path, PathBuf},
     process::Child,
 };
@@ -10,17 +8,6 @@ use edlang_driver::linker::{link_binary, link_shared_lib};
 use edlang_lowering::lower_modules;
 use edlang_session::{DebugInfo, OptLevel, Session};
 use tempfile::TempDir;
-
-#[derive(Debug, Clone)]
-struct TestError(Cow<'static, str>);
-
-impl fmt::Display for TestError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(&self.0)
-    }
-}
-
-impl std::error::Error for TestError {}
 
 #[derive(Debug)]
 pub struct CompileResult {

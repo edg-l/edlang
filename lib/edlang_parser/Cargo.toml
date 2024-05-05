@@ -13,7 +13,7 @@ repository = "https://github.com/edg-l/edlang"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-ariadne = { version = "0.4.0", features = ["auto-color"] }
+ariadne = { version = "0.4.1", features = ["auto-color"] }
 edlang_ast = { version = "0.0.1-alpha.17", path = "../edlang_ast" }
 itertools = "0.12.1"
 lalrpop-util = { version = "0.20.2", features = ["lexer"] }

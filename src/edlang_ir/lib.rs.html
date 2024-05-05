@@ -556,6 +556,7 @@
 <a href="#554" id="554">554</a>
 <a href="#555" id="555">555</a>
 <a href="#556" id="556">556</a>
+<a href="#557" id="557">557</a>
 </pre></div><pre class="rust"><code><span class="comment">// Based on a cfg
 
 </span><span class="kw">use </span>std::{
@@ -669,6 +670,7 @@
 <span class="attr">#[derive(Debug, Clone)]
 </span><span class="kw">pub struct </span>AdtBody {
     <span class="kw">pub </span>def_id: DefId,
+    <span class="kw">pub </span>mod_id: DefId,
     <span class="kw">pub </span>is_pub: bool,
     <span class="kw">pub </span>name: String,
     <span class="kw">pub </span>variants: Vec&lt;AdtVariant&gt;,

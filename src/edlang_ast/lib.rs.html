@@ -268,6 +268,7 @@
 <a href="#266" id="266">266</a>
 <a href="#267" id="267">267</a>
 <a href="#268" id="268">268</a>
+<a href="#269" id="269">269</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::BTreeMap;
 
 <span class="kw">pub use </span>edlang_span::Span;
@@ -309,6 +310,7 @@
 </span><span class="kw">pub enum </span>PathSegment {
     Field(Ident),
     Index { value: Expression, span: Span },
+    Method { value: FnCallExpr, span: Span },
 }
 
 <span class="attr">#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]

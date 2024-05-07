@@ -1000,12 +1000,29 @@ fn lower_fn_call(
         }
     };
 
+    if args_ty.len() != info.params.len() {
+        return Err(LoweringError::ParamCountMismatch {
+            span: info.span,
+            has_args: info.params.len(),
+            needs: args_ty.len(),
+            file_id: builder.file_id,
+        });
+    }
+
     let mut args = Vec::new();
 
-    assert_eq!(args_ty.len(), info.params.len(), "param length mismatch");
-
     for (arg, arg_ty) in info.params.iter().zip(args_ty) {
-        let (rvalue, _rvalue_ty, _span) = lower_expr(builder, arg, Some(&arg_ty))?;
+        let (rvalue, rvalue_ty, arg_span) = lower_expr(builder, arg, Some(&arg_ty))?;
+
+        if rvalue_ty != arg_ty.kind {
+            return Err(LoweringError::UnexpectedType {
+                span: arg_span,
+                found: rvalue_ty,
+                expected: arg_ty,
+                file_id: builder.file_id,
+            });
+        }
+
         args.push(rvalue);
     }
 

@@ -63,4 +63,11 @@ pub enum LoweringError {
         name: String,
         file_id: usize,
     },
+    #[error("parameter count mismatch to function call")]
+    ParamCountMismatch {
+        span: Span,
+        has_args: usize,
+        needs: usize,
+        file_id: usize,
+    },
 }

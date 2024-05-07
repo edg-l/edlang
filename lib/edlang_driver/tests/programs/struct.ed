@@ -5,7 +5,7 @@ struct Hello {
 }
 
 pub fn main() -> i64 {
-    let x: Hello = Hello {
+    let mut x: Hello = Hello {
         a: 2,
         b: 3,
     };

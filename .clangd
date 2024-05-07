@@ -1,2 +1,0 @@
-CompileFlags:                     # Tweak the parse settings
-  Add: [-std=c++17, -xc++, -Wall, -I/home/edgar/storage/llvm-17/include]

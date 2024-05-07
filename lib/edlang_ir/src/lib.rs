@@ -178,6 +178,18 @@ impl Local {
             mutable: false,
         }
     }
+
+    pub fn is_mutable(&self) -> bool {
+        if self.mutable {
+            return true;
+        }
+
+        match self.ty.kind {
+            TypeKind::Ptr(is_mut, _) => is_mut,
+            TypeKind::Ref(is_mut, _) => is_mut,
+            _ => false,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -424,11 +436,34 @@ pub enum RValue {
     Cast(Operand, TypeInfo, Span),
 }
 
+impl RValue {
+    pub fn get_local(&self) -> Option<usize> {
+        match self {
+            RValue::Use(op, _) => op.get_local(),
+            RValue::Ref(_, op, _) => op.get_local(),
+            RValue::BinOp(_, _, _, _) => None,
+            RValue::LogicOp(_, _, _, _) => None,
+            RValue::UnOp(_, _, _) => None,
+            RValue::Cast(op, _, _) => op.get_local(),
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub enum Operand {
     Copy(Place),
     Move(Place),
     Constant(ConstData),
+}
+
+impl Operand {
+    pub fn get_local(&self) -> Option<usize> {
+        match self {
+            Operand::Copy(place) => Some(place.local),
+            Operand::Move(place) => Some(place.local),
+            Operand::Constant(_) => None,
+        }
+    }
 }
 
 #[derive(Debug, Clone)]

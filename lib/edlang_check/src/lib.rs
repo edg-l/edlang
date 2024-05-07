@@ -201,16 +201,28 @@ pub fn lowering_error_to_report(
                 )
                 .finish()
         }
-        LoweringError::NotMutable { span, file_id } => {
+        LoweringError::NotMutable {
+            span,
+            declare_span,
+            file_id,
+        } => {
             let path = session.file_paths[file_id].display().to_string();
-            Report::build(ReportKind::Error, path.clone(), span.lo)
+            let mut report = Report::build(ReportKind::Error, path.clone(), span.lo)
                 .with_code("NotMutable")
                 .with_label(
-                    Label::new((path, span.into()))
-                        .with_message("can't mutate this value because it's not declared mutable")
+                    Label::new((path.clone(), span.into()))
+                        .with_message("can't mutate this variable because it's not mutable")
                         .with_color(colors.next()),
-                )
-                .finish()
+                );
+
+            if let Some(declare_span) = declare_span {
+                report = report.with_label(
+                    Label::new((path, declare_span.into()))
+                        .with_message("variable declared here")
+                        .with_color(colors.next()),
+                );
+            }
+            report.finish()
         }
         LoweringError::NotMutableSelf {
             span,
@@ -231,6 +243,29 @@ pub fn lowering_error_to_report(
                         .with_color(colors.next()),
                 )
                 .finish()
+        }
+        LoweringError::CantTakeMutableBorrow {
+            span,
+            declare_span,
+            file_id,
+        } => {
+            let path = session.file_paths[file_id].display().to_string();
+            let mut report = Report::build(ReportKind::Error, path.clone(), span.lo)
+                .with_code("CantTakeMutableBorrow")
+                .with_label(
+                    Label::new((path.clone(), span.into()))
+                        .with_message("can't take a mutate borrow to this variable because it's not declared mutable")
+                        .with_color(colors.next()),
+                );
+
+            if let Some(declare_span) = declare_span {
+                report = report.with_label(
+                    Label::new((path, declare_span.into()))
+                        .with_message("variable declared here")
+                        .with_color(colors.next()),
+                );
+            }
+            report.finish()
         }
     }
 }

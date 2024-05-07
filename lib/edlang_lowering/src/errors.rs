@@ -71,7 +71,17 @@ pub enum LoweringError {
         file_id: usize,
     },
     #[error("can't mutate this value because it's not declared mutable")]
-    NotMutable { span: Span, file_id: usize },
+    NotMutable {
+        span: Span,
+        declare_span: Option<Span>,
+        file_id: usize,
+    },
+    #[error("can't take a mutable borrow to this value because it's not declared mutable")]
+    CantTakeMutableBorrow {
+        span: Span,
+        declare_span: Option<Span>,
+        file_id: usize,
+    },
     #[error("this method requires a mutable 'self'")]
     NotMutableSelf {
         span: Span,

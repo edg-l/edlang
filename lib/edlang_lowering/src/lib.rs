@@ -536,6 +536,14 @@ fn lower_assign(builder: &mut BodyBuilder, info: &ast::AssignStmt) -> Result<(),
         kind: ty,
     };
 
+    if !builder.body.locals[place.local].is_mutable() {
+        return Err(LoweringError::NotMutable {
+            span: info.span,
+            declare_span: builder.body.locals[place.local].span,
+            file_id: builder.file_id,
+        });
+    }
+
     for _ in 0..info.deref_times {
         match &path_ty.kind {
             TypeKind::Ptr(is_mut, inner) => {
@@ -687,7 +695,7 @@ fn lower_expr(
             let ty = match ty {
                 TypeKind::Ptr(_, inner) => *inner,
                 TypeKind::Ref(_, inner) => *inner,
-                _ => todo!("proepr error here"),
+                _ => todo!("proper error here"),
             };
 
             (
@@ -705,6 +713,16 @@ fn lower_expr(
                 None => None,
             };
             let (mut value, ty, _span) = lower_expr(builder, inner, type_hint)?;
+
+            if let Some(local) = value.get_local() {
+                if *mutable && !builder.body.locals[local].mutable {
+                    return Err(LoweringError::CantTakeMutableBorrow {
+                        span: *as_ref_span,
+                        declare_span: builder.body.locals[local].span,
+                        file_id: builder.file_id,
+                    });
+                }
+            }
 
             // check if its a use directly, to avoid a temporary.
             value = match value {

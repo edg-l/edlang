@@ -1277,6 +1277,7 @@ fn lower_path(
     )?;
 
     let mut ty = builder.body.locals[local].ty.kind.clone();
+    let mutable = builder.body.locals[local].mutable;
     let mut place = Place {
         local,
         projection: Default::default(),
@@ -1353,26 +1354,65 @@ fn lower_path(
                         }
                     };
 
+                    if args_ty.len() - 1 != value.params.len() {
+                        return Err(LoweringError::ParamCountMismatch {
+                            span: value.span,
+                            has_args: value.params.len(),
+                            needs: args_ty.len(),
+                            file_id: builder.file_id,
+                        });
+                    }
+
                     let mut args = Vec::new();
 
-                    assert_eq!(
-                        args_ty.len() - 1,
-                        value.params.len(),
-                        "param length mismatch"
-                    );
-
                     for (arg, arg_ty) in value.params.iter().zip(&args_ty[1..]) {
-                        let (rvalue, _rvalue_ty, _span) = lower_expr(builder, arg, Some(arg_ty))?;
+                        let (rvalue, rvalue_ty, arg_span) = lower_expr(builder, arg, Some(arg_ty))?;
+
+                        if rvalue_ty != arg_ty.kind {
+                            return Err(LoweringError::UnexpectedType {
+                                span: arg_span,
+                                found: rvalue_ty,
+                                expected: arg_ty.clone(),
+                                file_id: builder.file_id,
+                            });
+                        }
+
                         args.push(rvalue);
                     }
 
                     // insert self
 
                     match &args_ty[0].kind {
-                        TypeKind::Ptr(is_mut, _) | TypeKind::Ref(is_mut, _) => {
+                        TypeKind::Ptr(is_mut, inner_ty) | TypeKind::Ref(is_mut, inner_ty) => {
+                            if ty != inner_ty.kind {
+                                return Err(LoweringError::UnexpectedType {
+                                    span: info.span,
+                                    found: inner_ty.kind.clone(),
+                                    expected: args_ty[0].clone(),
+                                    file_id: builder.file_id,
+                                });
+                            }
+
+                            if !mutable && *is_mut {
+                                return Err(LoweringError::NotMutableSelf {
+                                    span: value.span,
+                                    path_span: info.span,
+                                    file_id: builder.file_id,
+                                });
+                            }
+
                             args.insert(0, RValue::Ref(*is_mut, Operand::Move(place), *span));
                         }
-                        _ => {
+                        expected_ty => {
+                            if ty != *expected_ty {
+                                return Err(LoweringError::UnexpectedType {
+                                    span: value.span,
+                                    found: ty.clone(),
+                                    expected: args_ty[0].clone(),
+                                    file_id: builder.file_id,
+                                });
+                            }
+
                             args.insert(0, RValue::Use(Operand::Move(place), *span));
                         }
                     }

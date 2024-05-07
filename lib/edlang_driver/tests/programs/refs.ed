@@ -7,6 +7,6 @@ pub fn main() -> i64 {
     return a;
 }
 
-pub fn hello(a: &mut i32) {
+pub fn hello(a: &mut i64) {
     *a = 2;
 }

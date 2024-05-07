@@ -193,10 +193,44 @@ pub fn lowering_error_to_report(
                 .with_code("ParamCountMismatch")
                 .with_label(
                     Label::new((path, span.into()))
-                        .with_message(format!("function call parameter count mismatch: has {}, needs {}.", has_args, needs))
+                        .with_message(format!(
+                            "function call parameter count mismatch: has {}, needs {}.",
+                            has_args, needs
+                        ))
                         .with_color(colors.next()),
                 )
                 .finish()
-        },
+        }
+        LoweringError::NotMutable { span, file_id } => {
+            let path = session.file_paths[file_id].display().to_string();
+            Report::build(ReportKind::Error, path.clone(), span.lo)
+                .with_code("NotMutable")
+                .with_label(
+                    Label::new((path, span.into()))
+                        .with_message("can't mutate this value because it's not declared mutable")
+                        .with_color(colors.next()),
+                )
+                .finish()
+        }
+        LoweringError::NotMutableSelf {
+            span,
+            path_span,
+            file_id,
+        } => {
+            let path = session.file_paths[file_id].display().to_string();
+            Report::build(ReportKind::Error, path.clone(), span.lo)
+                .with_code("NotMutableSelf")
+                .with_label(
+                    Label::new((path.clone(), path_span.into()))
+                        .with_message("this value is not declared mutable")
+                        .with_color(colors.next()),
+                )
+                .with_label(
+                    Label::new((path, span.into()))
+                        .with_message("this method requires a mutable 'self'")
+                        .with_color(colors.next()),
+                )
+                .finish()
+        }
     }
 }

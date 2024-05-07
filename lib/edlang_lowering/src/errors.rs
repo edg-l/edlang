@@ -70,4 +70,12 @@ pub enum LoweringError {
         needs: usize,
         file_id: usize,
     },
+    #[error("can't mutate this value because it's not declared mutable")]
+    NotMutable { span: Span, file_id: usize },
+    #[error("this method requires a mutable 'self'")]
+    NotMutableSelf {
+        span: Span,
+        path_span: Span,
+        file_id: usize,
+    },
 }

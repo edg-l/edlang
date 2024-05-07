@@ -1,0 +1,21 @@
+extern fn printf(a: &str);
+
+fn main() -> u32 {
+  let x: A = A {
+    a: 2
+  };
+
+  let y: u32 = x.hello(4);
+
+  return y;
+}
+
+struct A {
+  a: u32,
+}
+
+impl A {
+  pub fn hello(self: &A, x: u32) -> u32 {
+    return self.a + x;
+  }
+}

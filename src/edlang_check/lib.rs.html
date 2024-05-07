@@ -186,6 +186,22 @@
 <a href="#184" id="184">184</a>
 <a href="#185" id="185">185</a>
 <a href="#186" id="186">186</a>
+<a href="#187" id="187">187</a>
+<a href="#188" id="188">188</a>
+<a href="#189" id="189">189</a>
+<a href="#190" id="190">190</a>
+<a href="#191" id="191">191</a>
+<a href="#192" id="192">192</a>
+<a href="#193" id="193">193</a>
+<a href="#194" id="194">194</a>
+<a href="#195" id="195">195</a>
+<a href="#196" id="196">196</a>
+<a href="#197" id="197">197</a>
+<a href="#198" id="198">198</a>
+<a href="#199" id="199">199</a>
+<a href="#200" id="200">200</a>
+<a href="#201" id="201">201</a>
+<a href="#202" id="202">202</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::ops::Range;
 
 <span class="kw">use </span>ariadne::{ColorGenerator, Label, Report, ReportKind};
@@ -370,6 +386,22 @@
                 )
                 .finish()
         }
+        LoweringError::ParamCountMismatch {
+            span,
+            has_args,
+            needs,
+            file_id,
+        } =&gt; {
+            <span class="kw">let </span>path = session.file_paths[file_id].display().to_string();
+            Report::build(ReportKind::Error, path.clone(), span.lo)
+                .with_code(<span class="string">"ParamCountMismatch"</span>)
+                .with_label(
+                    Label::new((path, span.into()))
+                        .with_message(<span class="macro">format!</span>(<span class="string">"function call parameter count mismatch: has {}, needs {}."</span>, has_args, needs))
+                        .with_color(colors.next()),
+                )
+                .finish()
+        },
     }
 }
 </code></pre></div></section></main></body></html>

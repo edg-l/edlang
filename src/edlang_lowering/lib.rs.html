@@ -1510,6 +1510,46 @@
 <a href="#1508" id="1508">1508</a>
 <a href="#1509" id="1509">1509</a>
 <a href="#1510" id="1510">1510</a>
+<a href="#1511" id="1511">1511</a>
+<a href="#1512" id="1512">1512</a>
+<a href="#1513" id="1513">1513</a>
+<a href="#1514" id="1514">1514</a>
+<a href="#1515" id="1515">1515</a>
+<a href="#1516" id="1516">1516</a>
+<a href="#1517" id="1517">1517</a>
+<a href="#1518" id="1518">1518</a>
+<a href="#1519" id="1519">1519</a>
+<a href="#1520" id="1520">1520</a>
+<a href="#1521" id="1521">1521</a>
+<a href="#1522" id="1522">1522</a>
+<a href="#1523" id="1523">1523</a>
+<a href="#1524" id="1524">1524</a>
+<a href="#1525" id="1525">1525</a>
+<a href="#1526" id="1526">1526</a>
+<a href="#1527" id="1527">1527</a>
+<a href="#1528" id="1528">1528</a>
+<a href="#1529" id="1529">1529</a>
+<a href="#1530" id="1530">1530</a>
+<a href="#1531" id="1531">1531</a>
+<a href="#1532" id="1532">1532</a>
+<a href="#1533" id="1533">1533</a>
+<a href="#1534" id="1534">1534</a>
+<a href="#1535" id="1535">1535</a>
+<a href="#1536" id="1536">1536</a>
+<a href="#1537" id="1537">1537</a>
+<a href="#1538" id="1538">1538</a>
+<a href="#1539" id="1539">1539</a>
+<a href="#1540" id="1540">1540</a>
+<a href="#1541" id="1541">1541</a>
+<a href="#1542" id="1542">1542</a>
+<a href="#1543" id="1543">1543</a>
+<a href="#1544" id="1544">1544</a>
+<a href="#1545" id="1545">1545</a>
+<a href="#1546" id="1546">1546</a>
+<a href="#1547" id="1547">1547</a>
+<a href="#1548" id="1548">1548</a>
+<a href="#1549" id="1549">1549</a>
+<a href="#1550" id="1550">1550</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::HashMap;
 
 <span class="kw">use </span>ast::{BinaryOp, ModuleStatement, Span, WhileStmt};
@@ -2789,6 +2829,7 @@
     )<span class="question-mark">?</span>;
 
     <span class="kw">let </span><span class="kw-2">mut </span>ty = builder.body.locals[local].ty.kind.clone();
+    <span class="kw">let </span>mutable = builder.body.locals[local].mutable;
     <span class="kw">let </span><span class="kw-2">mut </span>place = Place {
         local,
         projection: Default::default(),
@@ -2865,26 +2906,65 @@
                         }
                     };
 
+                    <span class="kw">if </span>args_ty.len() - <span class="number">1 </span>!= value.params.len() {
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(LoweringError::ParamCountMismatch {
+                            span: value.span,
+                            has_args: value.params.len(),
+                            needs: args_ty.len(),
+                            file_id: builder.file_id,
+                        });
+                    }
+
                     <span class="kw">let </span><span class="kw-2">mut </span>args = Vec::new();
 
-                    <span class="macro">assert_eq!</span>(
-                        args_ty.len() - <span class="number">1</span>,
-                        value.params.len(),
-                        <span class="string">"param length mismatch"
-                    </span>);
-
                     <span class="kw">for </span>(arg, arg_ty) <span class="kw">in </span>value.params.iter().zip(<span class="kw-2">&amp;</span>args_ty[<span class="number">1</span>..]) {
-                        <span class="kw">let </span>(rvalue, _rvalue_ty, _span) = lower_expr(builder, arg, <span class="prelude-val">Some</span>(arg_ty))<span class="question-mark">?</span>;
+                        <span class="kw">let </span>(rvalue, rvalue_ty, arg_span) = lower_expr(builder, arg, <span class="prelude-val">Some</span>(arg_ty))<span class="question-mark">?</span>;
+
+                        <span class="kw">if </span>rvalue_ty != arg_ty.kind {
+                            <span class="kw">return </span><span class="prelude-val">Err</span>(LoweringError::UnexpectedType {
+                                span: arg_span,
+                                found: rvalue_ty,
+                                expected: arg_ty.clone(),
+                                file_id: builder.file_id,
+                            });
+                        }
+
                         args.push(rvalue);
                     }
 
                     <span class="comment">// insert self
 
                     </span><span class="kw">match </span><span class="kw-2">&amp;</span>args_ty[<span class="number">0</span>].kind {
-                        TypeKind::Ptr(is_mut, <span class="kw">_</span>) | TypeKind::Ref(is_mut, <span class="kw">_</span>) =&gt; {
+                        TypeKind::Ptr(is_mut, inner_ty) | TypeKind::Ref(is_mut, inner_ty) =&gt; {
+                            <span class="kw">if </span>ty != inner_ty.kind {
+                                <span class="kw">return </span><span class="prelude-val">Err</span>(LoweringError::UnexpectedType {
+                                    span: info.span,
+                                    found: inner_ty.kind.clone(),
+                                    expected: args_ty[<span class="number">0</span>].clone(),
+                                    file_id: builder.file_id,
+                                });
+                            }
+
+                            <span class="kw">if </span>!mutable &amp;&amp; <span class="kw-2">*</span>is_mut {
+                                <span class="kw">return </span><span class="prelude-val">Err</span>(LoweringError::NotMutableSelf {
+                                    span: value.span,
+                                    path_span: info.span,
+                                    file_id: builder.file_id,
+                                });
+                            }
+
                             args.insert(<span class="number">0</span>, RValue::Ref(<span class="kw-2">*</span>is_mut, Operand::Move(place), <span class="kw-2">*</span>span));
                         }
-                        <span class="kw">_ </span>=&gt; {
+                        expected_ty =&gt; {
+                            <span class="kw">if </span>ty != <span class="kw-2">*</span>expected_ty {
+                                <span class="kw">return </span><span class="prelude-val">Err</span>(LoweringError::UnexpectedType {
+                                    span: value.span,
+                                    found: ty.clone(),
+                                    expected: args_ty[<span class="number">0</span>].clone(),
+                                    file_id: builder.file_id,
+                                });
+                            }
+
                             args.insert(<span class="number">0</span>, RValue::Use(Operand::Move(place), <span class="kw-2">*</span>span));
                         }
                     }

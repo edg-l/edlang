@@ -1,6 +1,6 @@
 [package]
 name = "edb"
-version = "0.0.1-alpha.17"
+version = "0.0.1-alpha.18"
 authors = ["Edgar Luque <edgar@edgarluque.com>"]
 description = "The edlang language builder."
 edition = "2021"
@@ -14,7 +14,7 @@ repository = "https://github.com/edg-l/edlang"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-edlang_driver = { version = "0.0.1-alpha.17", path = "../lib/edlang_driver" }
+edlang_driver = { version = "0.0.1-alpha.18", path = "../lib/edlang_driver" }
 anyhow = "1"
 clap = { version = "4.5.4", features = ["derive"] }
 toml = "0.8.12"

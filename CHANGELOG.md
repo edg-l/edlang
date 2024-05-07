@@ -4,9 +4,64 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
+### 🚀 Features
+
+- Function call checks
+- More checks on impl blocks
+
+### 🐛 Bug Fixes
+
+- Fix cf bug
+
+- Fix test
+
+
+### Other
+
+- Initial str type
+
+- Codegen for impl methods
+
+- Remove clangd file
+
+- Add asref check
+
+- Version 0.0.1-alpha.18
+
+
+### ⚙️ Miscellaneous Tasks
+
+- Update deps
+
+## [0.0.1-alpha.17] - 2024-04-09
+
+### 🚀 Features
+
+- Add aliases for new and build
+
+### Other
+
+- Don't use defautl scope in other changelog
+
+- Progress
+
+- Upd deps
+
+- Impl block
+
+- Llvm 18
+
+- Version
+
+
 ### ⚙️ Miscellaneous Tasks
 
 - Git cliff config
+- Update changelog
+- Ci
+
+- Ci
+
 
 ## [0.0.1-alpha.16] - 2024-03-13
 
@@ -35,13 +90,13 @@ All notable changes to this project will be documented in this file.
 
 ### Other
 
-- *(other)* Improv cast
+- Improv cast
 
-- *(other)* Beter2
+- Beter2
 
-- *(other)* Allow top level module
+- Allow top level module
 
-- *(other)* Version
+- Version
 
 
 ## [0.0.1-alpha.14] - 2024-03-11
@@ -69,9 +124,9 @@ All notable changes to this project will be documented in this file.
 
 ### Other
 
-- *(other)* Try release ci
+- Try release ci
 
-- *(other)* Try release ci
+- Try release ci
 
 
 ### ⚙️ Miscellaneous Tasks
@@ -109,11 +164,11 @@ All notable changes to this project will be documented in this file.
 
 ### Other
 
-- *(other)* Changelog
+- Changelog
 
-- *(other)* Try to fix release changelog
+- Try to fix release changelog
 
-- *(other)* Release
+- Release
 
 
 ## [0.0.1-alpha.10] - 2024-02-28
@@ -143,7 +198,7 @@ All notable changes to this project will be documented in this file.
 
 ### Other
 
-- *(other)* Upd
+- Upd
 
 
 ### ⚙️ Miscellaneous Tasks
@@ -158,25 +213,25 @@ All notable changes to this project will be documented in this file.
 
 ### Other
 
-- *(other)* Make main always pub
+- Make main always pub
 
-- *(other)* Readme
+- Readme
 
-- *(other)* Gitattributes
+- Gitattributes
 
-- *(other)* Cliff
+- Cliff
 
-- *(other)* Better
+- Better
 
-- *(other)* Basic struct
+- Basic struct
 
-- *(other)* Struct field
+- Struct field
 
-- *(other)* Struct init parsing
+- Struct init parsing
 
-- *(other)* Nice
+- Nice
 
-- *(other)* Version
+- Version
 
 
 ### 🧪 Testing
@@ -192,11 +247,11 @@ All notable changes to this project will be documented in this file.
 
 ### Other
 
-- *(other)* Changelog
+- Changelog
 
-- *(other)* Refs
+- Refs
 
-- *(other)* Version and fix no return
+- Version and fix no return
 
 
 ## [0.0.1-alpha.6] - 2024-02-17
@@ -215,9 +270,9 @@ All notable changes to this project will be documented in this file.
 
 ### Other
 
-- *(other)* Optimize
+- Optimize
 
-- *(other)* Vv0.0.1-alpha.6
+- Vv0.0.1-alpha.6
 
 
 ## [0.0.1-alpha.5] - 2024-02-14
@@ -231,9 +286,9 @@ All notable changes to this project will be documented in this file.
 
 ### Other
 
-- *(other)* Version
+- Version
 
-- *(other)* Changelog
+- Changelog
 
 
 ## [0.0.1-alpha.4] - 2024-02-14
@@ -277,9 +332,9 @@ All notable changes to this project will be documented in this file.
 
 ### Other
 
-- *(other)* Fmt
+- Fmt
 
-- *(other)* Readme
+- Readme
 
 
 ### 🎨 Styling
@@ -307,109 +362,109 @@ All notable changes to this project will be documented in this file.
 
 ### Other
 
-- *(other)* Initial
+- Initial
 
-- *(other)* Check
+- Check
 
-- *(other)* Format
+- Format
 
-- *(other)* Start logos
+- Start logos
 
-- *(other)* Progress
+- Progress
 
-- *(other)* Progress
+- Progress
 
-- *(other)* Big progress
+- Big progress
 
-- *(other)* Rly basic type inference
+- Rly basic type inference
 
-- *(other)* Type info improvements
+- Type info improvements
 
-- *(other)* Add rudimentary type inference, todo: args
+- Add rudimentary type inference, todo: args
 
-- *(other)* If else type analysis
+- If else type analysis
 
-- *(other)* Idk
+- Idk
 
-- *(other)* Tmp
+- Tmp
 
-- *(other)* Better
+- Better
 
-- *(other)* Progress
+- Progress
 
-- *(other)* Require fully typed integers for now
+- Require fully typed integers for now
 
-- *(other)* Progress
+- Progress
 
-- *(other)* V
+- V
 
-- *(other)* Spans
+- Spans
 
-- *(other)* Arns
+- Arns
 
-- *(other)* Padding
+- Padding
 
-- *(other)* Cleanup
+- Cleanup
 
-- *(other)* Ok
+- Ok
 
-- *(other)* Upd
+- Upd
 
-- *(other)* Upd
+- Upd
 
-- *(other)* New start
+- New start
 
-- *(other)* Progress
+- Progress
 
-- *(other)* Parser
+- Parser
 
-- *(other)* Prog
+- Prog
 
-- *(other)* Ok
+- Ok
 
-- *(other)* Ok
+- Ok
 
-- *(other)* Upd
+- Upd
 
-- *(other)* Ok
+- Ok
 
-- *(other)* A
+- A
 
-- *(other)* Prog
+- Prog
 
-- *(other)* P
+- P
 
-- *(other)* Fn call
+- Fn call
 
-- *(other)* Prog
+- Prog
 
-- *(other)* Nice
+- Nice
 
-- *(other)* Compile
+- Compile
 
-- *(other)* Handle unit return
+- Handle unit return
 
-- *(other)* Basic binop
+- Basic binop
 
-- *(other)* More
+- More
 
-- *(other)* Prog
+- Prog
 
-- *(other)* .
+- .
 
-- *(other)* Todo
+- Todo
 
-- *(other)* Debug info
+- Debug info
 
-- *(other)* A
+- A
 
-- *(other)* Rename
+- Rename
 
-- *(other)* Version
+- Version
 
-- *(other)* Clippy
+- Clippy
 
-- *(other)* Clippy
+- Clippy
 
 
 ### 🎨 Styling

@@ -1091,7 +1091,7 @@ fn compile_rvalue<'ctx>(
                     unreachable!("cast from {:?} to ptr", current_ty)
                 }
             } else if target_llvm_ty.is_int_type() {
-                let is_signed = target_ty.kind.is_signed_integer();
+                let is_signed = ty.kind.is_signed_integer();
                 let target_llvm_ty = target_llvm_ty.into_int_type();
                 if current_ty.is_int_type() {
                     // int to int casts

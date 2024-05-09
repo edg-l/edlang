@@ -2728,7 +2728,7 @@
                     <span class="macro">unreachable!</span>(<span class="string">"cast from {:?} to ptr"</span>, current_ty)
                 }
             } <span class="kw">else if </span>target_llvm_ty.is_int_type() {
-                <span class="kw">let </span>is_signed = target_ty.kind.is_signed_integer();
+                <span class="kw">let </span>is_signed = ty.kind.is_signed_integer();
                 <span class="kw">let </span>target_llvm_ty = target_llvm_ty.into_int_type();
                 <span class="kw">if </span>current_ty.is_int_type() {
                     <span class="comment">// int to int casts

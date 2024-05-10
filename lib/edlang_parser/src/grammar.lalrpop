@@ -151,34 +151,36 @@ pub(crate) TypeQualifier: ast::TypeQualifier = {
 }
 
 pub(crate) Type: ast::Type = {
-  <lo:@L> <qualifiers:TypeQualifier*> <name:Ident> <hi:@R> => ast::Type {
+  <lo:@L> <qualifiers:TypeQualifier*> <name:Ident> <hi:@R> => ast::Type::Basic {
         name,
         generics: vec![],
         qualifiers,
         span: ast::Span::new(lo, hi),
     },
-    <lo:@L> <qualifiers:TypeQualifier*> <name:Ident> "<" <generics:Comma<Type>> ">" <hi:@R> => ast::Type {
+    <lo:@L> <qualifiers:TypeQualifier*> <name:Ident> "<" <generics:Comma<Type>> ">" <hi:@R> => ast::Type::Basic {
         name,
         generics,
+        qualifiers,
+        span: ast::Span::new(lo, hi),
+    },
+    <lo:@L> <qualifiers:TypeQualifier*> "[" <of:Type> "]" <hi:@R> => ast::Type::Array {
+        of: Box::new(of),
+        size: None,
+        qualifiers,
+        span: ast::Span::new(lo, hi),
+    },
+    <lo:@L> <qualifiers:TypeQualifier*> "[" <of:Type> ";" <size:"integer"> "]" <hi:@R> => ast::Type::Array {
+        of: Box::new(of),
+        size: Some(size.try_into().unwrap()),
         qualifiers,
         span: ast::Span::new(lo, hi),
     },
 }
 
 /// For things like A::<T> { a: value }
-pub(crate) IdentWithOptionalType: ast::Type = {
-    <lo:@L> <name:Ident> <hi:@R> => ast::Type {
-        name,
-        generics: vec![],
-        qualifiers: vec![],
-        span: ast::Span::new(lo, hi),
-    },
-    <lo:@L> <name:Ident> "::" "<" <generics:Comma<Type>> ">" <hi:@R> => ast::Type {
-        name,
-        generics,
-        qualifiers: vec![],
-        span: ast::Span::new(lo, hi),
-    },
+pub(crate) IdentWithGenerics: (ast::Ident, Vec<ast::Type>) = {
+    <name:Ident> => (name, vec![]),
+    <lo:@L> <name:Ident> "::" "<" <generics:Comma<Type>> ">" <hi:@R> => (name, generics),
 }
 
 pub(crate) PathExpr: ast::PathExpr = {
@@ -351,6 +353,7 @@ pub(crate) Expression: ast::Expression = {
   #[precedence(level="5")] #[assoc(side="left")]
   <lo:@L> <a:Expression> "as" <b: Type> <hi:@R> => ast::Expression::Cast(Box::new(a), b, ast::Span::new(lo, hi)),
   "(" <StructInitExpr> ")" => ast::Expression::StructInit(<>),
+  <ArrayInitExpr> => ast::Expression::ArrayInit(<>),
 }
 
 pub BinaryFirstLvlOp: ast::BinaryOp = {
@@ -412,9 +415,17 @@ pub(crate) StructInitField: (ast::Ident, ast::StructInitField) = {
 }
 
 pub(crate) StructInitExpr: ast::StructInitExpr = {
-  <lo:@L> <name:IdentWithOptionalType> "{" <fields:Comma<StructInitField>> "}" <hi:@R> => ast::StructInitExpr {
-    name,
+  <lo:@L> <name:IdentWithGenerics> "{" <fields:Comma<StructInitField>> "}" <hi:@R> => ast::StructInitExpr {
+    name: name.0,
+    generics: name.1,
     fields: fields.into_iter().collect(),
+    span: ast::Span::new(lo, hi),
+  }
+}
+
+pub(crate) ArrayInitExpr: ast::ArrayInitExpr = {
+  <lo:@L> "[" <data:Comma<Expression>> "]" <hi:@R> => ast::ArrayInitExpr {
+    data: data.into_iter().collect(),
     span: ast::Span::new(lo, hi),
   }
 }

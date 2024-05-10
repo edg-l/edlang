@@ -262,6 +262,7 @@ pub enum TypeKind {
     Ref(bool, Box<TypeInfo>),
     // name for print purposes
     Struct(DefId, String), // todo, add generics
+    Slice(Box<TypeInfo>, Option<u32>),
 }
 
 impl TypeKind {
@@ -308,6 +309,7 @@ impl TypeKind {
             TypeKind::Ref(_, inner) => inner.kind.get_falsy_value(),
             TypeKind::Struct(_, _name) => todo!(),
             TypeKind::Str => todo!(),
+            TypeKind::Slice(_, _) => todo!(),
         }
     }
 }
@@ -351,6 +353,15 @@ impl fmt::Display for TypeKind {
                 write!(f, "&{word} {}", inner.kind)
             }
             TypeKind::Struct(_, name) => write!(f, "{}", name),
+            TypeKind::Slice(inner, size) => {
+                let size = if let Some(size) = size {
+                    format!("; {size}")
+                } else {
+                    "".to_string()
+                };
+
+                write!(f, "[{}{size}]", inner.kind)
+            }
         }
     }
 }
@@ -477,6 +488,7 @@ pub enum PlaceElem {
     Deref,
     Field { field_idx: usize },
     Index { local: usize },
+    ConstIndex { index: usize },
 }
 
 impl TypeKind {

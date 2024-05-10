@@ -645,15 +645,16 @@ fn find_expr_type(builder: &mut BodyBuilder, info: &ast::Expression) -> Option<T
                 .get_module_body()
                 .symbols
                 .structs
-                .get(&info.name.name.name)
+                .get(&info.name.name)
                 .expect("struct not found");
-            ir::TypeKind::Struct(id, info.name.name.name.clone())
+            ir::TypeKind::Struct(id, info.name.name.clone())
         }
         ast::Expression::Cast(_, _new_ty, _) => {
             // checks?
 
             todo!()
         }
+        ast::Expression::ArrayInit(_) => todo!(),
     })
 }
 
@@ -762,7 +763,7 @@ fn lower_expr(
                 .get_module_body()
                 .symbols
                 .structs
-                .get(&info.name.name.name)
+                .get(&info.name.name)
                 .expect("struct not found");
             let struct_body = builder.ctx.body.structs.get(&id).unwrap().clone();
             let ty = TypeKind::Struct(id, struct_body.name.clone());
@@ -831,6 +832,45 @@ fn lower_expr(
             };
 
             (rvalue, kind, *span)
+        }
+        ast::Expression::ArrayInit(info) => {
+            let ty = if let Some(type_hint) = type_hint {
+                type_hint.clone()
+            } else {
+                todo!()
+            };
+
+            let inner = if let TypeKind::Slice(inner, _) = &ty.kind {
+                inner
+            } else {
+                unreachable!()
+            };
+
+            let local = builder.add_temp_local(ty.kind.clone());
+            builder.statements.push(Statement {
+                span: None,
+                kind: StatementKind::StorageLive(local),
+            });
+            let place = Place {
+                local,
+                projection: Default::default(),
+            };
+            for (i, x) in info.data.iter().enumerate() {
+                let (value, _ty, span) = lower_expr(builder, x, Some(inner))?;
+                let mut place = place.clone();
+                place.projection.push(PlaceElem::ConstIndex { index: i });
+
+                builder.statements.push(Statement {
+                    span: Some(span),
+                    kind: StatementKind::Assign(place, value),
+                });
+            }
+
+            (
+                RValue::Use(Operand::Move(place), info.span),
+                ty.kind,
+                info.span,
+            )
         }
     })
 }
@@ -1096,9 +1136,7 @@ fn lower_value(
                     span: None,
                     kind: ir::TypeKind::Char,
                 },
-                kind: ir::ConstKind::Value(ir::ValueTree::Leaf(ir::ConstValue::U32(
-                    (*value) as u32,
-                ))),
+                kind: ir::ConstKind::Value(ir::ValueTree::Leaf(ir::ConstValue::U8((*value) as u8))),
             }),
             TypeKind::Char,
             *span,
@@ -1475,82 +1513,106 @@ pub fn lower_type(
     t: &ast::Type,
     module_id: DefId,
 ) -> Result<ir::TypeInfo, LoweringError> {
-    let mut ty = match t.name.name.as_str() {
-        "()" => ir::TypeInfo {
-            span: Some(t.span),
-            kind: ir::TypeKind::Unit,
-        },
-        "u8" => ir::TypeInfo {
-            span: Some(t.span),
-            kind: ir::TypeKind::Uint(ir::UintTy::U8),
-        },
-        "u16" => ir::TypeInfo {
-            span: Some(t.span),
-            kind: ir::TypeKind::Uint(ir::UintTy::U16),
-        },
-        "u32" => ir::TypeInfo {
-            span: Some(t.span),
-            kind: ir::TypeKind::Uint(ir::UintTy::U32),
-        },
-        "u64" => ir::TypeInfo {
-            span: Some(t.span),
-            kind: ir::TypeKind::Uint(ir::UintTy::U64),
-        },
-        "u128" => ir::TypeInfo {
-            span: Some(t.span),
-            kind: ir::TypeKind::Uint(ir::UintTy::U128),
-        },
-        "i8" => ir::TypeInfo {
-            span: Some(t.span),
-            kind: ir::TypeKind::Int(ir::IntTy::I8),
-        },
-        "i16" => ir::TypeInfo {
-            span: Some(t.span),
-            kind: ir::TypeKind::Int(ir::IntTy::I16),
-        },
-        "i32" => ir::TypeInfo {
-            span: Some(t.span),
-            kind: ir::TypeKind::Int(ir::IntTy::I32),
-        },
-        "i64" => ir::TypeInfo {
-            span: Some(t.span),
-            kind: ir::TypeKind::Int(ir::IntTy::I64),
-        },
-        "i128" => ir::TypeInfo {
-            span: Some(t.span),
-            kind: ir::TypeKind::Int(ir::IntTy::I128),
-        },
-        "char" => ir::TypeInfo {
-            span: Some(t.span),
-            kind: ir::TypeKind::Char,
-        },
-        "bool" => ir::TypeInfo {
-            span: Some(t.span),
-            kind: ir::TypeKind::Bool,
-        },
-        "str" => ir::TypeInfo {
-            span: Some(t.span),
-            kind: ir::TypeKind::Str,
-        },
-        other => {
-            let module = ctx.body.modules.get(&module_id).expect("module not found");
-            if let Some(struct_id) = module.symbols.structs.get(other) {
-                let struct_body = ctx.body.structs.get(struct_id).unwrap();
-                ir::TypeInfo {
-                    span: Some(struct_body.span),
-                    kind: TypeKind::Struct(*struct_id, struct_body.name.clone()),
+    let (mut ty, qualifiers) = match t {
+        ast::Type::Basic {
+            name,
+            generics: _,
+            qualifiers,
+            span,
+        } => {
+            let ty = match name.name.as_str() {
+                "()" => ir::TypeInfo {
+                    span: Some(*span),
+                    kind: ir::TypeKind::Unit,
+                },
+                "u8" => ir::TypeInfo {
+                    span: Some(*span),
+                    kind: ir::TypeKind::Uint(ir::UintTy::U8),
+                },
+                "u16" => ir::TypeInfo {
+                    span: Some(*span),
+                    kind: ir::TypeKind::Uint(ir::UintTy::U16),
+                },
+                "u32" => ir::TypeInfo {
+                    span: Some(*span),
+                    kind: ir::TypeKind::Uint(ir::UintTy::U32),
+                },
+                "u64" => ir::TypeInfo {
+                    span: Some(*span),
+                    kind: ir::TypeKind::Uint(ir::UintTy::U64),
+                },
+                "u128" => ir::TypeInfo {
+                    span: Some(*span),
+                    kind: ir::TypeKind::Uint(ir::UintTy::U128),
+                },
+                "i8" => ir::TypeInfo {
+                    span: Some(*span),
+                    kind: ir::TypeKind::Int(ir::IntTy::I8),
+                },
+                "i16" => ir::TypeInfo {
+                    span: Some(*span),
+                    kind: ir::TypeKind::Int(ir::IntTy::I16),
+                },
+                "i32" => ir::TypeInfo {
+                    span: Some(*span),
+                    kind: ir::TypeKind::Int(ir::IntTy::I32),
+                },
+                "i64" => ir::TypeInfo {
+                    span: Some(*span),
+                    kind: ir::TypeKind::Int(ir::IntTy::I64),
+                },
+                "i128" => ir::TypeInfo {
+                    span: Some(*span),
+                    kind: ir::TypeKind::Int(ir::IntTy::I128),
+                },
+                "char" => ir::TypeInfo {
+                    span: Some(*span),
+                    kind: ir::TypeKind::Char,
+                },
+                "bool" => ir::TypeInfo {
+                    span: Some(*span),
+                    kind: ir::TypeKind::Bool,
+                },
+                "str" => ir::TypeInfo {
+                    span: Some(*span),
+                    kind: ir::TypeKind::Str,
+                },
+                other => {
+                    let module = ctx.body.modules.get(&module_id).expect("module not found");
+                    if let Some(struct_id) = module.symbols.structs.get(other) {
+                        let struct_body = ctx.body.structs.get(struct_id).unwrap();
+                        ir::TypeInfo {
+                            span: Some(struct_body.span),
+                            kind: TypeKind::Struct(*struct_id, struct_body.name.clone()),
+                        }
+                    } else {
+                        Err(LoweringError::UnrecognizedType {
+                            span: name.span,
+                            name: name.name.clone(),
+                            file_id: module.file_id,
+                        })?
+                    }
                 }
-            } else {
-                Err(LoweringError::UnrecognizedType {
-                    span: t.name.span,
-                    name: t.name.name.clone(),
-                    file_id: module.file_id,
-                })?
-            }
+            };
+            (ty, qualifiers)
+        }
+        ast::Type::Array {
+            of,
+            size,
+            qualifiers,
+            span,
+        } => {
+            let ty = ir::TypeInfo {
+                span: Some(*span),
+                kind: ir::TypeKind::Slice(Box::new(lower_type(ctx, of, module_id)?), *size),
+            };
+            (ty, qualifiers)
         }
     };
 
-    for qualifier in t.qualifiers.iter().rev() {
+    let span = ty.span;
+
+    for qualifier in qualifiers.iter().rev() {
         let kind = match qualifier {
             ast::TypeQualifier::Ref => TypeKind::Ref(false, Box::new(ty)),
             ast::TypeQualifier::RefMut => TypeKind::Ref(true, Box::new(ty)),
@@ -1558,10 +1620,7 @@ pub fn lower_type(
             ast::TypeQualifier::PtrMut => TypeKind::Ptr(true, Box::new(ty)),
         };
 
-        ty = TypeInfo {
-            span: Some(t.span),
-            kind,
-        };
+        ty = TypeInfo { span, kind };
     }
 
     Ok(ty)

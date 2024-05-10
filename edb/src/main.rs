@@ -31,7 +31,7 @@ enum Commands {
         #[arg(long)]
         name: Option<String>,
 
-        /// Use a binary (application) template [default]
+        /// Use a binary (application) template \[default\]
         #[arg(long, group = "binary", default_value_t = true)]
         bin: bool,
 

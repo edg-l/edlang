@@ -21,7 +21,7 @@ use inkwell::{
     values::{BasicValue, BasicValueEnum, PointerValue},
     AddressSpace,
 };
-use ir::{LocalKind, ModuleBody, ProgramBody, TypeInfo, ValueTree};
+use ir::{LocalKind, ModuleBody, Place, ProgramBody, TypeInfo, ValueTree};
 use llvm_sys::debuginfo::LLVMDIFlagPublic;
 use tracing::{info, trace};
 
@@ -160,7 +160,11 @@ pub fn compile(session: &Session, program: &ProgramBody) -> Result<PathBuf, Box<
         compile_module(&mut module_ctx, *module_id);
 
         module_ctx.di_builder.finalize();
-        module_ctx.module.verify()?;
+
+        if let Err(e) = module_ctx.module.verify() {
+            eprintln!("{}", e.to_str()?);
+            Err(e)?;
+        }
 
         // todo link modules together
         llvm_modules.push_back(module_ctx.module);
@@ -458,7 +462,44 @@ fn compile_fn(ctx: &ModuleCompileCtx, fn_id: DefId) -> Result<(), BuilderError> 
                                     _ => unreachable!(),
                                 }
                             }
-                            ir::PlaceElem::Index { .. } => todo!(),
+                            ir::PlaceElem::Index { local } => {
+                                let value = compile_load_place(
+                                    ctx,
+                                    fn_id,
+                                    &locals,
+                                    &Place {
+                                        local: *local,
+                                        projection: Default::default(),
+                                    },
+                                    false,
+                                )?;
+
+                                ptr = unsafe {
+                                    ctx.builder.build_in_bounds_gep(
+                                        ptr.get_type(),
+                                        ptr,
+                                        &[
+                                            ctx.ctx.context.i32_type().const_int(0, false),
+                                            value.0.into_int_value(),
+                                        ],
+                                        "constindex",
+                                    )?
+                                };
+                            }
+                            ir::PlaceElem::ConstIndex { index } => {
+                                ptr = unsafe {
+                                    ctx.builder.build_in_bounds_gep(
+                                        ptr.get_type(),
+                                        ptr,
+                                        &[ctx
+                                            .ctx
+                                            .context
+                                            .i32_type()
+                                            .const_int((*index) as u64, false)],
+                                        "constindex",
+                                    )?
+                                };
+                            }
                         }
                     }
 
@@ -1034,6 +1075,7 @@ fn compile_rvalue<'ctx>(
                             }
                             ir::PlaceElem::Field { .. } => todo!(),
                             ir::PlaceElem::Index { .. } => todo!(),
+                            ir::PlaceElem::ConstIndex { .. } => todo!(),
                         }
                     }
 
@@ -1224,6 +1266,7 @@ fn compile_load_place<'ctx>(
                 }
             }
             ir::PlaceElem::Index { .. } => todo!(),
+            ir::PlaceElem::ConstIndex { .. } => todo!(),
         }
     }
 
@@ -1351,7 +1394,7 @@ fn compile_basic_type<'ctx>(
     match &ty.kind {
         ir::TypeKind::Unit => todo!(),
         ir::TypeKind::Bool => ctx.ctx.context.bool_type().as_basic_type_enum(),
-        ir::TypeKind::Char => ctx.ctx.context.i32_type().as_basic_type_enum(),
+        ir::TypeKind::Char => ctx.ctx.context.i8_type().as_basic_type_enum(),
         ir::TypeKind::Int(ty) => match ty {
             ir::IntTy::I128 => ctx.ctx.context.i128_type().as_basic_type_enum(),
             ir::IntTy::I64 => ctx.ctx.context.i64_type().as_basic_type_enum(),
@@ -1436,6 +1479,26 @@ fn compile_basic_type<'ctx>(
                 .context
                 .struct_type(&fields, false)
                 .as_basic_type_enum()
+        }
+        ir::TypeKind::Slice(inner, size) => {
+            let inner = compile_basic_type(ctx, inner);
+            if let Some(size) = size {
+                inner.array_type(*size).as_basic_type_enum()
+            } else {
+                ctx.ctx
+                    .context
+                    .struct_type(
+                        &[
+                            ctx.ctx
+                                .context
+                                .ptr_type(AddressSpace::default())
+                                .as_basic_type_enum(),
+                            ctx.ctx.context.i64_type().as_basic_type_enum(),
+                        ],
+                        false,
+                    )
+                    .as_basic_type_enum()
+            }
         }
     }
 }
@@ -1630,6 +1693,53 @@ fn compile_debug_type<'ctx>(ctx: &ModuleCompileCtx<'ctx, '_>, ty: &ir::TypeInfo)
                     "str",
                 )
                 .as_type()
+        }
+        ir::TypeKind::Slice(inner, size) => {
+            let real_ty = compile_basic_type(ctx, ty);
+            let inner_type = compile_debug_type(ctx, inner);
+
+            if let Some(size) = size {
+                ctx.di_builder
+                    .create_array_type(
+                        inner_type,
+                        ctx.target_data.get_abi_size(&real_ty),
+                        ctx.target_data.get_abi_alignment(&real_ty),
+                        #[allow(clippy::single_range_in_vec_init)] // false positive
+                        &[0..((*size) as i64)],
+                    )
+                    .as_type()
+            } else {
+                ctx.di_builder
+                    .create_struct_type(
+                        ctx.di_namespace,
+                        "str",
+                        ctx.di_unit.get_file(),
+                        0,
+                        ctx.target_data.get_bit_size(&real_ty),
+                        ctx.target_data.get_abi_alignment(&real_ty),
+                        0,
+                        None,
+                        &[
+                            ctx.di_builder
+                                .create_pointer_type(
+                                    name,
+                                    inner_type,
+                                    (ctx.target_data.get_pointer_byte_size(None) * 8).into(),
+                                    ctx.target_data.get_pointer_byte_size(None),
+                                    AddressSpace::default(),
+                                )
+                                .as_type(),
+                            ctx.di_builder
+                                .create_basic_type(name, 64, 0x7, LLVMDIFlagPublic)
+                                .unwrap()
+                                .as_type(),
+                        ],
+                        0,
+                        None,
+                        "str",
+                    )
+                    .as_type()
+            }
         }
     }
 }

@@ -48,13 +48,20 @@ pub struct Ident {
     pub span: Span,
 }
 
-// T: A + B
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct Type {
-    pub name: Ident,
-    pub generics: Vec<Type>,
-    pub qualifiers: Vec<TypeQualifier>,
-    pub span: Span,
+pub enum Type {
+    Basic {
+        name: Ident,
+        generics: Vec<Type>,
+        qualifiers: Vec<TypeQualifier>,
+        span: Span,
+    },
+    Array {
+        of: Box<Self>,
+        size: Option<u32>,
+        qualifiers: Vec<TypeQualifier>,
+        span: Span,
+    },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -184,6 +191,7 @@ pub enum Expression {
     Value(ValueExpr),
     FnCall(FnCallExpr),
     StructInit(StructInitExpr),
+    ArrayInit(ArrayInitExpr),
     Unary(UnaryOp, Box<Self>),
     Binary(Box<Self>, BinaryOp, Box<Self>),
     Deref(Box<Self>, Span),
@@ -209,8 +217,15 @@ pub struct StructInitField {
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct StructInitExpr {
-    pub name: Type,
+    pub name: Ident,
+    pub generics: Vec<Type>,
     pub fields: BTreeMap<Ident, StructInitField>,
+    pub span: Span,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct ArrayInitExpr {
+    pub data: Vec<Expression>,
     pub span: Span,
 }
 

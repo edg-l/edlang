@@ -348,9 +348,9 @@ impl fmt::Display for TypeKind {
                 write!(f, "*{word} {}", inner.kind)
             }
             TypeKind::Ref(is_mut, inner) => {
-                let word = if *is_mut { "mut" } else { "const" };
+                let word = if *is_mut { "mut " } else { "" };
 
-                write!(f, "&{word} {}", inner.kind)
+                write!(f, "&{word}{}", inner.kind)
             }
             TypeKind::Struct(_, name) => write!(f, "{}", name),
             TypeKind::Slice(inner, size) => {
@@ -483,11 +483,11 @@ pub struct Place {
     pub projection: SmallVec<[PlaceElem; 1]>,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub enum PlaceElem {
     Deref,
     Field { field_idx: usize },
-    Index { local: usize },
+    Index { value: Box<RValue> },
     ConstIndex { index: usize },
 }
 

@@ -21,7 +21,7 @@ use inkwell::{
     values::{BasicValue, BasicValueEnum, PointerValue},
     AddressSpace,
 };
-use ir::{LocalKind, ModuleBody, Place, ProgramBody, TypeInfo, ValueTree};
+use ir::{LocalKind, ModuleBody, ProgramBody, TypeInfo, TypeKind, ValueTree};
 use llvm_sys::debuginfo::LLVMDIFlagPublic;
 use tracing::{info, trace};
 
@@ -462,43 +462,46 @@ fn compile_fn(ctx: &ModuleCompileCtx, fn_id: DefId) -> Result<(), BuilderError> 
                                     _ => unreachable!(),
                                 }
                             }
-                            ir::PlaceElem::Index { local } => {
-                                let value = compile_load_place(
-                                    ctx,
-                                    fn_id,
-                                    &locals,
-                                    &Place {
-                                        local: *local,
-                                        projection: Default::default(),
-                                    },
-                                    false,
-                                )?;
+                            ir::PlaceElem::Index { value } => {
+                                let (value, _ty) = compile_rvalue(ctx, fn_id, &locals, value)?;
 
                                 ptr = unsafe {
                                     ctx.builder.build_in_bounds_gep(
-                                        ptr.get_type(),
+                                        compile_basic_type(ctx, &local_ty),
                                         ptr,
                                         &[
                                             ctx.ctx.context.i32_type().const_int(0, false),
-                                            value.0.into_int_value(),
+                                            value.into_int_value(),
                                         ],
                                         "constindex",
                                     )?
                                 };
+
+                                local_ty = match local_ty.kind {
+                                    ir::TypeKind::Slice(inner, _) => (*inner).clone(),
+                                    _ => unreachable!(),
+                                }
                             }
                             ir::PlaceElem::ConstIndex { index } => {
                                 ptr = unsafe {
                                     ctx.builder.build_in_bounds_gep(
-                                        ptr.get_type(),
+                                        compile_basic_type(ctx, &local_ty),
                                         ptr,
-                                        &[ctx
-                                            .ctx
-                                            .context
-                                            .i32_type()
-                                            .const_int((*index) as u64, false)],
+                                        &[
+                                            ctx.ctx.context.i32_type().const_int(0, false),
+                                            ctx.ctx
+                                                .context
+                                                .i32_type()
+                                                .const_int((*index) as u64, false),
+                                        ],
                                         "constindex",
                                     )?
                                 };
+
+                                local_ty = match local_ty.kind {
+                                    ir::TypeKind::Slice(inner, _) => (*inner).clone(),
+                                    _ => unreachable!(),
+                                }
                             }
                         }
                     }
@@ -1073,9 +1076,65 @@ fn compile_rvalue<'ctx>(
                                     .build_load(compile_basic_type(ctx, &local_ty), ptr, "deref")?
                                     .into_pointer_value();
                             }
-                            ir::PlaceElem::Field { .. } => todo!(),
-                            ir::PlaceElem::Index { .. } => todo!(),
-                            ir::PlaceElem::ConstIndex { .. } => todo!(),
+                            ir::PlaceElem::Field { field_idx } => {
+                                local_ty = match local_ty.kind {
+                                    ir::TypeKind::Struct(id, _) => {
+                                        let struct_body = ctx.ctx.program.structs.get(&id).unwrap();
+                                        let ty = struct_body.variants[*field_idx].ty.clone();
+                                        let field_name =
+                                            struct_body.variants[*field_idx].name.clone();
+                                        ptr = ctx.builder.build_struct_gep(
+                                            compile_basic_type(ctx, &local_ty),
+                                            ptr,
+                                            (*field_idx).try_into().unwrap(),
+                                            &format!("ptr_field_{field_name}"),
+                                        )?;
+                                        ty
+                                    }
+                                    _ => unreachable!(),
+                                }
+                            }
+                            ir::PlaceElem::Index { value } => {
+                                let (value, _ty) = compile_rvalue(ctx, fn_id, &locals, value)?;
+
+                                ptr = unsafe {
+                                    ctx.builder.build_in_bounds_gep(
+                                        compile_basic_type(ctx, &local_ty),
+                                        ptr,
+                                        &[
+                                            ctx.ctx.context.i32_type().const_int(0, false),
+                                            value.into_int_value(),
+                                        ],
+                                        "constindex",
+                                    )?
+                                };
+
+                                local_ty = match local_ty.kind {
+                                    ir::TypeKind::Slice(inner, _) => (*inner).clone(),
+                                    _ => unreachable!(),
+                                }
+                            }
+                            ir::PlaceElem::ConstIndex { index } => {
+                                ptr = unsafe {
+                                    ctx.builder.build_in_bounds_gep(
+                                        compile_basic_type(ctx, &local_ty),
+                                        ptr,
+                                        &[
+                                            ctx.ctx.context.i32_type().const_int(0, false),
+                                            ctx.ctx
+                                                .context
+                                                .i32_type()
+                                                .const_int((*index) as u64, false),
+                                        ],
+                                        "constindex",
+                                    )?
+                                };
+
+                                local_ty = match local_ty.kind {
+                                    ir::TypeKind::Slice(inner, _) => (*inner).clone(),
+                                    _ => unreachable!(),
+                                }
+                            }
                         }
                     }
 
@@ -1118,8 +1177,9 @@ fn compile_rvalue<'ctx>(
             let target_llvm_ty = compile_basic_type(ctx, &target_ty);
             let (value, ty) = compile_load_operand(ctx, fn_id, locals, op)?;
             let current_ty = compile_basic_type(ctx, &ty);
+            let is_ptr = matches!(ty.kind, TypeKind::Ptr(_, _) | TypeKind::Ref(_, _));
 
-            if target_llvm_ty.is_pointer_type() {
+            if is_ptr {
                 // int to ptr
                 let target_llvm_ty = target_llvm_ty.into_pointer_type();
                 if current_ty.is_int_type() {
@@ -1265,8 +1325,44 @@ fn compile_load_place<'ctx>(
                     _ => unreachable!(),
                 }
             }
-            ir::PlaceElem::Index { .. } => todo!(),
-            ir::PlaceElem::ConstIndex { .. } => todo!(),
+            ir::PlaceElem::Index { value } => {
+                let (value, _ty) = compile_rvalue(ctx, fn_id, locals, value)?;
+
+                ptr = unsafe {
+                    ctx.builder.build_in_bounds_gep(
+                        compile_basic_type(ctx, &local_ty),
+                        ptr,
+                        &[
+                            ctx.ctx.context.i32_type().const_int(0, false),
+                            value.into_int_value(),
+                        ],
+                        "constindex",
+                    )?
+                };
+
+                local_ty = match local_ty.kind {
+                    ir::TypeKind::Slice(inner, _) => (*inner).clone(),
+                    _ => unreachable!(),
+                }
+            }
+            ir::PlaceElem::ConstIndex { index } => {
+                ptr = unsafe {
+                    ctx.builder.build_in_bounds_gep(
+                        compile_basic_type(ctx, &local_ty),
+                        ptr,
+                        &[
+                            ctx.ctx.context.i32_type().const_int(0, false),
+                            ctx.ctx.context.i32_type().const_int((*index) as u64, false),
+                        ],
+                        "constindex",
+                    )?
+                };
+
+                local_ty = match local_ty.kind {
+                    ir::TypeKind::Slice(inner, _) => (*inner).clone(),
+                    _ => unreachable!(),
+                }
+            }
         }
     }
 

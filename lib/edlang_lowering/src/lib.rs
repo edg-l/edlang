@@ -1357,7 +1357,30 @@ fn lower_path(
                     unimplemented!()
                 }
             }
-            ast::PathSegment::Index { .. } => todo!(),
+            ast::PathSegment::Index { value, span: _ } => {
+                // auto deref
+                while let TypeKind::Ref(_, inner) = ty {
+                    place.projection.push(PlaceElem::Deref);
+                    ty = inner.kind;
+                }
+
+                if let ast::Expression::Value(ast::ValueExpr::Int { value, span: _ }) = value {
+                    place.projection.push(PlaceElem::ConstIndex {
+                        index: (*value).try_into().unwrap(),
+                    });
+                } else {
+                    let (rvalue, _ty, _span) = lower_expr(builder, value, None)?;
+                    place.projection.push(PlaceElem::Index {
+                        value: Box::new(rvalue),
+                    });
+                }
+
+                ty = if let TypeKind::Slice(inner, _) = ty {
+                    inner.kind.clone()
+                } else {
+                    unreachable!();
+                }
+            }
             ast::PathSegment::Method { value, span } => {
                 // is while fine? auto deref
                 while let TypeKind::Ref(_, inner) = ty {

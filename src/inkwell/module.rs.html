@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/inkwell-946411d814d2c9f8/5d5a531/src/module.rs`."><title>module.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="inkwell" data-themes="" data-resource-suffix="" data-rustdoc-version="1.78.0 (9b00956e5 2024-04-29)" data-channel="1.78.0" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/inkwell-946411d814d2c9f8/6c0fb56/src/module.rs`."><title>module.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="inkwell" data-themes="" data-resource-suffix="" data-rustdoc-version="1.78.0 (9b00956e5 2024-04-29)" data-channel="1.78.0" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
             <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
     <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../inkwell/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
@@ -1633,7 +1633,7 @@
 <span class="attr">#[allow(deprecated)]
 </span><span class="kw">use </span>llvm_sys::bit_reader::LLVMParseBitcodeInContext;
 <span class="kw">use </span>llvm_sys::bit_writer::{LLVMWriteBitcodeToFile, LLVMWriteBitcodeToMemoryBuffer};
-<span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">14.0</span>)]
+<span class="attr">#[llvm_versions(..=<span class="number">14</span>)]
 </span><span class="kw">use </span>llvm_sys::core::LLVMGetTypeByName;
 
 <span class="kw">use </span>llvm_sys::core::{
@@ -1643,18 +1643,18 @@
     LLVMGetNamedMetadataNumOperands, LLVMGetNamedMetadataOperands, LLVMGetTarget, LLVMPrintModuleToFile,
     LLVMPrintModuleToString, LLVMSetDataLayout, LLVMSetModuleIdentifier, LLVMSetTarget,
 };
-<span class="attr">#[llvm_versions(<span class="number">7.0</span>..=latest)]
+<span class="attr">#[llvm_versions(<span class="number">7</span>..)]
 </span><span class="kw">use </span>llvm_sys::core::{LLVMAddModuleFlag, LLVMGetModuleFlag};
-<span class="attr">#[llvm_versions(<span class="number">13.0</span>..=latest)]
+<span class="attr">#[llvm_versions(<span class="number">13</span>..)]
 </span><span class="kw">use </span>llvm_sys::error::LLVMGetErrorMessage;
 <span class="kw">use </span>llvm_sys::execution_engine::{
     LLVMCreateExecutionEngineForModule, LLVMCreateInterpreterForModule, LLVMCreateJITCompilerForModule,
 };
 <span class="kw">use </span>llvm_sys::prelude::{LLVMModuleRef, LLVMValueRef};
-<span class="attr">#[llvm_versions(<span class="number">13.0</span>..=latest)]
+<span class="attr">#[llvm_versions(<span class="number">13</span>..)]
 </span><span class="kw">use </span>llvm_sys::transforms::pass_builder::LLVMRunPasses;
 <span class="kw">use </span>llvm_sys::LLVMLinkage;
-<span class="attr">#[llvm_versions(<span class="number">7.0</span>..=latest)]
+<span class="attr">#[llvm_versions(<span class="number">7</span>..)]
 </span><span class="kw">use </span>llvm_sys::LLVMModuleFlagBehavior;
 
 <span class="kw">use </span>std::cell::{Cell, Ref, RefCell};
@@ -1666,22 +1666,22 @@
 <span class="kw">use </span>std::ptr;
 <span class="kw">use </span>std::rc::Rc;
 
-<span class="attr">#[llvm_versions(<span class="number">7.0</span>..=latest)]
+<span class="attr">#[llvm_versions(<span class="number">7</span>..)]
 </span><span class="kw">use </span><span class="kw">crate</span>::comdat::Comdat;
 <span class="kw">use </span><span class="kw">crate</span>::context::{AsContextRef, Context, ContextRef};
 <span class="kw">use </span><span class="kw">crate</span>::data_layout::DataLayout;
-<span class="attr">#[llvm_versions(<span class="number">7.0</span>..=latest)]
+<span class="attr">#[llvm_versions(<span class="number">7</span>..)]
 </span><span class="kw">use </span><span class="kw">crate</span>::debug_info::{DICompileUnit, DWARFEmissionKind, DWARFSourceLanguage, DebugInfoBuilder};
 <span class="kw">use </span><span class="kw">crate</span>::execution_engine::ExecutionEngine;
 <span class="kw">use </span><span class="kw">crate</span>::memory_buffer::MemoryBuffer;
-<span class="attr">#[llvm_versions(<span class="number">13.0</span>..=latest)]
+<span class="attr">#[llvm_versions(<span class="number">13</span>..)]
 </span><span class="kw">use </span><span class="kw">crate</span>::passes::PassBuilderOptions;
 <span class="kw">use </span><span class="kw">crate</span>::support::{to_c_str, LLVMString};
-<span class="attr">#[llvm_versions(<span class="number">13.0</span>..=latest)]
+<span class="attr">#[llvm_versions(<span class="number">13</span>..)]
 </span><span class="kw">use </span><span class="kw">crate</span>::targets::TargetMachine;
 <span class="kw">use </span><span class="kw">crate</span>::targets::{InitializationConfig, Target, TargetTriple};
 <span class="kw">use </span><span class="kw">crate</span>::types::{AsTypeRef, BasicType, FunctionType, StructType};
-<span class="attr">#[llvm_versions(<span class="number">7.0</span>..=latest)]
+<span class="attr">#[llvm_versions(<span class="number">7</span>..)]
 </span><span class="kw">use </span><span class="kw">crate</span>::values::BasicValue;
 <span class="kw">use </span><span class="kw">crate</span>::values::{AsValueRef, FunctionValue, GlobalValue, MetadataValue};
 <span class="kw">use crate</span>::{AddressSpace, OptimizationLevel};
@@ -1985,7 +1985,7 @@
     /// assert_eq!(module.get_struct_type("foo").unwrap(), opaque);
     /// ```
     ///
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">11.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">11</span>)]
     </span><span class="kw">pub fn </span>get_struct_type(<span class="kw-2">&amp;</span><span class="self">self</span>, name: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;StructType&lt;<span class="lifetime">'ctx</span>&gt;&gt; {
         <span class="kw">let </span>c_string = to_c_str(name);
 
@@ -2014,7 +2014,7 @@
     ///
     /// assert_eq!(module.get_struct_type("foo").unwrap(), opaque);
     /// ```
-    </span><span class="attr">#[llvm_versions(<span class="number">12.0</span>..=latest)]
+    </span><span class="attr">#[llvm_versions(<span class="number">12</span>..)]
     </span><span class="kw">pub fn </span>get_struct_type(<span class="kw-2">&amp;</span><span class="self">self</span>, name: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;StructType&lt;<span class="lifetime">'ctx</span>&gt;&gt; {
         <span class="self">self</span>.get_context().get_struct_type(name)
     }
@@ -2867,7 +2867,7 @@
     /// assert_eq!(module.get_name().to_str(), Ok("my_mod"));
     /// assert_eq!(module.get_source_file_name().to_str(), Ok("my_mod.rs"));
     /// ```
-    </span><span class="attr">#[llvm_versions(<span class="number">7.0</span>..=latest)]
+    </span><span class="attr">#[llvm_versions(<span class="number">7</span>..)]
     </span><span class="kw">pub fn </span>get_source_file_name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>CStr {
         <span class="kw">use </span>llvm_sys::core::LLVMGetSourceFileName;
 
@@ -2894,7 +2894,7 @@
     /// assert_eq!(module.get_name().to_str(), Ok("my_mod"));
     /// assert_eq!(module.get_source_file_name().to_str(), Ok("my_mod.rs"));
     /// ```
-    </span><span class="attr">#[llvm_versions(<span class="number">7.0</span>..=latest)]
+    </span><span class="attr">#[llvm_versions(<span class="number">7</span>..)]
     </span><span class="kw">pub fn </span>set_source_file_name(<span class="kw-2">&amp;</span><span class="self">self</span>, file_name: <span class="kw-2">&amp;</span>str) {
         <span class="kw">use </span>llvm_sys::core::LLVMSetSourceFileName;
 
@@ -2954,7 +2954,7 @@
 
     <span class="doccomment">/// Gets the `Comdat` associated with a particular name. If it does not exist, it will be created.
     /// A new `Comdat` defaults to a kind of `ComdatSelectionKind::Any`.
-    </span><span class="attr">#[llvm_versions(<span class="number">7.0</span>..=latest)]
+    </span><span class="attr">#[llvm_versions(<span class="number">7</span>..)]
     </span><span class="kw">pub fn </span>get_or_insert_comdat(<span class="kw-2">&amp;</span><span class="self">self</span>, name: <span class="kw-2">&amp;</span>str) -&gt; Comdat {
         <span class="kw">use </span>llvm_sys::comdat::LLVMGetOrInsertComdat;
 
@@ -2968,7 +2968,7 @@
     /// If a `BasicValue` was used to create this flag, it will be wrapped in a `MetadataValue`
     /// when returned from this function.
     </span><span class="comment">// SubTypes: Might need to return Option&lt;BVE, MV&lt;Enum&gt;, or MV&lt;String&gt;&gt;
-    </span><span class="attr">#[llvm_versions(<span class="number">7.0</span>..=latest)]
+    </span><span class="attr">#[llvm_versions(<span class="number">7</span>..)]
     </span><span class="kw">pub fn </span>get_flag(<span class="kw-2">&amp;</span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;MetadataValue&lt;<span class="lifetime">'ctx</span>&gt;&gt; {
         <span class="kw">use </span>llvm_sys::core::LLVMMetadataAsValue;
 
@@ -2985,7 +2985,7 @@
 
     <span class="doccomment">/// Append a `MetadataValue` as a module wide flag. Note that using the same key twice
     /// will likely invalidate the module.
-    </span><span class="attr">#[llvm_versions(<span class="number">7.0</span>..=latest)]
+    </span><span class="attr">#[llvm_versions(<span class="number">7</span>..)]
     </span><span class="kw">pub fn </span>add_metadata_flag(<span class="kw-2">&amp;</span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>str, behavior: FlagBehavior, flag: MetadataValue&lt;<span class="lifetime">'ctx</span>&gt;) {
         <span class="kw">let </span>md = flag.as_metadata_ref();
 
@@ -3003,7 +3003,7 @@
     <span class="doccomment">/// Append a `BasicValue` as a module wide flag. Note that using the same key twice
     /// will likely invalidate the module.
     </span><span class="comment">// REVIEW: What happens if value is not const?
-    </span><span class="attr">#[llvm_versions(<span class="number">7.0</span>..=latest)]
+    </span><span class="attr">#[llvm_versions(<span class="number">7</span>..)]
     </span><span class="kw">pub fn </span>add_basic_value_flag&lt;BV: BasicValue&lt;<span class="lifetime">'ctx</span>&gt;&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>str, behavior: FlagBehavior, flag: BV) {
         <span class="kw">use </span>llvm_sys::core::LLVMValueAsMetadata;
 
@@ -3021,7 +3021,7 @@
     }
 
     <span class="doccomment">/// Strips and debug info from the module, if it exists.
-    </span><span class="attr">#[llvm_versions(<span class="number">6.0</span>..=latest)]
+    </span><span class="attr">#[llvm_versions(<span class="number">6</span>..)]
     </span><span class="kw">pub fn </span>strip_debug_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="kw">use </span>llvm_sys::debuginfo::LLVMStripModuleDebugInfo;
 
@@ -3029,7 +3029,7 @@
     }
 
     <span class="doccomment">/// Gets the version of debug metadata contained in this `Module`.
-    </span><span class="attr">#[llvm_versions(<span class="number">6.0</span>..=latest)]
+    </span><span class="attr">#[llvm_versions(<span class="number">6</span>..)]
     </span><span class="kw">pub fn </span>get_debug_metadata_version(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; libc::c_uint {
         <span class="kw">use </span>llvm_sys::debuginfo::LLVMGetModuleDebugMetadataVersion;
 
@@ -3037,7 +3037,7 @@
     }
 
     <span class="doccomment">/// Creates a `DebugInfoBuilder` for this `Module`.
-    </span><span class="attr">#[llvm_versions(<span class="number">7.0</span>..=latest)]
+    </span><span class="attr">#[llvm_versions(<span class="number">7</span>..)]
     </span><span class="kw">pub fn </span>create_debug_info_builder(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         allow_unresolved: bool,
@@ -3122,7 +3122,7 @@
     /// Individual passes may be specified, separated by commas.
     /// Full pipelines may also be invoked using default&lt;O3&gt; and friends.
     /// See opt for full reference of the Passes format.
-    </span><span class="attr">#[llvm_versions(<span class="number">13.0</span>..=latest)]
+    </span><span class="attr">#[llvm_versions(<span class="number">13</span>..)]
     </span><span class="kw">pub fn </span>run_passes(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         passes: <span class="kw-2">&amp;</span>str,
@@ -3175,7 +3175,7 @@
     </span>}
 }
 
-<span class="attr">#[llvm_versions(<span class="number">7.0</span>..=latest)]
+<span class="attr">#[llvm_versions(<span class="number">7</span>..)]
 #[llvm_enum(LLVMModuleFlagBehavior)]
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 </span><span class="doccomment">/// Defines the operational behavior for a module wide flag. This documentation comes directly

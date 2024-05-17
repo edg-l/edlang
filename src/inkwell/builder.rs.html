@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/inkwell-946411d814d2c9f8/5d5a531/src/builder.rs`."><title>builder.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="inkwell" data-themes="" data-resource-suffix="" data-rustdoc-version="1.78.0 (9b00956e5 2024-04-29)" data-channel="1.78.0" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/inkwell-946411d814d2c9f8/6c0fb56/src/builder.rs`."><title>builder.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="inkwell" data-themes="" data-resource-suffix="" data-rustdoc-version="1.78.0 (9b00956e5 2024-04-29)" data-channel="1.78.0" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
             <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
     <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../inkwell/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
@@ -3526,30 +3526,30 @@
     LLVMInsertIntoBuilderWithName, LLVMPositionBuilder, LLVMPositionBuilderAtEnd, LLVMPositionBuilderBefore,
     LLVMSetCleanup,
 };
-<span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">14.0</span>)]
+<span class="attr">#[llvm_versions(..=<span class="number">14</span>)]
 </span><span class="kw">use </span>llvm_sys::core::{
     LLVMBuildCall, LLVMBuildGEP, LLVMBuildInBoundsGEP, LLVMBuildInvoke, LLVMBuildLoad, LLVMBuildPtrDiff,
     LLVMBuildStructGEP,
 };
-<span class="attr">#[llvm_versions(<span class="number">15.0</span>..=latest)]
+<span class="attr">#[llvm_versions(<span class="number">15</span>..)]
 </span><span class="kw">use </span>llvm_sys::core::{
     LLVMBuildCall2, LLVMBuildGEP2, LLVMBuildInBoundsGEP2, LLVMBuildInvoke2, LLVMBuildLoad2, LLVMBuildPtrDiff2,
     LLVMBuildStructGEP2,
 };
-<span class="attr">#[llvm_versions(<span class="number">8.0</span>..=latest)]
+<span class="attr">#[llvm_versions(<span class="number">8</span>..)]
 </span><span class="kw">use </span>llvm_sys::core::{LLVMBuildIntCast2, LLVMBuildMemCpy, LLVMBuildMemMove, LLVMBuildMemSet};
 
 <span class="kw">use </span>llvm_sys::prelude::{LLVMBuilderRef, LLVMValueRef};
 <span class="kw">use </span>thiserror::Error;
 
 <span class="kw">use </span><span class="kw">crate</span>::basic_block::BasicBlock;
-<span class="attr">#[llvm_versions(<span class="number">7.0</span>..=<span class="number">8.0</span>)]
+<span class="attr">#[llvm_versions(<span class="number">7</span>..=<span class="number">8</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::context::AsContextRef;
-<span class="attr">#[llvm_versions(<span class="number">7.0</span>..=latest)]
+<span class="attr">#[llvm_versions(<span class="number">7</span>..)]
 </span><span class="kw">use </span><span class="kw">crate</span>::debug_info::DILocation;
 <span class="kw">use </span><span class="kw">crate</span>::support::to_c_str;
 <span class="kw">use </span><span class="kw">crate</span>::types::{AsTypeRef, BasicType, FloatMathType, FunctionType, IntMathType, PointerMathType, PointerType};
-<span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">14.0</span>)]
+<span class="attr">#[llvm_versions(..=<span class="number">14</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::values::CallableValue;
 <span class="kw">use </span><span class="kw">crate</span>::values::{
     AggregateValue, AggregateValueEnum, AsValueRef, BasicMetadataValueEnum, BasicValue, BasicValueEnum, CallSiteValue,
@@ -3725,7 +3725,7 @@
     ///
     /// builder.build_return(Some(&amp;ret_val)).unwrap();
     /// ```
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">14.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">14</span>)]
     </span><span class="kw">pub fn </span>build_call&lt;F&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         function: F,
@@ -3761,7 +3761,7 @@
     }
 
     <span class="doccomment">/// Builds a function call instruction. Alias for [Builder::build_direct_call].
-    </span><span class="attr">#[llvm_versions(<span class="number">15.0</span>..=latest)]
+    </span><span class="attr">#[llvm_versions(<span class="number">15</span>..)]
     </span><span class="kw">pub fn </span>build_call(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         function: FunctionValue&lt;<span class="lifetime">'ctx</span>&gt;,
@@ -3802,7 +3802,7 @@
     ///
     /// builder.build_return(Some(&amp;ret_val)).unwrap();
     /// ```
-    </span><span class="attr">#[llvm_versions(<span class="number">15.0</span>..=latest)]
+    </span><span class="attr">#[llvm_versions(<span class="number">15</span>..)]
     </span><span class="kw">pub fn </span>build_direct_call(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         function: FunctionValue&lt;<span class="lifetime">'ctx</span>&gt;,
@@ -3845,7 +3845,7 @@
     /// builder.build_return(Some(&amp;ret_val)).unwrap();
     /// ```
     ///
-    </span><span class="attr">#[llvm_versions(<span class="number">15.0</span>..=latest)]
+    </span><span class="attr">#[llvm_versions(<span class="number">15</span>..)]
     </span><span class="kw">pub fn </span>build_indirect_call(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         function_type: FunctionType&lt;<span class="lifetime">'ctx</span>&gt;,
@@ -3859,7 +3859,7 @@
         <span class="self">self</span>.build_call_help(function_type, function_pointer.as_value_ref(), args, name)
     }
 
-    <span class="attr">#[llvm_versions(<span class="number">15.0</span>..=latest)]
+    <span class="attr">#[llvm_versions(<span class="number">15</span>..)]
     </span><span class="kw">fn </span>build_call_help(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         function_type: FunctionType&lt;<span class="lifetime">'ctx</span>&gt;,
@@ -3977,7 +3977,7 @@
     ///     builder.build_return(Some(&amp;f32_type.const_zero())).unwrap();
     /// }
     /// ```
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">14.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">14</span>)]
     </span><span class="kw">pub fn </span>build_invoke&lt;F&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         function: F,
@@ -4095,7 +4095,7 @@
     ///     builder.build_return(Some(&amp;f32_type.const_zero())).unwrap();
     /// }
     /// ```
-    </span><span class="attr">#[llvm_versions(<span class="number">15.0</span>..=latest)]
+    </span><span class="attr">#[llvm_versions(<span class="number">15</span>..)]
     </span><span class="kw">pub fn </span>build_invoke(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         function: FunctionValue&lt;<span class="lifetime">'ctx</span>&gt;,
@@ -4110,7 +4110,7 @@
         <span class="self">self</span>.build_direct_invoke(function, args, then_block, catch_block, name)
     }
 
-    <span class="attr">#[llvm_versions(<span class="number">15.0</span>..=latest)]
+    <span class="attr">#[llvm_versions(<span class="number">15</span>..)]
     </span><span class="kw">pub fn </span>build_direct_invoke(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         function: FunctionValue&lt;<span class="lifetime">'ctx</span>&gt;,
@@ -4132,7 +4132,7 @@
         )
     }
 
-    <span class="attr">#[llvm_versions(<span class="number">15.0</span>..=latest)]
+    <span class="attr">#[llvm_versions(<span class="number">15</span>..)]
     </span><span class="kw">pub fn </span>build_indirect_invoke(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         function_type: FunctionType&lt;<span class="lifetime">'ctx</span>&gt;,
@@ -4155,7 +4155,7 @@
         )
     }
 
-    <span class="attr">#[llvm_versions(<span class="number">15.0</span>..=latest)]
+    <span class="attr">#[llvm_versions(<span class="number">15</span>..)]
     </span><span class="kw">fn </span>build_invoke_help(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         fn_ty: FunctionType&lt;<span class="lifetime">'ctx</span>&gt;,
@@ -4468,7 +4468,7 @@
 
     <span class="comment">// REVIEW: Doesn't GEP work on array too?
     </span><span class="doccomment">/// GEP is very likely to segfault if indexes are used incorrectly, and is therefore an unsafe function. Maybe we can change this in the future.
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">14.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">14</span>)]
     </span><span class="kw">pub unsafe fn </span>build_gep(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         ptr: PointerValue&lt;<span class="lifetime">'ctx</span>&gt;,
@@ -4495,7 +4495,7 @@
 
     <span class="comment">// REVIEW: Doesn't GEP work on array too?
     </span><span class="doccomment">/// GEP is very likely to segfault if indexes are used incorrectly, and is therefore an unsafe function. Maybe we can change this in the future.
-    </span><span class="attr">#[llvm_versions(<span class="number">15.0</span>..=latest)]
+    </span><span class="attr">#[llvm_versions(<span class="number">15</span>..)]
     </span><span class="kw">pub unsafe fn </span>build_gep&lt;T: BasicType&lt;<span class="lifetime">'ctx</span>&gt;&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         pointee_ty: T,
@@ -4525,7 +4525,7 @@
     <span class="comment">// REVIEW: Doesn't GEP work on array too?
     // REVIEW: This could be merge in with build_gep via a in_bounds: bool param
     </span><span class="doccomment">/// GEP is very likely to segfault if indexes are used incorrectly, and is therefore an unsafe function. Maybe we can change this in the future.
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">14.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">14</span>)]
     </span><span class="kw">pub unsafe fn </span>build_in_bounds_gep(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         ptr: PointerValue&lt;<span class="lifetime">'ctx</span>&gt;,
@@ -4553,7 +4553,7 @@
     <span class="comment">// REVIEW: Doesn't GEP work on array too?
     // REVIEW: This could be merge in with build_gep via a in_bounds: bool param
     </span><span class="doccomment">/// GEP is very likely to segfault if indexes are used incorrectly, and is therefore an unsafe function. Maybe we can change this in the future.
-    </span><span class="attr">#[llvm_versions(<span class="number">15.0</span>..=latest)]
+    </span><span class="attr">#[llvm_versions(<span class="number">15</span>..)]
     </span><span class="kw">pub unsafe fn </span>build_in_bounds_gep&lt;T: BasicType&lt;<span class="lifetime">'ctx</span>&gt;&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         pointee_ty: T,
@@ -4616,7 +4616,7 @@
     /// assert!(builder.build_struct_gep(struct_ptr, 1, "struct_gep").is_ok());
     /// assert!(builder.build_struct_gep(struct_ptr, 2, "struct_gep").is_err());
     /// ```
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">14.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">14</span>)]
     </span><span class="kw">pub fn </span>build_struct_gep(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         ptr: PointerValue&lt;<span class="lifetime">'ctx</span>&gt;,
@@ -4682,7 +4682,7 @@
     /// assert!(builder.build_struct_gep(struct_ty, struct_ptr, 1, "struct_gep").is_ok());
     /// assert!(builder.build_struct_gep(struct_ty, struct_ptr, 2, "struct_gep").is_err());
     /// ```
-    </span><span class="attr">#[llvm_versions(<span class="number">15.0</span>..=latest)]
+    </span><span class="attr">#[llvm_versions(<span class="number">15</span>..)]
     </span><span class="kw">pub fn </span>build_struct_gep&lt;T: BasicType&lt;<span class="lifetime">'ctx</span>&gt;&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         pointee_ty: T,
@@ -4748,7 +4748,7 @@
     /// builder.build_ptr_diff(i32_ptr_param1, i32_ptr_param2, "diff").unwrap();
     /// builder.build_return(None).unwrap();
     /// ```
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">14.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">14</span>)]
     </span><span class="kw">pub fn </span>build_ptr_diff(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         lhs_ptr: PointerValue&lt;<span class="lifetime">'ctx</span>&gt;,
@@ -4799,7 +4799,7 @@
     /// builder.build_ptr_diff(i32_ptr_type, i32_ptr_param1, i32_ptr_param2, "diff").unwrap();
     /// builder.build_return(None).unwrap();
     /// ```
-    </span><span class="attr">#[llvm_versions(<span class="number">15.0</span>..=latest)]
+    </span><span class="attr">#[llvm_versions(<span class="number">15</span>..)]
     </span><span class="kw">pub fn </span>build_ptr_diff&lt;T: BasicType&lt;<span class="lifetime">'ctx</span>&gt;&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         pointee_ty: T,
@@ -4909,7 +4909,7 @@
     ///
     /// builder.build_return(Some(&amp;pointee)).unwrap();
     /// ```
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">14.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">14</span>)]
     </span><span class="kw">pub fn </span>build_load(<span class="kw-2">&amp;</span><span class="self">self</span>, ptr: PointerValue&lt;<span class="lifetime">'ctx</span>&gt;, name: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;BasicValueEnum&lt;<span class="lifetime">'ctx</span>&gt;, BuilderError&gt; {
         <span class="kw">if </span><span class="self">self</span>.positioned.get() != PositionState::Set {
             <span class="kw">return </span><span class="prelude-val">Err</span>(BuilderError::UnsetPosition);
@@ -4949,7 +4949,7 @@
     ///
     /// builder.build_return(Some(&amp;pointee)).unwrap();
     /// ```
-    </span><span class="attr">#[llvm_versions(<span class="number">15.0</span>..=latest)]
+    </span><span class="attr">#[llvm_versions(<span class="number">15</span>..)]
     </span><span class="kw">pub fn </span>build_load&lt;T: BasicType&lt;<span class="lifetime">'ctx</span>&gt;&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         pointee_ty: T,
@@ -5011,7 +5011,7 @@
     /// Returns an `Err(BuilderError::AlignmentError)` if the source or destination alignments are not a power of 2.
     ///
     /// [`TargetData::ptr_sized_int_type_in_context`](https://thedan64.github.io/inkwell/inkwell/targets/struct.TargetData.html#method.ptr_sized_int_type_in_context) will get you one of those.
-    </span><span class="attr">#[llvm_versions(<span class="number">8.0</span>..=latest)]
+    </span><span class="attr">#[llvm_versions(<span class="number">8</span>..)]
     </span><span class="kw">pub fn </span>build_memcpy(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         dest: PointerValue&lt;<span class="lifetime">'ctx</span>&gt;,
@@ -5059,7 +5059,7 @@
     /// Returns an `Err(BuilderError::AlignmentError)` if the source or destination alignments are not a power of 2 under 2^64.
     ///
     /// [`TargetData::ptr_sized_int_type_in_context`](https://thedan64.github.io/inkwell/inkwell/targets/struct.TargetData.html#method.ptr_sized_int_type_in_context) will get you one of those.
-    </span><span class="attr">#[llvm_versions(<span class="number">8.0</span>..=latest)]
+    </span><span class="attr">#[llvm_versions(<span class="number">8</span>..)]
     </span><span class="kw">pub fn </span>build_memmove(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         dest: PointerValue&lt;<span class="lifetime">'ctx</span>&gt;,
@@ -5107,7 +5107,7 @@
     /// Returns an `Err(BuilderError::AlignmentError)` if the source alignment is not a power of 2 under 2^64.
     ///
     /// [`TargetData::ptr_sized_int_type_in_context`](https://thedan64.github.io/inkwell/inkwell/targets/struct.TargetData.html#method.ptr_sized_int_type_in_context) will get you one of those.
-    </span><span class="attr">#[llvm_versions(<span class="number">8.0</span>..=latest)]
+    </span><span class="attr">#[llvm_versions(<span class="number">8</span>..)]
     </span><span class="kw">pub fn </span>build_memset(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         dest: PointerValue&lt;<span class="lifetime">'ctx</span>&gt;,
@@ -5668,7 +5668,7 @@
     }
 
     <span class="doccomment">/// Like `build_int_cast`, but respects the signedness of the type being cast to.
-    </span><span class="attr">#[llvm_versions(<span class="number">8.0</span>..=latest)]
+    </span><span class="attr">#[llvm_versions(<span class="number">8</span>..)]
     </span><span class="kw">pub fn </span>build_int_cast_sign_flag&lt;T: IntMathValue&lt;<span class="lifetime">'ctx</span>&gt;&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         int: T,
@@ -6936,7 +6936,7 @@
     }
 
     <span class="doccomment">/// Set the debug info source location of the instruction currently pointed at by the builder
-    </span><span class="attr">#[llvm_versions(<span class="number">7.0</span>..=<span class="number">8.0</span>)]
+    </span><span class="attr">#[llvm_versions(<span class="number">7</span>..=<span class="number">8</span>)]
     </span><span class="kw">pub fn </span>set_current_debug_location(<span class="kw-2">&amp;</span><span class="self">self</span>, context: <span class="kw">impl </span>AsContextRef&lt;<span class="lifetime">'ctx</span>&gt;, location: DILocation&lt;<span class="lifetime">'ctx</span>&gt;) {
         <span class="kw">use </span>llvm_sys::core::LLVMMetadataAsValue;
         <span class="kw">use </span>llvm_sys::core::LLVMSetCurrentDebugLocation;
@@ -6949,7 +6949,7 @@
     }
 
     <span class="doccomment">/// Set the debug info source location of the instruction currently pointed at by the builder
-    </span><span class="attr">#[llvm_versions(<span class="number">9.0</span>..=latest)]
+    </span><span class="attr">#[llvm_versions(<span class="number">9</span>..)]
     </span><span class="kw">pub fn </span>set_current_debug_location(<span class="kw-2">&amp;</span><span class="self">self</span>, location: DILocation&lt;<span class="lifetime">'ctx</span>&gt;) {
         <span class="kw">use </span>llvm_sys::core::LLVMSetCurrentDebugLocation2;
         <span class="kw">unsafe </span>{
@@ -6959,7 +6959,7 @@
 
     <span class="doccomment">/// Get the debug info source location of the instruction currently pointed at by the builder,
     /// if available.
-    </span><span class="attr">#[llvm_versions(<span class="number">7.0</span>..=latest)]
+    </span><span class="attr">#[llvm_versions(<span class="number">7</span>..)]
     </span><span class="kw">pub fn </span>get_current_debug_location(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;DILocation&lt;<span class="lifetime">'ctx</span>&gt;&gt; {
         <span class="kw">use </span>llvm_sys::core::LLVMGetCurrentDebugLocation;
         <span class="kw">use </span>llvm_sys::core::LLVMValueAsMetadata;
@@ -6975,7 +6975,7 @@
 
     <span class="doccomment">/// Unset the debug info source location of the instruction currently pointed at by the
     /// builder. If there isn't any debug info, this is a no-op.
-    </span><span class="attr">#[llvm_versions(<span class="number">7.0</span>..=<span class="number">8.0</span>)]
+    </span><span class="attr">#[llvm_versions(<span class="number">7</span>..=<span class="number">8</span>)]
     </span><span class="kw">pub fn </span>unset_current_debug_location(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">use </span>llvm_sys::core::LLVMSetCurrentDebugLocation;
         <span class="kw">unsafe </span>{
@@ -6985,7 +6985,7 @@
 
     <span class="doccomment">/// Unset the debug info source location of the instruction currently pointed at by the
     /// builder. If there isn't any debug info, this is a no-op.
-    </span><span class="attr">#[llvm_versions(<span class="number">9.0</span>..=latest)]
+    </span><span class="attr">#[llvm_versions(<span class="number">9</span>..)]
     </span><span class="kw">pub fn </span>unset_current_debug_location(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">use </span>llvm_sys::core::LLVMSetCurrentDebugLocation2;
         <span class="kw">unsafe </span>{
@@ -6995,7 +6995,7 @@
 }
 
 <span class="doccomment">/// Used by build_memcpy and build_memmove
-</span><span class="attr">#[llvm_versions(<span class="number">8.0</span>..=latest)]
+</span><span class="attr">#[llvm_versions(<span class="number">8</span>..)]
 </span><span class="kw">fn </span>is_alignment_ok(align: u32) -&gt; bool {
     <span class="comment">// This replicates the assertions LLVM runs.
     //

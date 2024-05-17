@@ -592,6 +592,18 @@
 <a href="#590" id="590">590</a>
 <a href="#591" id="591">591</a>
 <a href="#592" id="592">592</a>
+<a href="#593" id="593">593</a>
+<a href="#594" id="594">594</a>
+<a href="#595" id="595">595</a>
+<a href="#596" id="596">596</a>
+<a href="#597" id="597">597</a>
+<a href="#598" id="598">598</a>
+<a href="#599" id="599">599</a>
+<a href="#600" id="600">600</a>
+<a href="#601" id="601">601</a>
+<a href="#602" id="602">602</a>
+<a href="#603" id="603">603</a>
+<a href="#604" id="604">604</a>
 </pre></div><pre class="rust"><code><span class="comment">// Based on a cfg
 
 </span><span class="kw">use </span>std::{
@@ -856,7 +868,8 @@
     Ref(bool, Box&lt;TypeInfo&gt;),
     <span class="comment">// name for print purposes
     </span>Struct(DefId, String), <span class="comment">// todo, add generics
-</span>}
+    </span>Slice(Box&lt;TypeInfo&gt;, <span class="prelude-ty">Option</span>&lt;u32&gt;),
+}
 
 <span class="kw">impl </span>TypeKind {
     <span class="kw">pub const fn </span>is_unit(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
@@ -902,6 +915,7 @@
             TypeKind::Ref(<span class="kw">_</span>, inner) =&gt; inner.kind.get_falsy_value(),
             TypeKind::Struct(<span class="kw">_</span>, _name) =&gt; <span class="macro">todo!</span>(),
             TypeKind::Str =&gt; <span class="macro">todo!</span>(),
+            TypeKind::Slice(<span class="kw">_</span>, <span class="kw">_</span>) =&gt; <span class="macro">todo!</span>(),
         }
     }
 }
@@ -940,11 +954,20 @@
                 <span class="macro">write!</span>(f, <span class="string">"*{word} {}"</span>, inner.kind)
             }
             TypeKind::Ref(is_mut, inner) =&gt; {
-                <span class="kw">let </span>word = <span class="kw">if </span><span class="kw-2">*</span>is_mut { <span class="string">"mut" </span>} <span class="kw">else </span>{ <span class="string">"const" </span>};
+                <span class="kw">let </span>word = <span class="kw">if </span><span class="kw-2">*</span>is_mut { <span class="string">"mut " </span>} <span class="kw">else </span>{ <span class="string">"" </span>};
 
-                <span class="macro">write!</span>(f, <span class="string">"&amp;{word} {}"</span>, inner.kind)
+                <span class="macro">write!</span>(f, <span class="string">"&amp;{word}{}"</span>, inner.kind)
             }
             TypeKind::Struct(<span class="kw">_</span>, name) =&gt; <span class="macro">write!</span>(f, <span class="string">"{}"</span>, name),
+            TypeKind::Slice(inner, size) =&gt; {
+                <span class="kw">let </span>size = <span class="kw">if let </span><span class="prelude-val">Some</span>(size) = size {
+                    <span class="macro">format!</span>(<span class="string">"; {size}"</span>)
+                } <span class="kw">else </span>{
+                    <span class="string">""</span>.to_string()
+                };
+
+                <span class="macro">write!</span>(f, <span class="string">"[{}{size}]"</span>, inner.kind)
+            }
         }
     }
 }
@@ -1066,11 +1089,12 @@
     <span class="kw">pub </span>projection: SmallVec&lt;[PlaceElem; <span class="number">1</span>]&gt;,
 }
 
-<span class="attr">#[derive(Debug, Clone, Copy)]
+<span class="attr">#[derive(Debug, Clone)]
 </span><span class="kw">pub enum </span>PlaceElem {
     Deref,
     Field { field_idx: usize },
-    Index { local: usize },
+    Index { value: Box&lt;RValue&gt; },
+    ConstIndex { index: usize },
 }
 
 <span class="kw">impl </span>TypeKind {

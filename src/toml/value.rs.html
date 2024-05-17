@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/toml-0.8.12/src/value.rs`."><title>value.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="toml" data-themes="" data-resource-suffix="" data-rustdoc-version="1.78.0 (9b00956e5 2024-04-29)" data-channel="1.78.0" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/toml-0.8.13/src/value.rs`."><title>value.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="toml" data-themes="" data-resource-suffix="" data-rustdoc-version="1.78.0 (9b00956e5 2024-04-29)" data-channel="1.78.0" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
             <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
     <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../toml/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
@@ -1526,17 +1526,6 @@
 <a href="#1524" id="1524">1524</a>
 <a href="#1525" id="1525">1525</a>
 <a href="#1526" id="1526">1526</a>
-<a href="#1527" id="1527">1527</a>
-<a href="#1528" id="1528">1528</a>
-<a href="#1529" id="1529">1529</a>
-<a href="#1530" id="1530">1530</a>
-<a href="#1531" id="1531">1531</a>
-<a href="#1532" id="1532">1532</a>
-<a href="#1533" id="1533">1533</a>
-<a href="#1534" id="1534">1534</a>
-<a href="#1535" id="1535">1535</a>
-<a href="#1536" id="1536">1536</a>
-<a href="#1537" id="1537">1537</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Definition of a TOML [value][Value]
 
 </span><span class="kw">use </span>std::collections::{BTreeMap, HashMap};
@@ -1787,7 +1776,7 @@
 <span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; From&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>str&gt; <span class="kw">for </span>Value {
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>from(val: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>str) -&gt; Value {
-        Value::String(val.to_string())
+        Value::String(val.to_owned())
     }
 }
 
@@ -1901,9 +1890,9 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">'s</span>, T: <span class="question-mark">?</span>Sized&gt; Index <span class="kw">for </span><span class="kw-2">&amp;</span><span class="lifetime">'s </span>T
+<span class="kw">impl</span>&lt;<span class="lifetime">'s</span>, T&gt; Index <span class="kw">for </span><span class="kw-2">&amp;</span><span class="lifetime">'s </span>T
 <span class="kw">where
-    </span>T: Index,
+    </span>T: Index + <span class="question-mark">?</span>Sized,
 {
     <span class="kw">fn </span>index&lt;<span class="lifetime">'a</span>&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, val: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>Value) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span>Value&gt; {
         (<span class="kw-2">**</span><span class="self">self</span>).index(val)
@@ -2004,7 +1993,7 @@
             }
 
             <span class="kw">fn </span>visit_u64&lt;E: de::Error&gt;(<span class="self">self</span>, value: u64) -&gt; <span class="prelude-ty">Result</span>&lt;Value, E&gt; {
-                <span class="kw">if </span>value &lt;= i64::max_value() <span class="kw">as </span>u64 {
+                <span class="kw">if </span>i64::try_from(value).is_ok() {
                     <span class="prelude-val">Ok</span>(Value::Integer(value <span class="kw">as </span>i64))
                 } <span class="kw">else </span>{
                     <span class="prelude-val">Err</span>(de::Error::custom(<span class="string">"u64 value was too large"</span>))
@@ -2272,7 +2261,7 @@
 
     <span class="kw">fn </span>variant_seed&lt;V&gt;(<span class="kw-2">mut </span><span class="self">self</span>, seed: V) -&gt; <span class="prelude-ty">Result</span>&lt;(V::Value, <span class="self">Self</span>::Variant), <span class="self">Self</span>::Error&gt;
     <span class="kw">where
-        </span>V: serde::de::DeserializeSeed&lt;<span class="lifetime">'de</span>&gt;,
+        </span>V: de::DeserializeSeed&lt;<span class="lifetime">'de</span>&gt;,
     {
         <span class="kw">use </span>de::Error;
         <span class="kw">let </span>(key, value) = <span class="kw">match </span><span class="self">self</span>.iter.next() {
@@ -2303,7 +2292,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">'de</span>&gt; serde::de::VariantAccess&lt;<span class="lifetime">'de</span>&gt; <span class="kw">for </span>MapEnumDeserializer {
+<span class="kw">impl</span>&lt;<span class="lifetime">'de</span>&gt; de::VariantAccess&lt;<span class="lifetime">'de</span>&gt; <span class="kw">for </span>MapEnumDeserializer {
     <span class="kw">type </span>Error = <span class="kw">crate</span>::de::Error;
 
     <span class="kw">fn </span>unit_variant(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt; {
@@ -2332,20 +2321,20 @@
 
     <span class="kw">fn </span>newtype_variant_seed&lt;T&gt;(<span class="self">self</span>, seed: T) -&gt; <span class="prelude-ty">Result</span>&lt;T::Value, <span class="self">Self</span>::Error&gt;
     <span class="kw">where
-        </span>T: serde::de::DeserializeSeed&lt;<span class="lifetime">'de</span>&gt;,
+        </span>T: de::DeserializeSeed&lt;<span class="lifetime">'de</span>&gt;,
     {
         seed.deserialize(<span class="self">self</span>.value.into_deserializer())
     }
 
     <span class="kw">fn </span>tuple_variant&lt;V&gt;(<span class="self">self</span>, len: usize, visitor: V) -&gt; <span class="prelude-ty">Result</span>&lt;V::Value, <span class="self">Self</span>::Error&gt;
     <span class="kw">where
-        </span>V: serde::de::Visitor&lt;<span class="lifetime">'de</span>&gt;,
+        </span>V: de::Visitor&lt;<span class="lifetime">'de</span>&gt;,
     {
         <span class="kw">use </span>de::Error;
         <span class="kw">match </span><span class="self">self</span>.value {
             Value::Array(values) =&gt; {
                 <span class="kw">if </span>values.len() == len {
-                    serde::de::Deserializer::deserialize_seq(values.into_deserializer(), visitor)
+                    de::Deserializer::deserialize_seq(values.into_deserializer(), visitor)
                 } <span class="kw">else </span>{
                     <span class="prelude-val">Err</span>(Error::custom(<span class="macro">format!</span>(<span class="string">"expected tuple with length {}"</span>, len)))
                 }
@@ -2365,10 +2354,7 @@
                 <span class="kw">let </span>tuple_values = tuple_values<span class="question-mark">?</span>;
 
                 <span class="kw">if </span>tuple_values.len() == len {
-                    serde::de::Deserializer::deserialize_seq(
-                        tuple_values.into_deserializer(),
-                        visitor,
-                    )
+                    de::Deserializer::deserialize_seq(tuple_values.into_deserializer(), visitor)
                 } <span class="kw">else </span>{
                     <span class="prelude-val">Err</span>(Error::custom(<span class="macro">format!</span>(<span class="string">"expected tuple with length {}"</span>, len)))
                 }
@@ -2386,9 +2372,9 @@
         visitor: V,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;V::Value, <span class="self">Self</span>::Error&gt;
     <span class="kw">where
-        </span>V: serde::de::Visitor&lt;<span class="lifetime">'de</span>&gt;,
+        </span>V: de::Visitor&lt;<span class="lifetime">'de</span>&gt;,
     {
-        serde::de::Deserializer::deserialize_struct(
+        de::Deserializer::deserialize_struct(
             <span class="self">self</span>.value.into_deserializer(),
             <span class="string">""</span>, <span class="comment">// TODO: this should be the variant name
             </span>fields,
@@ -2397,7 +2383,7 @@
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">'de</span>&gt; de::IntoDeserializer&lt;<span class="lifetime">'de</span>, <span class="kw">crate</span>::de::Error&gt; <span class="kw">for </span>Value {
+<span class="kw">impl</span>&lt;<span class="lifetime">'de</span>&gt; IntoDeserializer&lt;<span class="lifetime">'de</span>, <span class="kw">crate</span>::de::Error&gt; <span class="kw">for </span>Value {
     <span class="kw">type </span>Deserializer = <span class="self">Self</span>;
 
     <span class="kw">fn </span>into_deserializer(<span class="self">self</span>) -&gt; <span class="self">Self </span>{
@@ -2452,7 +2438,7 @@
     }
 
     <span class="kw">fn </span>serialize_u64(<span class="self">self</span>, value: u64) -&gt; <span class="prelude-ty">Result</span>&lt;Value, <span class="kw">crate</span>::ser::Error&gt; {
-        <span class="kw">if </span>value &lt;= i64::max_value() <span class="kw">as </span>u64 {
+        <span class="kw">if </span>i64::try_from(value).is_ok() {
             <span class="self">self</span>.serialize_i64(value <span class="kw">as </span>i64)
         } <span class="kw">else </span>{
             <span class="prelude-val">Err</span>(ser::Error::custom(<span class="string">"u64 value was too large"</span>))
@@ -2503,18 +2489,18 @@
         <span class="self">self</span>.serialize_str(_variant)
     }
 
-    <span class="kw">fn </span>serialize_newtype_struct&lt;T: <span class="question-mark">?</span>Sized&gt;(
+    <span class="kw">fn </span>serialize_newtype_struct&lt;T&gt;(
         <span class="self">self</span>,
         _name: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
         value: <span class="kw-2">&amp;</span>T,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Value, <span class="kw">crate</span>::ser::Error&gt;
     <span class="kw">where
-        </span>T: ser::Serialize,
+        </span>T: ser::Serialize + <span class="question-mark">?</span>Sized,
     {
         value.serialize(<span class="self">self</span>)
     }
 
-    <span class="kw">fn </span>serialize_newtype_variant&lt;T: <span class="question-mark">?</span>Sized&gt;(
+    <span class="kw">fn </span>serialize_newtype_variant&lt;T&gt;(
         <span class="self">self</span>,
         _name: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
         _variant_index: u32,
@@ -2522,7 +2508,7 @@
         value: <span class="kw-2">&amp;</span>T,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Value, <span class="kw">crate</span>::ser::Error&gt;
     <span class="kw">where
-        </span>T: ser::Serialize,
+        </span>T: ser::Serialize + <span class="question-mark">?</span>Sized,
     {
         <span class="kw">let </span>value = value.serialize(ValueSerializer)<span class="question-mark">?</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>table = Table::new();
@@ -2534,9 +2520,9 @@
         <span class="prelude-val">Err</span>(<span class="kw">crate</span>::ser::Error::unsupported_none())
     }
 
-    <span class="kw">fn </span>serialize_some&lt;T: <span class="question-mark">?</span>Sized&gt;(<span class="self">self</span>, value: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Result</span>&lt;Value, <span class="kw">crate</span>::ser::Error&gt;
+    <span class="kw">fn </span>serialize_some&lt;T&gt;(<span class="self">self</span>, value: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Result</span>&lt;Value, <span class="kw">crate</span>::ser::Error&gt;
     <span class="kw">where
-        </span>T: ser::Serialize,
+        </span>T: ser::Serialize + <span class="question-mark">?</span>Sized,
     {
         value.serialize(<span class="self">self</span>)
     }
@@ -2684,18 +2670,18 @@
         <span class="prelude-val">Err</span>(<span class="kw">crate</span>::ser::Error::unsupported_type(<span class="prelude-val">Some</span>(name)))
     }
 
-    <span class="kw">fn </span>serialize_newtype_struct&lt;T: <span class="question-mark">?</span>Sized&gt;(
+    <span class="kw">fn </span>serialize_newtype_struct&lt;T&gt;(
         <span class="self">self</span>,
         _name: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
         value: <span class="kw-2">&amp;</span>T,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Table, <span class="kw">crate</span>::ser::Error&gt;
     <span class="kw">where
-        </span>T: ser::Serialize,
+        </span>T: ser::Serialize + <span class="question-mark">?</span>Sized,
     {
         value.serialize(<span class="self">self</span>)
     }
 
-    <span class="kw">fn </span>serialize_newtype_variant&lt;T: <span class="question-mark">?</span>Sized&gt;(
+    <span class="kw">fn </span>serialize_newtype_variant&lt;T&gt;(
         <span class="self">self</span>,
         _name: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
         _variant_index: u32,
@@ -2703,7 +2689,7 @@
         value: <span class="kw-2">&amp;</span>T,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Table, <span class="kw">crate</span>::ser::Error&gt;
     <span class="kw">where
-        </span>T: ser::Serialize,
+        </span>T: ser::Serialize + <span class="question-mark">?</span>Sized,
     {
         <span class="kw">let </span>value = value.serialize(ValueSerializer)<span class="question-mark">?</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>table = Table::new();
@@ -2715,9 +2701,9 @@
         <span class="prelude-val">Err</span>(<span class="kw">crate</span>::ser::Error::unsupported_none())
     }
 
-    <span class="kw">fn </span>serialize_some&lt;T: <span class="question-mark">?</span>Sized&gt;(<span class="self">self</span>, value: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Result</span>&lt;Table, <span class="kw">crate</span>::ser::Error&gt;
+    <span class="kw">fn </span>serialize_some&lt;T&gt;(<span class="self">self</span>, value: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Result</span>&lt;Table, <span class="kw">crate</span>::ser::Error&gt;
     <span class="kw">where
-        </span>T: ser::Serialize,
+        </span>T: ser::Serialize + <span class="question-mark">?</span>Sized,
     {
         value.serialize(<span class="self">self</span>)
     }
@@ -2782,9 +2768,9 @@
     <span class="kw">type </span><span class="prelude-val">Ok </span>= Value;
     <span class="kw">type </span>Error = <span class="kw">crate</span>::ser::Error;
 
-    <span class="kw">fn </span>serialize_element&lt;T: <span class="question-mark">?</span>Sized&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">crate</span>::ser::Error&gt;
+    <span class="kw">fn </span>serialize_element&lt;T&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">crate</span>::ser::Error&gt;
     <span class="kw">where
-        </span>T: ser::Serialize,
+        </span>T: ser::Serialize + <span class="question-mark">?</span>Sized,
     {
         <span class="self">self</span>.vec.push(Value::try_from(value)<span class="question-mark">?</span>);
         <span class="prelude-val">Ok</span>(())
@@ -2799,9 +2785,9 @@
     <span class="kw">type </span><span class="prelude-val">Ok </span>= Value;
     <span class="kw">type </span>Error = <span class="kw">crate</span>::ser::Error;
 
-    <span class="kw">fn </span>serialize_element&lt;T: <span class="question-mark">?</span>Sized&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">crate</span>::ser::Error&gt;
+    <span class="kw">fn </span>serialize_element&lt;T&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">crate</span>::ser::Error&gt;
     <span class="kw">where
-        </span>T: ser::Serialize,
+        </span>T: ser::Serialize + <span class="question-mark">?</span>Sized,
     {
         ser::SerializeSeq::serialize_element(<span class="self">self</span>, value)
     }
@@ -2815,9 +2801,9 @@
     <span class="kw">type </span><span class="prelude-val">Ok </span>= Value;
     <span class="kw">type </span>Error = <span class="kw">crate</span>::ser::Error;
 
-    <span class="kw">fn </span>serialize_field&lt;T: <span class="question-mark">?</span>Sized&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">crate</span>::ser::Error&gt;
+    <span class="kw">fn </span>serialize_field&lt;T&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">crate</span>::ser::Error&gt;
     <span class="kw">where
-        </span>T: ser::Serialize,
+        </span>T: ser::Serialize + <span class="question-mark">?</span>Sized,
     {
         ser::SerializeSeq::serialize_element(<span class="self">self</span>, value)
     }
@@ -2831,9 +2817,9 @@
     <span class="kw">type </span><span class="prelude-val">Ok </span>= Value;
     <span class="kw">type </span>Error = <span class="kw">crate</span>::ser::Error;
 
-    <span class="kw">fn </span>serialize_field&lt;T: <span class="question-mark">?</span>Sized&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">crate</span>::ser::Error&gt;
+    <span class="kw">fn </span>serialize_field&lt;T&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">crate</span>::ser::Error&gt;
     <span class="kw">where
-        </span>T: ser::Serialize,
+        </span>T: ser::Serialize + <span class="question-mark">?</span>Sized,
     {
         ser::SerializeSeq::serialize_element(<span class="self">self</span>, value)
     }
@@ -2852,9 +2838,9 @@
     <span class="kw">type </span><span class="prelude-val">Ok </span>= Table;
     <span class="kw">type </span>Error = <span class="kw">crate</span>::ser::Error;
 
-    <span class="kw">fn </span>serialize_key&lt;T: <span class="question-mark">?</span>Sized&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">crate</span>::ser::Error&gt;
+    <span class="kw">fn </span>serialize_key&lt;T&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">crate</span>::ser::Error&gt;
     <span class="kw">where
-        </span>T: ser::Serialize,
+        </span>T: ser::Serialize + <span class="question-mark">?</span>Sized,
     {
         <span class="kw">match </span>Value::try_from(key)<span class="question-mark">? </span>{
             Value::String(s) =&gt; <span class="self">self</span>.next_key = <span class="prelude-val">Some</span>(s),
@@ -2863,9 +2849,9 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn </span>serialize_value&lt;T: <span class="question-mark">?</span>Sized&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">crate</span>::ser::Error&gt;
+    <span class="kw">fn </span>serialize_value&lt;T&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">crate</span>::ser::Error&gt;
     <span class="kw">where
-        </span>T: ser::Serialize,
+        </span>T: ser::Serialize + <span class="question-mark">?</span>Sized,
     {
         <span class="kw">let </span>key = <span class="self">self</span>.next_key.take();
         <span class="kw">let </span>key = key.expect(<span class="string">"serialize_value called before serialize_key"</span>);
@@ -2890,13 +2876,9 @@
     <span class="kw">type </span><span class="prelude-val">Ok </span>= Table;
     <span class="kw">type </span>Error = <span class="kw">crate</span>::ser::Error;
 
-    <span class="kw">fn </span>serialize_field&lt;T: <span class="question-mark">?</span>Sized&gt;(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        key: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
-        value: <span class="kw-2">&amp;</span>T,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">crate</span>::ser::Error&gt;
+    <span class="kw">fn </span>serialize_field&lt;T&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, key: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, value: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">crate</span>::ser::Error&gt;
     <span class="kw">where
-        </span>T: ser::Serialize,
+        </span>T: ser::Serialize + <span class="question-mark">?</span>Sized,
     {
         ser::SerializeMap::serialize_key(<span class="self">self</span>, key)<span class="question-mark">?</span>;
         ser::SerializeMap::serialize_value(<span class="self">self</span>, value)
@@ -2915,16 +2897,16 @@
     <span class="kw">type </span><span class="prelude-val">Ok </span>= Value;
     <span class="kw">type </span>Error = <span class="kw">crate</span>::ser::Error;
 
-    <span class="kw">fn </span>serialize_key&lt;T: <span class="question-mark">?</span>Sized&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">crate</span>::ser::Error&gt;
+    <span class="kw">fn </span>serialize_key&lt;T&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">crate</span>::ser::Error&gt;
     <span class="kw">where
-        </span>T: ser::Serialize,
+        </span>T: ser::Serialize + <span class="question-mark">?</span>Sized,
     {
         <span class="self">self</span>.ser.serialize_key(key)
     }
 
-    <span class="kw">fn </span>serialize_value&lt;T: <span class="question-mark">?</span>Sized&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">crate</span>::ser::Error&gt;
+    <span class="kw">fn </span>serialize_value&lt;T&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">crate</span>::ser::Error&gt;
     <span class="kw">where
-        </span>T: ser::Serialize,
+        </span>T: ser::Serialize + <span class="question-mark">?</span>Sized,
     {
         <span class="self">self</span>.ser.serialize_value(value)
     }
@@ -2938,13 +2920,9 @@
     <span class="kw">type </span><span class="prelude-val">Ok </span>= Value;
     <span class="kw">type </span>Error = <span class="kw">crate</span>::ser::Error;
 
-    <span class="kw">fn </span>serialize_field&lt;T: <span class="question-mark">?</span>Sized&gt;(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        key: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str,
-        value: <span class="kw-2">&amp;</span>T,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">crate</span>::ser::Error&gt;
+    <span class="kw">fn </span>serialize_field&lt;T&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, key: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, value: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">crate</span>::ser::Error&gt;
     <span class="kw">where
-        </span>T: ser::Serialize,
+        </span>T: ser::Serialize + <span class="question-mark">?</span>Sized,
     {
         ser::SerializeMap::serialize_key(<span class="self">self</span>, key)<span class="question-mark">?</span>;
         ser::SerializeMap::serialize_value(<span class="self">self</span>, value)
@@ -3035,40 +3013,40 @@
     }
 }
 
-<span class="kw">impl </span>serde::ser::SerializeTupleVariant <span class="kw">for </span>ValueSerializeVariant&lt;ValueSerializeVec&gt; {
-    <span class="kw">type </span><span class="prelude-val">Ok </span>= <span class="kw">crate</span>::Value;
+<span class="kw">impl </span>ser::SerializeTupleVariant <span class="kw">for </span>ValueSerializeVariant&lt;ValueSerializeVec&gt; {
+    <span class="kw">type </span><span class="prelude-val">Ok </span>= Value;
     <span class="kw">type </span>Error = <span class="kw">crate</span>::ser::Error;
 
-    <span class="kw">fn </span>serialize_field&lt;T: <span class="question-mark">?</span>Sized&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt;
+    <span class="kw">fn </span>serialize_field&lt;T&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt;
     <span class="kw">where
-        </span>T: serde::ser::Serialize,
+        </span>T: ser::Serialize + <span class="question-mark">?</span>Sized,
     {
-        serde::ser::SerializeSeq::serialize_element(<span class="kw-2">&amp;mut </span><span class="self">self</span>.inner, value)
+        ser::SerializeSeq::serialize_element(<span class="kw-2">&amp;mut </span><span class="self">self</span>.inner, value)
     }
 
     <span class="kw">fn </span>end(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Ok, <span class="self">Self</span>::Error&gt; {
-        <span class="kw">let </span>inner = serde::ser::SerializeSeq::end(<span class="self">self</span>.inner)<span class="question-mark">?</span>;
+        <span class="kw">let </span>inner = ser::SerializeSeq::end(<span class="self">self</span>.inner)<span class="question-mark">?</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>table = Table::new();
         table.insert(<span class="self">self</span>.variant.to_owned(), inner);
         <span class="prelude-val">Ok</span>(Value::Table(table))
     }
 }
 
-<span class="kw">impl </span>serde::ser::SerializeStructVariant <span class="kw">for </span>ValueSerializeVariant&lt;ValueSerializeMap&gt; {
-    <span class="kw">type </span><span class="prelude-val">Ok </span>= <span class="kw">crate</span>::Value;
+<span class="kw">impl </span>ser::SerializeStructVariant <span class="kw">for </span>ValueSerializeVariant&lt;ValueSerializeMap&gt; {
+    <span class="kw">type </span><span class="prelude-val">Ok </span>= Value;
     <span class="kw">type </span>Error = <span class="kw">crate</span>::ser::Error;
 
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>serialize_field&lt;T&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, key: <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str, value: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt;
     <span class="kw">where
-        </span>T: serde::ser::Serialize + <span class="question-mark">?</span>Sized,
+        </span>T: ser::Serialize + <span class="question-mark">?</span>Sized,
     {
-        serde::ser::SerializeStruct::serialize_field(<span class="kw-2">&amp;mut </span><span class="self">self</span>.inner, key, value)
+        ser::SerializeStruct::serialize_field(<span class="kw-2">&amp;mut </span><span class="self">self</span>.inner, key, value)
     }
 
     <span class="attr">#[inline]
     </span><span class="kw">fn </span>end(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Ok, <span class="self">Self</span>::Error&gt; {
-        <span class="kw">let </span>inner = serde::ser::SerializeStruct::end(<span class="self">self</span>.inner)<span class="question-mark">?</span>;
+        <span class="kw">let </span>inner = ser::SerializeStruct::end(<span class="self">self</span>.inner)<span class="question-mark">?</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>table = Table::new();
         table.insert(<span class="self">self</span>.variant.to_owned(), inner);
         <span class="prelude-val">Ok</span>(Value::Table(table))

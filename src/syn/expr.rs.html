@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/syn-2.0.61/src/expr.rs`."><title>expr.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="syn" data-themes="" data-resource-suffix="" data-rustdoc-version="1.78.0 (9b00956e5 2024-04-29)" data-channel="1.78.0" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/syn-2.0.63/src/expr.rs`."><title>expr.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="syn" data-themes="" data-resource-suffix="" data-rustdoc-version="1.78.0 (9b00956e5 2024-04-29)" data-channel="1.78.0" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
             <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
     <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../syn/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
@@ -3629,7 +3629,75 @@
 <a href="#3627" id="3627">3627</a>
 <a href="#3628" id="3628">3628</a>
 <a href="#3629" id="3629">3629</a>
+<a href="#3630" id="3630">3630</a>
+<a href="#3631" id="3631">3631</a>
+<a href="#3632" id="3632">3632</a>
+<a href="#3633" id="3633">3633</a>
+<a href="#3634" id="3634">3634</a>
+<a href="#3635" id="3635">3635</a>
+<a href="#3636" id="3636">3636</a>
+<a href="#3637" id="3637">3637</a>
+<a href="#3638" id="3638">3638</a>
+<a href="#3639" id="3639">3639</a>
+<a href="#3640" id="3640">3640</a>
+<a href="#3641" id="3641">3641</a>
+<a href="#3642" id="3642">3642</a>
+<a href="#3643" id="3643">3643</a>
+<a href="#3644" id="3644">3644</a>
+<a href="#3645" id="3645">3645</a>
+<a href="#3646" id="3646">3646</a>
+<a href="#3647" id="3647">3647</a>
+<a href="#3648" id="3648">3648</a>
+<a href="#3649" id="3649">3649</a>
+<a href="#3650" id="3650">3650</a>
+<a href="#3651" id="3651">3651</a>
+<a href="#3652" id="3652">3652</a>
+<a href="#3653" id="3653">3653</a>
+<a href="#3654" id="3654">3654</a>
+<a href="#3655" id="3655">3655</a>
+<a href="#3656" id="3656">3656</a>
+<a href="#3657" id="3657">3657</a>
+<a href="#3658" id="3658">3658</a>
+<a href="#3659" id="3659">3659</a>
+<a href="#3660" id="3660">3660</a>
+<a href="#3661" id="3661">3661</a>
+<a href="#3662" id="3662">3662</a>
+<a href="#3663" id="3663">3663</a>
+<a href="#3664" id="3664">3664</a>
+<a href="#3665" id="3665">3665</a>
+<a href="#3666" id="3666">3666</a>
+<a href="#3667" id="3667">3667</a>
+<a href="#3668" id="3668">3668</a>
+<a href="#3669" id="3669">3669</a>
+<a href="#3670" id="3670">3670</a>
+<a href="#3671" id="3671">3671</a>
+<a href="#3672" id="3672">3672</a>
+<a href="#3673" id="3673">3673</a>
+<a href="#3674" id="3674">3674</a>
+<a href="#3675" id="3675">3675</a>
+<a href="#3676" id="3676">3676</a>
+<a href="#3677" id="3677">3677</a>
+<a href="#3678" id="3678">3678</a>
+<a href="#3679" id="3679">3679</a>
+<a href="#3680" id="3680">3680</a>
+<a href="#3681" id="3681">3681</a>
+<a href="#3682" id="3682">3682</a>
+<a href="#3683" id="3683">3683</a>
+<a href="#3684" id="3684">3684</a>
+<a href="#3685" id="3685">3685</a>
+<a href="#3686" id="3686">3686</a>
+<a href="#3687" id="3687">3687</a>
+<a href="#3688" id="3688">3688</a>
+<a href="#3689" id="3689">3689</a>
+<a href="#3690" id="3690">3690</a>
+<a href="#3691" id="3691">3691</a>
+<a href="#3692" id="3692">3692</a>
+<a href="#3693" id="3693">3693</a>
+<a href="#3694" id="3694">3694</a>
+<a href="#3695" id="3695">3695</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::attr::Attribute;
+<span class="attr">#[cfg(all(feature = <span class="string">"parsing"</span>, feature = <span class="string">"full"</span>))]
+</span><span class="kw">use </span><span class="kw">crate</span>::error::Result;
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::generics::BoundLifetimes;
 <span class="kw">use </span><span class="kw">crate</span>::ident::Ident;
@@ -3638,6 +3706,8 @@
 <span class="kw">use </span><span class="kw">crate</span>::lit::Lit;
 <span class="kw">use </span><span class="kw">crate</span>::mac::Macro;
 <span class="kw">use </span><span class="kw">crate</span>::op::{BinOp, UnOp};
+<span class="attr">#[cfg(all(feature = <span class="string">"parsing"</span>, feature = <span class="string">"full"</span>))]
+</span><span class="kw">use </span><span class="kw">crate</span>::parse::ParseStream;
 <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::pat::Pat;
 <span class="kw">use </span><span class="kw">crate</span>::path::{AngleBracketedGenericArguments, Path, QSelf};
@@ -4324,8 +4394,26 @@
 }
 
 <span class="kw">impl </span>Expr {
-    <span class="attr">#[cfg(feature = <span class="string">"parsing"</span>)]
-    </span><span class="kw">const </span>DUMMY: <span class="self">Self </span>= Expr::Path(ExprPath {
+    <span class="doccomment">/// An unspecified invalid expression.
+    ///
+    /// ```
+    /// use quote::ToTokens;
+    /// use std::mem;
+    /// use syn::{parse_quote, Expr};
+    ///
+    /// fn unparenthesize(e: &amp;mut Expr) {
+    ///     while let Expr::Paren(paren) = e {
+    ///         *e = mem::replace(&amp;mut *paren.expr, Expr::PLACEHOLDER);
+    ///     }
+    /// }
+    ///
+    /// fn main() {
+    ///     let mut e: Expr = parse_quote! { ((1 + 1)) };
+    ///     unparenthesize(&amp;mut e);
+    ///     assert_eq!("1 + 1", e.to_token_stream().to_string());
+    /// }
+    /// ```
+    </span><span class="kw">pub const </span>PLACEHOLDER: <span class="self">Self </span>= Expr::Path(ExprPath {
         attrs: Vec::new(),
         qself: <span class="prelude-val">None</span>,
         path: Path {
@@ -4333,6 +4421,155 @@
             segments: Punctuated::new(),
         },
     });
+
+    <span class="doccomment">/// An alternative to the primary `Expr::parse` parser (from the [`Parse`]
+    /// trait) for ambiguous syntactic positions in which a trailing brace
+    /// should not be taken as part of the expression.
+    ///
+    /// [`Parse`]: crate::parse::Parse
+    ///
+    /// Rust grammar has an ambiguity where braces sometimes turn a path
+    /// expression into a struct initialization and sometimes do not. In the
+    /// following code, the expression `S {}` is one expression. Presumably
+    /// there is an empty struct `struct S {}` defined somewhere which it is
+    /// instantiating.
+    ///
+    /// ```
+    /// # struct S;
+    /// # impl std::ops::Deref for S {
+    /// #     type Target = bool;
+    /// #     fn deref(&amp;self) -&gt; &amp;Self::Target {
+    /// #         &amp;true
+    /// #     }
+    /// # }
+    /// let _ = *S {};
+    ///
+    /// // parsed by rustc as: `*(S {})`
+    /// ```
+    ///
+    /// We would want to parse the above using `Expr::parse` after the `=`
+    /// token.
+    ///
+    /// But in the following, `S {}` is *not* a struct init expression.
+    ///
+    /// ```
+    /// # const S: &amp;bool = &amp;true;
+    /// if *S {} {}
+    ///
+    /// // parsed by rustc as:
+    /// //
+    /// //    if (*S) {
+    /// //        /* empty block */
+    /// //    }
+    /// //    {
+    /// //        /* another empty block */
+    /// //    }
+    /// ```
+    ///
+    /// For that reason we would want to parse if-conditions using
+    /// `Expr::parse_without_eager_brace` after the `if` token. Same for similar
+    /// syntactic positions such as the condition expr after a `while` token or
+    /// the expr at the top of a `match`.
+    ///
+    /// The Rust grammar's choices around which way this ambiguity is resolved
+    /// at various syntactic positions is fairly arbitrary. Really either parse
+    /// behavior could work in most positions, and language designers just
+    /// decide each case based on which is more likely to be what the programmer
+    /// had in mind most of the time.
+    ///
+    /// ```
+    /// # struct S;
+    /// # fn doc() -&gt; S {
+    /// if return S {} {}
+    /// # unreachable!()
+    /// # }
+    ///
+    /// // parsed by rustc as:
+    /// //
+    /// //    if (return (S {})) {
+    /// //    }
+    /// //
+    /// // but could equally well have been this other arbitrary choice:
+    /// //
+    /// //    if (return S) {
+    /// //    }
+    /// //    {}
+    /// ```
+    ///
+    /// Note the grammar ambiguity on trailing braces is distinct from
+    /// precedence and is not captured by assigning a precedence level to the
+    /// braced struct init expr in relation to other operators. This can be
+    /// illustrated by `return 0..S {}` vs `match 0..S {}`. The former parses as
+    /// `return (0..(S {}))` implying tighter precedence for struct init than
+    /// `..`, while the latter parses as `match (0..S) {}` implying tighter
+    /// precedence for `..` than struct init, a contradiction.
+    </span><span class="attr">#[cfg(all(feature = <span class="string">"full"</span>, feature = <span class="string">"parsing"</span>))]
+    #[cfg_attr(doc_cfg, doc(cfg(all(feature = <span class="string">"full"</span>, feature = <span class="string">"parsing"</span>))))]
+    </span><span class="kw">pub fn </span>parse_without_eager_brace(input: ParseStream) -&gt; <span class="prelude-ty">Result</span>&lt;Expr&gt; {
+        parsing::ambiguous_expr(input, parsing::AllowStruct(<span class="bool-val">false</span>))
+    }
+
+    <span class="doccomment">/// An alternative to the primary `Expr::parse` parser (from the [`Parse`]
+    /// trait) for syntactic positions in which expression boundaries are placed
+    /// more eagerly than done by the typical expression grammar. This includes
+    /// expressions at the head of a statement or in the right-hand side of a
+    /// `match` arm.
+    ///
+    /// [`Parse`]: crate::parse::Parse
+    ///
+    /// Compare the following cases:
+    ///
+    /// 1.
+    ///   ```
+    ///   # let result = ();
+    ///   # let guard = false;
+    ///   # let cond = true;
+    ///   # let f = true;
+    ///   # let g = f;
+    ///   #
+    ///   let _ = match result {
+    ///       () if guard =&gt; if cond { f } else { g }
+    ///       () =&gt; false,
+    ///   };
+    ///   ```
+    ///
+    /// 2.
+    ///   ```
+    ///   # let cond = true;
+    ///   # let f = ();
+    ///   # let g = f;
+    ///   #
+    ///   let _ = || {
+    ///       if cond { f } else { g }
+    ///       ()
+    ///   };
+    ///   ```
+    ///
+    /// 3.
+    ///   ```
+    ///   # let cond = true;
+    ///   # let f = || ();
+    ///   # let g = f;
+    ///   #
+    ///   let _ = [if cond { f } else { g } ()];
+    ///   ```
+    ///
+    /// The same sequence of tokens `if cond { f } else { g } ()` appears in
+    /// expression position 3 times. The first two syntactic positions use eager
+    /// placement of expression boundaries, and parse as `Expr::If`, with the
+    /// adjacent `()` becoming `Pat::Tuple` or `Expr::Tuple`. In contrast, the
+    /// third case uses standard expression boundaries and parses as
+    /// `Expr::Call`.
+    ///
+    /// As with [`parse_without_eager_brace`], this ambiguity in the Rust
+    /// grammar is independent of precedence.
+    ///
+    /// [`parse_without_eager_brace`]: Self::parse_without_eager_brace
+    </span><span class="attr">#[cfg(all(feature = <span class="string">"full"</span>, feature = <span class="string">"parsing"</span>))]
+    #[cfg_attr(doc_cfg, doc(cfg(all(feature = <span class="string">"full"</span>, feature = <span class="string">"parsing"</span>))))]
+    </span><span class="kw">pub fn </span>parse_with_earlier_boundary_rule(input: ParseStream) -&gt; <span class="prelude-ty">Result</span>&lt;Expr&gt; {
+        parsing::parse_with_earlier_boundary_rule(input)
+    }
 
     <span class="attr">#[cfg(all(feature = <span class="string">"parsing"</span>, feature = <span class="string">"full"</span>))]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>replace_attrs(<span class="kw-2">&amp;mut </span><span class="self">self</span>, new: Vec&lt;Attribute&gt;) -&gt; Vec&lt;Attribute&gt; {
@@ -4608,8 +4845,9 @@
 <span class="attr">#[cfg(feature = <span class="string">"parsing"</span>)]
 </span><span class="kw">mod </span>precedence {
     <span class="kw">use </span><span class="kw">super</span>::BinOp;
+    <span class="kw">use </span>std::cmp::Ordering;
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>Precedence {
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">enum </span>Precedence {
         Any,
         Assign,
         Range,
@@ -4626,7 +4864,7 @@
     }
 
     <span class="kw">impl </span>Precedence {
-        <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>of(op: <span class="kw-2">&amp;</span>BinOp) -&gt; <span class="self">Self </span>{
+        <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>of(op: <span class="kw-2">&amp;</span>BinOp) -&gt; <span class="self">Self </span>{
             <span class="kw">match </span>op {
                 BinOp::Add(<span class="kw">_</span>) | BinOp::Sub(<span class="kw">_</span>) =&gt; Precedence::Arithmetic,
                 BinOp::Mul(<span class="kw">_</span>) | BinOp::Div(<span class="kw">_</span>) | BinOp::Rem(<span class="kw">_</span>) =&gt; Precedence::Term,
@@ -4653,6 +4891,28 @@
                 | BinOp::ShlAssign(<span class="kw">_</span>)
                 | BinOp::ShrAssign(<span class="kw">_</span>) =&gt; Precedence::Assign,
             }
+        }
+    }
+
+    <span class="kw">impl </span>Copy <span class="kw">for </span>Precedence {}
+
+    <span class="kw">impl </span>Clone <span class="kw">for </span>Precedence {
+        <span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
+            <span class="kw-2">*</span><span class="self">self
+        </span>}
+    }
+
+    <span class="kw">impl </span>PartialEq <span class="kw">for </span>Precedence {
+        <span class="kw">fn </span>eq(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; bool {
+            <span class="kw-2">*</span><span class="self">self </span><span class="kw">as </span>u8 == <span class="kw-2">*</span>other <span class="kw">as </span>u8
+        }
+    }
+
+    <span class="kw">impl </span>PartialOrd <span class="kw">for </span>Precedence {
+        <span class="kw">fn </span>partial_cmp(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Ordering&gt; {
+            <span class="kw">let </span>this = <span class="kw-2">*</span><span class="self">self </span><span class="kw">as </span>u8;
+            <span class="kw">let </span>other = <span class="kw-2">*</span>other <span class="kw">as </span>u8;
+            <span class="prelude-val">Some</span>(this.cmp(<span class="kw-2">&amp;</span>other))
         }
     }
 }
@@ -4703,7 +4963,6 @@
     <span class="kw">use </span><span class="kw">crate</span>::verbatim;
     <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
     </span><span class="kw">use </span>proc_macro2::TokenStream;
-    <span class="kw">use </span>std::cmp::Ordering;
     <span class="kw">use </span>std::mem;
 
     <span class="kw">mod </span>kw {
@@ -4717,7 +4976,7 @@
     // Struct literals are ambiguous in certain positions
     // https://github.com/rust-lang/rfcs/pull/92
     </span><span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>AllowStruct(bool);
+    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct </span>AllowStruct(<span class="kw">pub </span>bool);
 
     <span class="attr">#[cfg_attr(doc_cfg, doc(cfg(feature = <span class="string">"parsing"</span>)))]
     </span><span class="kw">impl </span>Parse <span class="kw">for </span>Expr {
@@ -4730,208 +4989,65 @@
         }
     }
 
-    <span class="kw">impl </span>Expr {
-        <span class="doccomment">/// An alternative to the primary `Expr::parse` parser (from the
-        /// [`Parse`] trait) for ambiguous syntactic positions in which a
-        /// trailing brace should not be taken as part of the expression.
-        ///
-        /// Rust grammar has an ambiguity where braces sometimes turn a path
-        /// expression into a struct initialization and sometimes do not. In the
-        /// following code, the expression `S {}` is one expression. Presumably
-        /// there is an empty struct `struct S {}` defined somewhere which it is
-        /// instantiating.
-        ///
-        /// ```
-        /// # struct S;
-        /// # impl std::ops::Deref for S {
-        /// #     type Target = bool;
-        /// #     fn deref(&amp;self) -&gt; &amp;Self::Target {
-        /// #         &amp;true
-        /// #     }
-        /// # }
-        /// let _ = *S {};
-        ///
-        /// // parsed by rustc as: `*(S {})`
-        /// ```
-        ///
-        /// We would want to parse the above using `Expr::parse` after the `=`
-        /// token.
-        ///
-        /// But in the following, `S {}` is *not* a struct init expression.
-        ///
-        /// ```
-        /// # const S: &amp;bool = &amp;true;
-        /// if *S {} {}
-        ///
-        /// // parsed by rustc as:
-        /// //
-        /// //    if (*S) {
-        /// //        /* empty block */
-        /// //    }
-        /// //    {
-        /// //        /* another empty block */
-        /// //    }
-        /// ```
-        ///
-        /// For that reason we would want to parse if-conditions using
-        /// `Expr::parse_without_eager_brace` after the `if` token. Same for
-        /// similar syntactic positions such as the condition expr after a
-        /// `while` token or the expr at the top of a `match`.
-        ///
-        /// The Rust grammar's choices around which way this ambiguity is
-        /// resolved at various syntactic positions is fairly arbitrary. Really
-        /// either parse behavior could work in most positions, and language
-        /// designers just decide each case based on which is more likely to be
-        /// what the programmer had in mind most of the time.
-        ///
-        /// ```
-        /// # struct S;
-        /// # fn doc() -&gt; S {
-        /// if return S {} {}
-        /// # unreachable!()
-        /// # }
-        ///
-        /// // parsed by rustc as:
-        /// //
-        /// //    if (return (S {})) {
-        /// //    }
-        /// //
-        /// // but could equally well have been this other arbitrary choice:
-        /// //
-        /// //    if (return S) {
-        /// //    }
-        /// //    {}
-        /// ```
-        ///
-        /// Note the grammar ambiguity on trailing braces is distinct from
-        /// precedence and is not captured by assigning a precedence level to
-        /// the braced struct init expr in relation to other operators. This can
-        /// be illustrated by `return 0..S {}` vs `match 0..S {}`. The former
-        /// parses as `return (0..(S {}))` implying tighter precedence for
-        /// struct init than `..`, while the latter parses as `match (0..S) {}`
-        /// implying tighter precedence for `..` than struct init, a
-        /// contradiction.
-        </span><span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
-        #[cfg_attr(doc_cfg, doc(cfg(all(feature = <span class="string">"full"</span>, feature = <span class="string">"parsing"</span>))))]
-        </span><span class="kw">pub fn </span>parse_without_eager_brace(input: ParseStream) -&gt; <span class="prelude-ty">Result</span>&lt;Expr&gt; {
-            ambiguous_expr(input, AllowStruct(<span class="bool-val">false</span>))
+    <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
+    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>parse_with_earlier_boundary_rule(input: ParseStream) -&gt; <span class="prelude-ty">Result</span>&lt;Expr&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>attrs = input.call(expr_attrs)<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>expr = <span class="kw">if </span>input.peek(token::Group) {
+            <span class="kw">let </span>allow_struct = AllowStruct(<span class="bool-val">true</span>);
+            <span class="kw">let </span>atom = expr_group(input, allow_struct)<span class="question-mark">?</span>;
+            <span class="kw">if </span>continue_parsing_early(<span class="kw-2">&amp;</span>atom) {
+                trailer_helper(input, atom)<span class="question-mark">?
+            </span>} <span class="kw">else </span>{
+                atom
+            }
+        } <span class="kw">else if </span>input.peek(<span class="macro">Token!</span>[<span class="kw">if</span>]) {
+            Expr::If(input.parse()<span class="question-mark">?</span>)
+        } <span class="kw">else if </span>input.peek(<span class="macro">Token!</span>[<span class="kw">while</span>]) {
+            Expr::While(input.parse()<span class="question-mark">?</span>)
+        } <span class="kw">else if </span>input.peek(<span class="macro">Token!</span>[<span class="kw">for</span>])
+            &amp;&amp; !(input.peek2(<span class="macro">Token!</span>[&lt;]) &amp;&amp; (input.peek3(Lifetime) || input.peek3(<span class="macro">Token!</span>[&gt;])))
+        {
+            Expr::ForLoop(input.parse()<span class="question-mark">?</span>)
+        } <span class="kw">else if </span>input.peek(<span class="macro">Token!</span>[<span class="kw">loop</span>]) {
+            Expr::Loop(input.parse()<span class="question-mark">?</span>)
+        } <span class="kw">else if </span>input.peek(<span class="macro">Token!</span>[<span class="kw">match</span>]) {
+            Expr::Match(input.parse()<span class="question-mark">?</span>)
+        } <span class="kw">else if </span>input.peek(<span class="macro">Token!</span>[<span class="kw">try</span>]) &amp;&amp; input.peek2(token::Brace) {
+            Expr::TryBlock(input.parse()<span class="question-mark">?</span>)
+        } <span class="kw">else if </span>input.peek(<span class="macro">Token!</span>[<span class="kw">unsafe</span>]) {
+            Expr::Unsafe(input.parse()<span class="question-mark">?</span>)
+        } <span class="kw">else if </span>input.peek(<span class="macro">Token!</span>[<span class="kw">const</span>]) &amp;&amp; input.peek2(token::Brace) {
+            Expr::Const(input.parse()<span class="question-mark">?</span>)
+        } <span class="kw">else if </span>input.peek(token::Brace) {
+            Expr::Block(input.parse()<span class="question-mark">?</span>)
+        } <span class="kw">else if </span>input.peek(Lifetime) {
+            atom_labeled(input)<span class="question-mark">?
+        </span>} <span class="kw">else </span>{
+            <span class="kw">let </span>allow_struct = AllowStruct(<span class="bool-val">true</span>);
+            unary_expr(input, allow_struct)<span class="question-mark">?
+        </span>};
+
+        <span class="kw">if </span>continue_parsing_early(<span class="kw-2">&amp;</span>expr) {
+            attrs.extend(expr.replace_attrs(Vec::new()));
+            expr.replace_attrs(attrs);
+
+            <span class="kw">let </span>allow_struct = AllowStruct(<span class="bool-val">true</span>);
+            <span class="kw">return </span>parse_expr(input, expr, allow_struct, Precedence::Any);
         }
 
-        <span class="doccomment">/// An alternative to the primary `Expr::parse` parser (from the
-        /// [`Parse`] trait) for syntactic positions in which expression
-        /// boundaries are placed more eagerly than done by the typical
-        /// expression grammar. This includes expressions at the head of a
-        /// statement or in the right-hand side of a `match` arm.
-        ///
-        /// Compare the following cases:
-        ///
-        /// 1.
-        ///   ```
-        ///   # let result = ();
-        ///   # let guard = false;
-        ///   # let cond = true;
-        ///   # let f = true;
-        ///   # let g = f;
-        ///   #
-        ///   let _ = match result {
-        ///       () if guard =&gt; if cond { f } else { g }
-        ///       () =&gt; false,
-        ///   };
-        ///   ```
-        ///
-        /// 2.
-        ///   ```
-        ///   # let cond = true;
-        ///   # let f = ();
-        ///   # let g = f;
-        ///   #
-        ///   let _ = || {
-        ///       if cond { f } else { g }
-        ///       ()
-        ///   };
-        ///   ```
-        ///
-        /// 3.
-        ///   ```
-        ///   # let cond = true;
-        ///   # let f = || ();
-        ///   # let g = f;
-        ///   #
-        ///   let _ = [if cond { f } else { g } ()];
-        ///   ```
-        ///
-        /// The same sequence of tokens `if cond { f } else { g } ()` appears in
-        /// expression position 3 times. The first two syntactic positions use
-        /// eager placement of expression boundaries, and parse as `Expr::If`,
-        /// with the adjacent `()` becoming `Pat::Tuple` or `Expr::Tuple`. In
-        /// contrast, the third case uses standard expression boundaries and
-        /// parses as `Expr::Call`.
-        ///
-        /// As with [`parse_without_eager_brace`], this ambiguity in the Rust
-        /// grammar is independent of precedence.
-        ///
-        /// [`parse_without_eager_brace`]: Self::parse_without_eager_brace
-        </span><span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
-        #[cfg_attr(doc_cfg, doc(cfg(all(feature = <span class="string">"full"</span>, feature = <span class="string">"parsing"</span>))))]
-        </span><span class="kw">pub fn </span>parse_with_earlier_boundary_rule(input: ParseStream) -&gt; <span class="prelude-ty">Result</span>&lt;Expr&gt; {
-            <span class="kw">let </span><span class="kw-2">mut </span>attrs = input.call(expr_attrs)<span class="question-mark">?</span>;
-            <span class="kw">let </span><span class="kw-2">mut </span>expr = <span class="kw">if </span>input.peek(token::Group) {
-                <span class="kw">let </span>allow_struct = AllowStruct(<span class="bool-val">true</span>);
-                <span class="kw">let </span>atom = expr_group(input, allow_struct)<span class="question-mark">?</span>;
-                <span class="kw">if </span>continue_parsing_early(<span class="kw-2">&amp;</span>atom) {
-                    trailer_helper(input, atom)<span class="question-mark">?
-                </span>} <span class="kw">else </span>{
-                    atom
-                }
-            } <span class="kw">else if </span>input.peek(<span class="macro">Token!</span>[<span class="kw">if</span>]) {
-                Expr::If(input.parse()<span class="question-mark">?</span>)
-            } <span class="kw">else if </span>input.peek(<span class="macro">Token!</span>[<span class="kw">while</span>]) {
-                Expr::While(input.parse()<span class="question-mark">?</span>)
-            } <span class="kw">else if </span>input.peek(<span class="macro">Token!</span>[<span class="kw">for</span>])
-                &amp;&amp; !(input.peek2(<span class="macro">Token!</span>[&lt;]) &amp;&amp; (input.peek3(Lifetime) || input.peek3(<span class="macro">Token!</span>[&gt;])))
-            {
-                Expr::ForLoop(input.parse()<span class="question-mark">?</span>)
-            } <span class="kw">else if </span>input.peek(<span class="macro">Token!</span>[<span class="kw">loop</span>]) {
-                Expr::Loop(input.parse()<span class="question-mark">?</span>)
-            } <span class="kw">else if </span>input.peek(<span class="macro">Token!</span>[<span class="kw">match</span>]) {
-                Expr::Match(input.parse()<span class="question-mark">?</span>)
-            } <span class="kw">else if </span>input.peek(<span class="macro">Token!</span>[<span class="kw">try</span>]) &amp;&amp; input.peek2(token::Brace) {
-                Expr::TryBlock(input.parse()<span class="question-mark">?</span>)
-            } <span class="kw">else if </span>input.peek(<span class="macro">Token!</span>[<span class="kw">unsafe</span>]) {
-                Expr::Unsafe(input.parse()<span class="question-mark">?</span>)
-            } <span class="kw">else if </span>input.peek(<span class="macro">Token!</span>[<span class="kw">const</span>]) &amp;&amp; input.peek2(token::Brace) {
-                Expr::Const(input.parse()<span class="question-mark">?</span>)
-            } <span class="kw">else if </span>input.peek(token::Brace) {
-                Expr::Block(input.parse()<span class="question-mark">?</span>)
-            } <span class="kw">else if </span>input.peek(Lifetime) {
-                atom_labeled(input)<span class="question-mark">?
-            </span>} <span class="kw">else </span>{
-                <span class="kw">let </span>allow_struct = AllowStruct(<span class="bool-val">true</span>);
-                unary_expr(input, allow_struct)<span class="question-mark">?
-            </span>};
-
-            <span class="kw">if </span>continue_parsing_early(<span class="kw-2">&amp;</span>expr) {
-                attrs.extend(expr.replace_attrs(Vec::new()));
-                expr.replace_attrs(attrs);
-
-                <span class="kw">let </span>allow_struct = AllowStruct(<span class="bool-val">true</span>);
-                <span class="kw">return </span>parse_expr(input, expr, allow_struct, Precedence::Any);
-            }
-
-            <span class="kw">if </span>input.peek(<span class="macro">Token!</span>[.]) &amp;&amp; !input.peek(<span class="macro">Token!</span>[..]) || input.peek(<span class="macro">Token!</span>[<span class="question-mark">?</span>]) {
-                expr = trailer_helper(input, expr)<span class="question-mark">?</span>;
-
-                attrs.extend(expr.replace_attrs(Vec::new()));
-                expr.replace_attrs(attrs);
-
-                <span class="kw">let </span>allow_struct = AllowStruct(<span class="bool-val">true</span>);
-                <span class="kw">return </span>parse_expr(input, expr, allow_struct, Precedence::Any);
-            }
+        <span class="kw">if </span>input.peek(<span class="macro">Token!</span>[.]) &amp;&amp; !input.peek(<span class="macro">Token!</span>[..]) || input.peek(<span class="macro">Token!</span>[<span class="question-mark">?</span>]) {
+            expr = trailer_helper(input, expr)<span class="question-mark">?</span>;
 
             attrs.extend(expr.replace_attrs(Vec::new()));
             expr.replace_attrs(attrs);
-            <span class="prelude-val">Ok</span>(expr)
+
+            <span class="kw">let </span>allow_struct = AllowStruct(<span class="bool-val">true</span>);
+            <span class="kw">return </span>parse_expr(input, expr, allow_struct, Precedence::Any);
         }
+
+        attrs.extend(expr.replace_attrs(Vec::new()));
+        expr.replace_attrs(attrs);
+        <span class="prelude-val">Ok</span>(expr)
     }
 
     <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
@@ -4942,28 +5058,6 @@
         <span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
             <span class="kw-2">*</span><span class="self">self
         </span>}
-    }
-
-    <span class="kw">impl </span>Copy <span class="kw">for </span>Precedence {}
-
-    <span class="kw">impl </span>Clone <span class="kw">for </span>Precedence {
-        <span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
-            <span class="kw-2">*</span><span class="self">self
-        </span>}
-    }
-
-    <span class="kw">impl </span>PartialEq <span class="kw">for </span>Precedence {
-        <span class="kw">fn </span>eq(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; bool {
-            <span class="kw-2">*</span><span class="self">self </span><span class="kw">as </span>u8 == <span class="kw-2">*</span>other <span class="kw">as </span>u8
-        }
-    }
-
-    <span class="kw">impl </span>PartialOrd <span class="kw">for </span>Precedence {
-        <span class="kw">fn </span>partial_cmp(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Ordering&gt; {
-            <span class="kw">let </span>this = <span class="kw-2">*</span><span class="self">self </span><span class="kw">as </span>u8;
-            <span class="kw">let </span>other = <span class="kw-2">*</span>other <span class="kw">as </span>u8;
-            <span class="prelude-val">Some</span>(this.cmp(<span class="kw-2">&amp;</span>other))
-        }
     }
 
     <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
@@ -4994,75 +5088,48 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Expr&gt; {
         <span class="kw">loop </span>{
             <span class="kw">let </span>ahead = input.fork();
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(op) = <span class="kw">match </span>ahead.parse::&lt;BinOp&gt;() {
-                <span class="prelude-val">Ok</span>(op) <span class="kw">if </span>Precedence::of(<span class="kw-2">&amp;</span>op) &gt;= base =&gt; <span class="prelude-val">Some</span>(op),
-                <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
-            } {
-                input.advance_to(<span class="kw-2">&amp;</span>ahead);
+            <span class="kw">if let </span>Expr::Range(ExprRange { end: <span class="prelude-val">Some</span>(<span class="kw">_</span>), .. }) = lhs {
+                <span class="comment">// A range with an upper bound cannot be the left-hand side of
+                // another binary operator.
+                </span><span class="kw">break</span>;
+            } <span class="kw">else if let </span><span class="prelude-val">Ok</span>(op) = ahead.parse::&lt;BinOp&gt;() {
                 <span class="kw">let </span>precedence = Precedence::of(<span class="kw-2">&amp;</span>op);
-                <span class="kw">let </span><span class="kw-2">mut </span>rhs = unary_expr(input, allow_struct)<span class="question-mark">?</span>;
-                <span class="kw">loop </span>{
-                    <span class="kw">let </span>next = peek_precedence(input);
-                    <span class="kw">if </span>next &gt; precedence || next == precedence &amp;&amp; precedence == Precedence::Assign {
-                        rhs = parse_expr(input, rhs, allow_struct, next)<span class="question-mark">?</span>;
-                    } <span class="kw">else </span>{
-                        <span class="kw">break</span>;
+                <span class="kw">if </span>precedence &lt; base {
+                    <span class="kw">break</span>;
+                }
+                <span class="kw">if </span>precedence == Precedence::Compare {
+                    <span class="kw">if let </span>Expr::Binary(lhs) = <span class="kw-2">&amp;</span>lhs {
+                        <span class="kw">if </span>Precedence::of(<span class="kw-2">&amp;</span>lhs.op) == Precedence::Compare {
+                            <span class="kw">break</span>;
+                        }
                     }
                 }
+                input.advance_to(<span class="kw-2">&amp;</span>ahead);
+                <span class="kw">let </span>right = parse_binop_rhs(input, allow_struct, precedence)<span class="question-mark">?</span>;
                 lhs = Expr::Binary(ExprBinary {
                     attrs: Vec::new(),
                     left: Box::new(lhs),
                     op,
-                    right: Box::new(rhs),
+                    right,
                 });
-            } <span class="kw">else if </span>Precedence::Assign &gt;= base
-                &amp;&amp; input.peek(<span class="macro">Token!</span>[=])
-                &amp;&amp; !input.peek(<span class="macro">Token!</span>[==])
-                &amp;&amp; !input.peek(<span class="macro">Token!</span>[=&gt;])
+            } <span class="kw">else if </span>Precedence::Assign &gt;= base &amp;&amp; input.peek(<span class="macro">Token!</span>[=]) &amp;&amp; !input.peek(<span class="macro">Token!</span>[=&gt;])
             {
                 <span class="kw">let </span>eq_token: <span class="macro">Token!</span>[=] = input.parse()<span class="question-mark">?</span>;
-                <span class="kw">let </span><span class="kw-2">mut </span>rhs = unary_expr(input, allow_struct)<span class="question-mark">?</span>;
-                <span class="kw">loop </span>{
-                    <span class="kw">let </span>next = peek_precedence(input);
-                    <span class="kw">if </span>next &gt;= Precedence::Assign {
-                        rhs = parse_expr(input, rhs, allow_struct, next)<span class="question-mark">?</span>;
-                    } <span class="kw">else </span>{
-                        <span class="kw">break</span>;
-                    }
-                }
+                <span class="kw">let </span>right = parse_binop_rhs(input, allow_struct, Precedence::Assign)<span class="question-mark">?</span>;
                 lhs = Expr::Assign(ExprAssign {
                     attrs: Vec::new(),
                     left: Box::new(lhs),
                     eq_token,
-                    right: Box::new(rhs),
+                    right,
                 });
             } <span class="kw">else if </span>Precedence::Range &gt;= base &amp;&amp; input.peek(<span class="macro">Token!</span>[..]) {
                 <span class="kw">let </span>limits: RangeLimits = input.parse()<span class="question-mark">?</span>;
-                <span class="kw">let </span>rhs = <span class="kw">if </span><span class="macro">matches!</span>(limits, RangeLimits::HalfOpen(<span class="kw">_</span>))
-                    &amp;&amp; (input.is_empty()
-                        || input.peek(<span class="macro">Token!</span>[,])
-                        || input.peek(<span class="macro">Token!</span>[;])
-                        || input.peek(<span class="macro">Token!</span>[.]) &amp;&amp; !input.peek(<span class="macro">Token!</span>[..])
-                        || !allow_struct.<span class="number">0 </span>&amp;&amp; input.peek(token::Brace))
-                {
-                    <span class="prelude-val">None
-                </span>} <span class="kw">else </span>{
-                    <span class="kw">let </span><span class="kw-2">mut </span>rhs = unary_expr(input, allow_struct)<span class="question-mark">?</span>;
-                    <span class="kw">loop </span>{
-                        <span class="kw">let </span>next = peek_precedence(input);
-                        <span class="kw">if </span>next &gt; Precedence::Range {
-                            rhs = parse_expr(input, rhs, allow_struct, next)<span class="question-mark">?</span>;
-                        } <span class="kw">else </span>{
-                            <span class="kw">break</span>;
-                        }
-                    }
-                    <span class="prelude-val">Some</span>(rhs)
-                };
+                <span class="kw">let </span>end = parse_range_end(input, <span class="kw-2">&amp;</span>limits, allow_struct)<span class="question-mark">?</span>;
                 lhs = Expr::Range(ExprRange {
                     attrs: Vec::new(),
                     start: <span class="prelude-val">Some</span>(Box::new(lhs)),
                     limits,
-                    end: rhs.map(Box::new),
+                    end,
                 });
             } <span class="kw">else if </span>Precedence::Cast &gt;= base &amp;&amp; input.peek(<span class="macro">Token!</span>[<span class="kw">as</span>]) {
                 <span class="kw">let </span>as_token: <span class="macro">Token!</span>[<span class="kw">as</span>] = input.parse()<span class="question-mark">?</span>;
@@ -5087,26 +5154,25 @@
     </span><span class="kw">fn </span>parse_expr(input: ParseStream, <span class="kw-2">mut </span>lhs: Expr, base: Precedence) -&gt; <span class="prelude-ty">Result</span>&lt;Expr&gt; {
         <span class="kw">loop </span>{
             <span class="kw">let </span>ahead = input.fork();
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(op) = <span class="kw">match </span>ahead.parse::&lt;BinOp&gt;() {
-                <span class="prelude-val">Ok</span>(op) <span class="kw">if </span>Precedence::of(<span class="kw-2">&amp;</span>op) &gt;= base =&gt; <span class="prelude-val">Some</span>(op),
-                <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
-            } {
-                input.advance_to(<span class="kw-2">&amp;</span>ahead);
+            <span class="kw">if let </span><span class="prelude-val">Ok</span>(op) = ahead.parse::&lt;BinOp&gt;() {
                 <span class="kw">let </span>precedence = Precedence::of(<span class="kw-2">&amp;</span>op);
-                <span class="kw">let </span><span class="kw-2">mut </span>rhs = unary_expr(input)<span class="question-mark">?</span>;
-                <span class="kw">loop </span>{
-                    <span class="kw">let </span>next = peek_precedence(input);
-                    <span class="kw">if </span>next &gt; precedence || next == precedence &amp;&amp; precedence == Precedence::Assign {
-                        rhs = parse_expr(input, rhs, next)<span class="question-mark">?</span>;
-                    } <span class="kw">else </span>{
-                        <span class="kw">break</span>;
+                <span class="kw">if </span>precedence &lt; base {
+                    <span class="kw">break</span>;
+                }
+                <span class="kw">if </span>precedence == Precedence::Compare {
+                    <span class="kw">if let </span>Expr::Binary(lhs) = <span class="kw-2">&amp;</span>lhs {
+                        <span class="kw">if </span>Precedence::of(<span class="kw-2">&amp;</span>lhs.op) == Precedence::Compare {
+                            <span class="kw">break</span>;
+                        }
                     }
                 }
+                input.advance_to(<span class="kw-2">&amp;</span>ahead);
+                <span class="kw">let </span>right = parse_binop_rhs(input, precedence)<span class="question-mark">?</span>;
                 lhs = Expr::Binary(ExprBinary {
                     attrs: Vec::new(),
                     left: Box::new(lhs),
                     op,
-                    right: Box::new(rhs),
+                    right,
                 });
             } <span class="kw">else if </span>Precedence::Cast &gt;= base &amp;&amp; input.peek(<span class="macro">Token!</span>[<span class="kw">as</span>]) {
                 <span class="kw">let </span>as_token: <span class="macro">Token!</span>[<span class="kw">as</span>] = input.parse()<span class="question-mark">?</span>;
@@ -5127,6 +5193,32 @@
         <span class="prelude-val">Ok</span>(lhs)
     }
 
+    <span class="kw">fn </span>parse_binop_rhs(
+        input: ParseStream,
+        <span class="attr">#[cfg(feature = <span class="string">"full"</span>)] </span>allow_struct: AllowStruct,
+        precedence: Precedence,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Box&lt;Expr&gt;&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>rhs = unary_expr(
+            input,
+            <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
+            </span>allow_struct,
+        )<span class="question-mark">?</span>;
+        <span class="kw">loop </span>{
+            <span class="kw">let </span>next = peek_precedence(input);
+            <span class="kw">if </span>next &gt; precedence || next == precedence &amp;&amp; precedence == Precedence::Assign {
+                rhs = parse_expr(
+                    input,
+                    rhs,
+                    <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
+                    </span>allow_struct,
+                    next,
+                )<span class="question-mark">?</span>;
+            } <span class="kw">else </span>{
+                <span class="kw">return </span><span class="prelude-val">Ok</span>(Box::new(rhs));
+            }
+        }
+    }
+
     <span class="kw">fn </span>peek_precedence(input: ParseStream) -&gt; Precedence {
         <span class="kw">if let </span><span class="prelude-val">Ok</span>(op) = input.fork().parse() {
             Precedence::of(<span class="kw-2">&amp;</span>op)
@@ -5142,7 +5234,7 @@
     }
 
     <span class="comment">// Parse an arbitrary expression.
-    </span><span class="kw">fn </span>ambiguous_expr(
+    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>ambiguous_expr(
         input: ParseStream,
         <span class="attr">#[cfg(feature = <span class="string">"full"</span>)] </span>allow_struct: AllowStruct,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Expr&gt; {
@@ -5860,40 +5952,54 @@
     </span><span class="kw">impl </span>Parse <span class="kw">for </span>ExprIf {
         <span class="kw">fn </span>parse(input: ParseStream) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>&gt; {
             <span class="kw">let </span>attrs = input.call(Attribute::parse_outer)<span class="question-mark">?</span>;
-            <span class="prelude-val">Ok</span>(ExprIf {
-                attrs,
-                if_token: input.parse()<span class="question-mark">?</span>,
-                cond: Box::new(input.call(Expr::parse_without_eager_brace)<span class="question-mark">?</span>),
-                then_branch: input.parse()<span class="question-mark">?</span>,
-                else_branch: {
-                    <span class="kw">if </span>input.peek(<span class="macro">Token!</span>[<span class="kw">else</span>]) {
-                        <span class="prelude-val">Some</span>(input.call(else_block)<span class="question-mark">?</span>)
-                    } <span class="kw">else </span>{
-                        <span class="prelude-val">None
-                    </span>}
-                },
-            })
+
+            <span class="kw">let </span><span class="kw-2">mut </span>clauses = Vec::new();
+            <span class="kw">let </span><span class="kw-2">mut </span>expr;
+            <span class="kw">loop </span>{
+                <span class="kw">let </span>if_token: <span class="macro">Token!</span>[<span class="kw">if</span>] = input.parse()<span class="question-mark">?</span>;
+                <span class="kw">let </span>cond = input.call(Expr::parse_without_eager_brace)<span class="question-mark">?</span>;
+                <span class="kw">let </span>then_branch: Block = input.parse()<span class="question-mark">?</span>;
+
+                expr = ExprIf {
+                    attrs: Vec::new(),
+                    if_token,
+                    cond: Box::new(cond),
+                    then_branch,
+                    else_branch: <span class="prelude-val">None</span>,
+                };
+
+                <span class="kw">if </span>!input.peek(<span class="macro">Token!</span>[<span class="kw">else</span>]) {
+                    <span class="kw">break</span>;
+                }
+
+                <span class="kw">let </span>else_token: <span class="macro">Token!</span>[<span class="kw">else</span>] = input.parse()<span class="question-mark">?</span>;
+                <span class="kw">let </span>lookahead = input.lookahead1();
+                <span class="kw">if </span>lookahead.peek(<span class="macro">Token!</span>[<span class="kw">if</span>]) {
+                    expr.else_branch = <span class="prelude-val">Some</span>((else_token, Box::new(Expr::PLACEHOLDER)));
+                    clauses.push(expr);
+                    <span class="kw">continue</span>;
+                } <span class="kw">else if </span>lookahead.peek(token::Brace) {
+                    expr.else_branch = <span class="prelude-val">Some</span>((
+                        else_token,
+                        Box::new(Expr::Block(ExprBlock {
+                            attrs: Vec::new(),
+                            label: <span class="prelude-val">None</span>,
+                            block: input.parse()<span class="question-mark">?</span>,
+                        })),
+                    ));
+                    <span class="kw">break</span>;
+                } <span class="kw">else </span>{
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(lookahead.error());
+                }
+            }
+
+            <span class="kw">while let </span><span class="prelude-val">Some</span>(<span class="kw-2">mut </span>prev) = clauses.pop() {
+                <span class="kw-2">*</span>prev.else_branch.as_mut().unwrap().<span class="number">1 </span>= Expr::If(expr);
+                expr = prev;
+            }
+            expr.attrs = attrs;
+            <span class="prelude-val">Ok</span>(expr)
         }
-    }
-
-    <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
-    </span><span class="kw">fn </span>else_block(input: ParseStream) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="macro">Token!</span>[<span class="kw">else</span>], Box&lt;Expr&gt;)&gt; {
-        <span class="kw">let </span>else_token: <span class="macro">Token!</span>[<span class="kw">else</span>] = input.parse()<span class="question-mark">?</span>;
-
-        <span class="kw">let </span>lookahead = input.lookahead1();
-        <span class="kw">let </span>else_branch = <span class="kw">if </span>lookahead.peek(<span class="macro">Token!</span>[<span class="kw">if</span>]) {
-            input.parse().map(Expr::If)<span class="question-mark">?
-        </span>} <span class="kw">else if </span>lookahead.peek(token::Brace) {
-            Expr::Block(ExprBlock {
-                attrs: Vec::new(),
-                label: <span class="prelude-val">None</span>,
-                block: input.parse()<span class="question-mark">?</span>,
-            })
-        } <span class="kw">else </span>{
-            <span class="kw">return </span><span class="prelude-val">Err</span>(lookahead.error());
-        };
-
-        <span class="prelude-val">Ok</span>((else_token, Box::new(else_branch)))
     }
 
     <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
@@ -6482,24 +6588,33 @@
     <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
     </span><span class="kw">fn </span>expr_range(input: ParseStream, allow_struct: AllowStruct) -&gt; <span class="prelude-ty">Result</span>&lt;ExprRange&gt; {
         <span class="kw">let </span>limits: RangeLimits = input.parse()<span class="question-mark">?</span>;
-        <span class="kw">let </span>end = <span class="kw">if </span><span class="macro">matches!</span>(limits, RangeLimits::HalfOpen(<span class="kw">_</span>))
-            &amp;&amp; (input.is_empty()
-                || input.peek(<span class="macro">Token!</span>[,])
-                || input.peek(<span class="macro">Token!</span>[;])
-                || input.peek(<span class="macro">Token!</span>[.]) &amp;&amp; !input.peek(<span class="macro">Token!</span>[..])
-                || !allow_struct.<span class="number">0 </span>&amp;&amp; input.peek(token::Brace))
-        {
-            <span class="prelude-val">None
-        </span>} <span class="kw">else </span>{
-            <span class="kw">let </span>to = ambiguous_expr(input, allow_struct)<span class="question-mark">?</span>;
-            <span class="prelude-val">Some</span>(Box::new(to))
-        };
+        <span class="kw">let </span>end = parse_range_end(input, <span class="kw-2">&amp;</span>limits, allow_struct)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(ExprRange {
             attrs: Vec::new(),
             start: <span class="prelude-val">None</span>,
             limits,
             end,
         })
+    }
+
+    <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
+    </span><span class="kw">fn </span>parse_range_end(
+        input: ParseStream,
+        limits: <span class="kw-2">&amp;</span>RangeLimits,
+        allow_struct: AllowStruct,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Box&lt;Expr&gt;&gt;&gt; {
+        <span class="kw">if </span><span class="macro">matches!</span>(limits, RangeLimits::HalfOpen(<span class="kw">_</span>))
+            &amp;&amp; (input.is_empty()
+                || input.peek(<span class="macro">Token!</span>[,])
+                || input.peek(<span class="macro">Token!</span>[;])
+                || input.peek(<span class="macro">Token!</span>[.]) &amp;&amp; !input.peek(<span class="macro">Token!</span>[..])
+                || !allow_struct.<span class="number">0 </span>&amp;&amp; input.peek(token::Brace))
+        {
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>)
+        } <span class="kw">else </span>{
+            <span class="kw">let </span>end = parse_binop_rhs(input, allow_struct, Precedence::Range)<span class="question-mark">?</span>;
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(end))
+        }
     }
 
     <span class="attr">#[cfg(feature = <span class="string">"full"</span>)]
@@ -6635,7 +6750,7 @@
             <span class="kw">let </span>part_end = offset + part.len();
             index.span = float_token.subspan(offset..part_end).unwrap_or(float_span);
 
-            <span class="kw">let </span>base = mem::replace(e, Expr::DUMMY);
+            <span class="kw">let </span>base = mem::replace(e, Expr::PLACEHOLDER);
             <span class="kw-2">*</span>e = Expr::Field(ExprField {
                 attrs: Vec::new(),
                 base: Box::new(base),
@@ -6916,16 +7031,33 @@
     </span><span class="kw">impl </span>ToTokens <span class="kw">for </span>ExprIf {
         <span class="kw">fn </span>to_tokens(<span class="kw-2">&amp;</span><span class="self">self</span>, tokens: <span class="kw-2">&amp;mut </span>TokenStream) {
             outer_attrs_to_tokens(<span class="kw-2">&amp;</span><span class="self">self</span>.attrs, tokens);
-            <span class="self">self</span>.if_token.to_tokens(tokens);
-            wrap_bare_struct(tokens, <span class="kw-2">&amp;</span><span class="self">self</span>.cond);
-            <span class="self">self</span>.then_branch.to_tokens(tokens);
-            <span class="kw">if let </span><span class="prelude-val">Some</span>((else_token, else_)) = <span class="kw-2">&amp;</span><span class="self">self</span>.else_branch {
+
+            <span class="kw">let </span><span class="kw-2">mut </span>expr = <span class="self">self</span>;
+            <span class="kw">loop </span>{
+                expr.if_token.to_tokens(tokens);
+                wrap_bare_struct(tokens, <span class="kw-2">&amp;</span>expr.cond);
+                expr.then_branch.to_tokens(tokens);
+
+                <span class="kw">let </span>(else_token, else_) = <span class="kw">match </span><span class="kw-2">&amp;</span>expr.else_branch {
+                    <span class="prelude-val">Some</span>(else_branch) =&gt; else_branch,
+                    <span class="prelude-val">None </span>=&gt; <span class="kw">break</span>,
+                };
+
                 else_token.to_tokens(tokens);
-                <span class="comment">// If we are not one of the valid expressions to exist in an else
-                // clause, wrap ourselves in a block.
-                </span><span class="kw">match </span><span class="kw-2">**</span>else_ {
-                    Expr::If(<span class="kw">_</span>) | Expr::Block(<span class="kw">_</span>) =&gt; else_.to_tokens(tokens),
-                    <span class="kw">_ </span>=&gt; token::Brace::default().surround(tokens, |tokens| else_.to_tokens(tokens)),
+                <span class="kw">match </span><span class="kw-2">&amp;**</span>else_ {
+                    Expr::If(next) =&gt; {
+                        expr = next;
+                    }
+                    Expr::Block(last) =&gt; {
+                        last.to_tokens(tokens);
+                        <span class="kw">break</span>;
+                    }
+                    <span class="comment">// If this is not one of the valid expressions to exist in
+                    // an else clause, wrap it in a block.
+                    </span>other =&gt; {
+                        token::Brace::default().surround(tokens, |tokens| other.to_tokens(tokens));
+                        <span class="kw">break</span>;
+                    }
                 }
             }
         }

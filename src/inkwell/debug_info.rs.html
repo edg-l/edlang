@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/inkwell-946411d814d2c9f8/5d5a531/src/debug_info.rs`."><title>debug_info.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="inkwell" data-themes="" data-resource-suffix="" data-rustdoc-version="1.78.0 (9b00956e5 2024-04-29)" data-channel="1.78.0" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/inkwell-946411d814d2c9f8/6c0fb56/src/debug_info.rs`."><title>debug_info.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="inkwell" data-themes="" data-resource-suffix="" data-rustdoc-version="1.78.0 (9b00956e5 2024-04-29)" data-channel="1.78.0" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
             <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
     <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../inkwell/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
@@ -1716,7 +1716,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::AddressSpace;
 
 <span class="kw">use </span>llvm_sys::core::LLVMMetadataAsValue;
-<span class="attr">#[llvm_versions(<span class="number">8.0</span>..=latest)]
+<span class="attr">#[llvm_versions(<span class="number">8</span>..)]
 </span><span class="kw">use </span>llvm_sys::debuginfo::LLVMDIBuilderCreateTypedef;
 <span class="kw">pub use </span>llvm_sys::debuginfo::LLVMDWARFTypeEncoding;
 <span class="kw">use </span>llvm_sys::debuginfo::LLVMDebugMetadataVersion;
@@ -1735,7 +1735,7 @@
     LLVMDIBuilderInsertDeclareBefore, LLVMDILocationGetColumn, LLVMDILocationGetLine, LLVMDILocationGetScope,
     LLVMDITypeGetAlignInBits, LLVMDITypeGetOffsetInBits, LLVMDITypeGetSizeInBits,
 };
-<span class="attr">#[llvm_versions(<span class="number">8.0</span>..=latest)]
+<span class="attr">#[llvm_versions(<span class="number">8</span>..)]
 </span><span class="kw">use </span>llvm_sys::debuginfo::{LLVMDIBuilderCreateConstantValueExpression, LLVMDIBuilderCreateGlobalVariableExpression};
 <span class="kw">use </span>llvm_sys::prelude::{LLVMDIBuilderRef, LLVMMetadataRef};
 <span class="kw">use </span>std::convert::TryInto;
@@ -2118,7 +2118,7 @@
 
     <span class="doccomment">/// Create a primitive basic type. `encoding` is an unsigned int flag (`DW_ATE_*`
     /// enum) defined by the chosen DWARF standard.
-    </span><span class="attr">#[llvm_versions(<span class="number">7.0</span>..=latest)]
+    </span><span class="attr">#[llvm_versions(<span class="number">7</span>..)]
     </span><span class="kw">pub fn </span>create_basic_type(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         name: <span class="kw-2">&amp;</span>str,
@@ -2149,7 +2149,7 @@
     }
 
     <span class="doccomment">/// Create a typedef (alias) of `ditype`
-    </span><span class="attr">#[llvm_versions(<span class="number">8.0</span>..=latest)]
+    </span><span class="attr">#[llvm_versions(<span class="number">8</span>..)]
     </span><span class="kw">pub fn </span>create_typedef(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         ditype: DIType&lt;<span class="lifetime">'ctx</span>&gt;,
@@ -2398,7 +2398,7 @@
         }
     }
 
-    <span class="attr">#[llvm_versions(<span class="number">8.0</span>..=latest)]
+    <span class="attr">#[llvm_versions(<span class="number">8</span>..)]
     </span><span class="kw">pub fn </span>create_global_variable_expression(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         scope: DIScope&lt;<span class="lifetime">'ctx</span>&gt;,
@@ -2437,7 +2437,7 @@
         }
     }
 
-    <span class="attr">#[llvm_versions(<span class="number">8.0</span>..=latest)]
+    <span class="attr">#[llvm_versions(<span class="number">8</span>..)]
     </span><span class="kw">pub fn </span>create_constant_expression(<span class="kw-2">&amp;</span><span class="self">self</span>, value: i64) -&gt; DIExpression&lt;<span class="lifetime">'ctx</span>&gt; {
         <span class="kw">let </span>metadata_ref = <span class="kw">unsafe </span>{ LLVMDIBuilderCreateConstantValueExpression(<span class="self">self</span>.builder, value <span class="kw">as _</span>) };
 
@@ -2996,7 +2996,7 @@
         <span class="kw">const </span>PUBLIC: <span class="self">Self</span>;
         <span class="kw">const </span>FWD_DECL: <span class="self">Self</span>;
         <span class="kw">const </span>APPLE_BLOCK: <span class="self">Self</span>;
-        <span class="comment">//#[llvm_versions(7.0..=9.0)]
+        <span class="comment">//#[llvm_versions(7..=9)]
         //const BLOCK_BYREF_STRUCT: Self;
         </span><span class="kw">const </span>VIRTUAL: <span class="self">Self</span>;
         <span class="kw">const </span>ARTIFICIAL: <span class="self">Self</span>;
@@ -3015,24 +3015,24 @@
         <span class="kw">const </span>INTRODUCED_VIRTUAL: <span class="self">Self</span>;
         <span class="kw">const </span>BIT_FIELD: <span class="self">Self</span>;
         <span class="kw">const </span>NO_RETURN: <span class="self">Self</span>;
-        <span class="comment">//#[llvm_versions(7.0..=8.0)]
+        <span class="comment">//#[llvm_versions(7..=8)]
         //const MAIN_SUBPROGRAM: Self;
         </span><span class="kw">const </span>TYPE_PASS_BY_VALUE: <span class="self">Self</span>;
         <span class="kw">const </span>TYPE_PASS_BY_REFERENCE: <span class="self">Self</span>;
-        <span class="comment">//#[llvm_versions(7.0)]
+        <span class="comment">//#[llvm_versions(7)]
         //const FIXED_ENUM: Self;
-        //#[llvm_versions(8.0..=latest)]
+        //#[llvm_versions(8..)]
         //const ENUM_CLASS: Self;
         </span><span class="kw">const </span>THUNK: <span class="self">Self</span>;
-        <span class="comment">//#[llvm_versions(7.0..=8.0)]
+        <span class="comment">//#[llvm_versions(7..=8)]
         //const TRIVIAL: Self;
-        //#[llvm_versions(9.0..=latest)]
+        //#[llvm_versions(9..)]
         //const NON_TRIVIAL: Self;
-        //#[llvm_versions(10.0)]
+        //#[llvm_versions(10)]
         //const RESERVED_BIT4: Self;
-        //#[llvm_versions(8.0..=latest)]
+        //#[llvm_versions(8..)]
         //const BIGE_NDIAN: Self;
-        //#[llvm_versions(8.0..=latest)]
+        //#[llvm_versions(8..)]
         //const LITTLE_ENDIAN: Self;
         </span><span class="kw">const </span>INDIRECT_VIRTUAL_BASE: <span class="self">Self</span>;
     }
@@ -3043,7 +3043,7 @@
         <span class="kw">const </span>PUBLIC: DIFlags = llvm_sys::debuginfo::LLVMDIFlagPublic;
         <span class="kw">const </span>FWD_DECL: DIFlags = llvm_sys::debuginfo::LLVMDIFlagFwdDecl;
         <span class="kw">const </span>APPLE_BLOCK: DIFlags = llvm_sys::debuginfo::LLVMDIFlagAppleBlock;
-        <span class="comment">//#[llvm_versions(7.0..=9.0)]
+        <span class="comment">//#[llvm_versions(7..=9)]
         //const BLOCK_BYREF_STRUCT: DIFlags = llvm_sys::debuginfo::LLVMDIFlagBlockByrefStruct;
         </span><span class="kw">const </span>VIRTUAL: DIFlags = llvm_sys::debuginfo::LLVMDIFlagVirtual;
         <span class="kw">const </span>ARTIFICIAL: DIFlags = llvm_sys::debuginfo::LLVMDIFlagArtificial;
@@ -3062,24 +3062,24 @@
         <span class="kw">const </span>INTRODUCED_VIRTUAL: DIFlags = llvm_sys::debuginfo::LLVMDIFlagIntroducedVirtual;
         <span class="kw">const </span>BIT_FIELD: DIFlags = llvm_sys::debuginfo::LLVMDIFlagBitField;
         <span class="kw">const </span>NO_RETURN: DIFlags = llvm_sys::debuginfo::LLVMDIFlagNoReturn;
-        <span class="comment">//#[llvm_versions(7.0..=8.0)]
+        <span class="comment">//#[llvm_versions(7..=8)]
         //const MAIN_SUBPROGRAM: DIFlags = llvm_sys::debuginfo::LLVMDIFlagMainSubprogram;
         </span><span class="kw">const </span>TYPE_PASS_BY_VALUE: DIFlags = llvm_sys::debuginfo::LLVMDIFlagTypePassByValue;
         <span class="kw">const </span>TYPE_PASS_BY_REFERENCE: DIFlags = llvm_sys::debuginfo::LLVMDIFlagTypePassByReference;
-        <span class="comment">//#[llvm_versions(7.0)]
+        <span class="comment">//#[llvm_versions(7)]
         //const FIXED_ENUM: DIFlags = llvm_sys::debuginfo::LLVMDIFlagFixedEnum;
-        //#[llvm_versions(8.0..=latest)]
+        //#[llvm_versions(8..)]
         //const ENUM_CLASS: DIFlags = llvm_sys::debuginfo::LLVMDIFlagEnumClass;
         </span><span class="kw">const </span>THUNK: DIFlags = llvm_sys::debuginfo::LLVMDIFlagThunk;
-        <span class="comment">//#[llvm_versions(7.0..=8.0)]
+        <span class="comment">//#[llvm_versions(7..=8)]
         //const TRIVIAL: DIFlags = llvm_sys::debuginfo::LLVMDIFlagTrivial;
-        //#[llvm_versions(9.0..=latest)]
+        //#[llvm_versions(9..)]
         //const NON_TRIVIAL: DIFlags = llvm_sys::debuginfo::LLVMDIFlagNonTrivial;
-        //#[llvm_versions(10.0)]
+        //#[llvm_versions(10)]
         //const RESERVED_BIT4: DIFlags = llvm_sys::debuginfo::LLVMDIFlagReservedBit4;
-        //#[llvm_versions(8.0..=latest)]
+        //#[llvm_versions(8..)]
         //const BIG_ENDIAN: DIFlags = llvm_sys::debuginfo::LLVMDIFlagBigEndian;
-        //#[llvm_versions(8.0..=latest)]
+        //#[llvm_versions(8..)]
         //const LITTLE_ENDIAN: DIFlags = llvm_sys::debuginfo::LLVMDIFlagLittleEndian;
         </span><span class="kw">const </span>INDIRECT_VIRTUAL_BASE: DIFlags = llvm_sys::debuginfo::LLVMDIFlagIndirectVirtualBase;
     }
@@ -3180,34 +3180,34 @@
         </span>GOOGLERenderScript,
         <span class="attr">#[llvm_variant(LLVMDWARFSourceLanguageBORLAND_Delphi)]
         </span>BORLANDDelphi,
-        <span class="attr">#[llvm_versions(<span class="number">16.0</span>..=latest)]
+        <span class="attr">#[llvm_versions(<span class="number">16</span>..)]
         #[llvm_variant(LLVMDWARFSourceLanguageKotlin)]
         </span>Kotlin,
-        <span class="attr">#[llvm_versions(<span class="number">16.0</span>..=latest)]
+        <span class="attr">#[llvm_versions(<span class="number">16</span>..)]
         #[llvm_variant(LLVMDWARFSourceLanguageZig)]
         </span>Zig,
-        <span class="attr">#[llvm_versions(<span class="number">16.0</span>..=latest)]
+        <span class="attr">#[llvm_versions(<span class="number">16</span>..)]
         #[llvm_variant(LLVMDWARFSourceLanguageCrystal)]
         </span>Crystal,
-        <span class="attr">#[llvm_versions(<span class="number">16.0</span>..=latest)]
+        <span class="attr">#[llvm_versions(<span class="number">16</span>..)]
         #[llvm_variant(LLVMDWARFSourceLanguageC_plus_plus_17)]
         </span>CPlusPlus17,
-        <span class="attr">#[llvm_versions(<span class="number">16.0</span>..=latest)]
+        <span class="attr">#[llvm_versions(<span class="number">16</span>..)]
         #[llvm_variant(LLVMDWARFSourceLanguageC_plus_plus_20)]
         </span>CPlusPlus20,
-        <span class="attr">#[llvm_versions(<span class="number">16.0</span>..=latest)]
+        <span class="attr">#[llvm_versions(<span class="number">16</span>..)]
         #[llvm_variant(LLVMDWARFSourceLanguageC17)]
         </span>C17,
-        <span class="attr">#[llvm_versions(<span class="number">16.0</span>..=latest)]
+        <span class="attr">#[llvm_versions(<span class="number">16</span>..)]
         #[llvm_variant(LLVMDWARFSourceLanguageFortran18)]
         </span>Fortran18,
-        <span class="attr">#[llvm_versions(<span class="number">16.0</span>..=latest)]
+        <span class="attr">#[llvm_versions(<span class="number">16</span>..)]
         #[llvm_variant(LLVMDWARFSourceLanguageAda2005)]
         </span>Ada2005,
-        <span class="attr">#[llvm_versions(<span class="number">16.0</span>..=latest)]
+        <span class="attr">#[llvm_versions(<span class="number">16</span>..)]
         #[llvm_variant(LLVMDWARFSourceLanguageAda2012)]
         </span>Ada2012,
-        <span class="attr">#[llvm_versions(<span class="number">17.0</span>..=latest)]
+        <span class="attr">#[llvm_versions(<span class="number">17</span>..)]
         #[llvm_variant(LLVMDWARFSourceLanguageMojo)]
         </span>Mojo,
     }

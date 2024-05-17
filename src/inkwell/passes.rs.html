@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/inkwell-946411d814d2c9f8/5d5a531/src/passes.rs`."><title>passes.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="inkwell" data-themes="" data-resource-suffix="" data-rustdoc-version="1.78.0 (9b00956e5 2024-04-29)" data-channel="1.78.0" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/inkwell-946411d814d2c9f8/6c0fb56/src/passes.rs`."><title>passes.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="inkwell" data-themes="" data-resource-suffix="" data-rustdoc-version="1.78.0 (9b00956e5 2024-04-29)" data-channel="1.78.0" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
             <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
     <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../inkwell/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
@@ -1308,34 +1308,34 @@
 <a href="#1306" id="1306">1306</a>
 <a href="#1307" id="1307">1307</a>
 <a href="#1308" id="1308">1308</a>
-</pre></div><pre class="rust"><code><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+</pre></div><pre class="rust"><code><span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
 </span><span class="kw">use </span>llvm_sys::core::LLVMGetGlobalPassRegistry;
 <span class="kw">use </span>llvm_sys::core::{
     LLVMCreateFunctionPassManagerForModule, LLVMCreatePassManager, LLVMDisposePassManager,
     LLVMFinalizeFunctionPassManager, LLVMInitializeFunctionPassManager, LLVMRunFunctionPassManager, LLVMRunPassManager,
 };
-<span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+<span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
 </span><span class="kw">use </span>llvm_sys::initialization::{
     LLVMInitializeAnalysis, LLVMInitializeCodeGen, LLVMInitializeCore, LLVMInitializeIPA, LLVMInitializeIPO,
     LLVMInitializeInstCombine, LLVMInitializeScalarOpts, LLVMInitializeTarget, LLVMInitializeTransformUtils,
     LLVMInitializeVectorization,
 };
-<span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">15.0</span>)]
+<span class="attr">#[llvm_versions(..=<span class="number">15</span>)]
 </span><span class="kw">use </span>llvm_sys::initialization::{LLVMInitializeInstrumentation, LLVMInitializeObjCARCOpts};
 <span class="kw">use </span>llvm_sys::prelude::LLVMPassManagerRef;
-<span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+<span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
 </span><span class="kw">use </span>llvm_sys::prelude::LLVMPassRegistryRef;
-<span class="attr">#[llvm_versions(<span class="number">10.0</span>..=<span class="number">16.0</span>)]
+<span class="attr">#[llvm_versions(<span class="number">10</span>..=<span class="number">16</span>)]
 </span><span class="kw">use </span>llvm_sys::transforms::ipo::LLVMAddMergeFunctionsPass;
-<span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">15.0</span>)]
+<span class="attr">#[llvm_versions(..=<span class="number">15</span>)]
 </span><span class="kw">use </span>llvm_sys::transforms::ipo::LLVMAddPruneEHPass;
-<span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+<span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
 </span><span class="kw">use </span>llvm_sys::transforms::ipo::{
     LLVMAddAlwaysInlinerPass, LLVMAddConstantMergePass, LLVMAddDeadArgEliminationPass, LLVMAddFunctionAttrsPass,
     LLVMAddFunctionInliningPass, LLVMAddGlobalDCEPass, LLVMAddGlobalOptimizerPass, LLVMAddIPSCCPPass,
     LLVMAddInternalizePass, LLVMAddStripDeadPrototypesPass, LLVMAddStripSymbolsPass,
 };
-<span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+<span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
 </span><span class="kw">use </span>llvm_sys::transforms::pass_manager_builder::{
     LLVMPassManagerBuilderCreate, LLVMPassManagerBuilderDispose, LLVMPassManagerBuilderPopulateFunctionPassManager,
     LLVMPassManagerBuilderPopulateModulePassManager, LLVMPassManagerBuilderRef,
@@ -1343,7 +1343,7 @@
     LLVMPassManagerBuilderSetDisableUnrollLoops, LLVMPassManagerBuilderSetOptLevel, LLVMPassManagerBuilderSetSizeLevel,
     LLVMPassManagerBuilderUseInlinerWithThreshold,
 };
-<span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+<span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
 </span><span class="kw">use </span>llvm_sys::transforms::scalar::{
     LLVMAddAggressiveDCEPass, LLVMAddAlignmentFromAssumptionsPass, LLVMAddBasicAliasAnalysisPass,
     LLVMAddBitTrackingDCEPass, LLVMAddCFGSimplificationPass, LLVMAddCorrelatedValuePropagationPass,
@@ -1356,17 +1356,17 @@
     LLVMAddScopedNoAliasAAPass, LLVMAddSimplifyLibCallsPass, LLVMAddTailCallEliminationPass,
     LLVMAddTypeBasedAliasAnalysisPass, LLVMAddVerifierPass,
 };
-<span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+<span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
 </span><span class="kw">use </span>llvm_sys::transforms::vectorize::{LLVMAddLoopVectorizePass, LLVMAddSLPVectorizePass};
 
 <span class="comment">// LLVM12 removes the ConstantPropagation pass
 // Users should use the InstSimplify pass instead.
-</span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">11.0</span>)]
+</span><span class="attr">#[llvm_versions(..=<span class="number">11</span>)]
 </span><span class="kw">use </span>llvm_sys::transforms::ipo::LLVMAddIPConstantPropagationPass;
-<span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">11.0</span>)]
+<span class="attr">#[llvm_versions(..=<span class="number">11</span>)]
 </span><span class="kw">use </span>llvm_sys::transforms::scalar::LLVMAddConstantPropagationPass;
 
-<span class="attr">#[llvm_versions(<span class="number">13.0</span>..=latest)]
+<span class="attr">#[llvm_versions(<span class="number">13</span>..)]
 </span><span class="kw">use </span>llvm_sys::transforms::pass_builder::{
     LLVMCreatePassBuilderOptions, LLVMDisposePassBuilderOptions, LLVMPassBuilderOptionsRef,
     LLVMPassBuilderOptionsSetCallGraphProfile, LLVMPassBuilderOptionsSetDebugLogging,
@@ -1376,25 +1376,25 @@
     LLVMPassBuilderOptionsSetMergeFunctions, LLVMPassBuilderOptionsSetSLPVectorization,
     LLVMPassBuilderOptionsSetVerifyEach,
 };
-<span class="attr">#[llvm_versions(<span class="number">12.0</span>..=<span class="number">16.0</span>)]
+<span class="attr">#[llvm_versions(<span class="number">12</span>..=<span class="number">16</span>)]
 </span><span class="kw">use </span>llvm_sys::transforms::scalar::LLVMAddInstructionSimplifyPass;
 
 <span class="kw">use </span><span class="kw">crate</span>::module::Module;
 <span class="kw">use </span><span class="kw">crate</span>::values::{AsValueRef, FunctionValue};
-<span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+<span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::OptimizationLevel;
 
 <span class="kw">use </span>std::borrow::Borrow;
 <span class="kw">use </span>std::marker::PhantomData;
 
 <span class="comment">// REVIEW: Opt Level might be identical to targets::Option&lt;CodeGenOptLevel&gt;
-</span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+</span><span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
 #[derive(Debug)]
 </span><span class="kw">pub struct </span>PassManagerBuilder {
     pass_manager_builder: LLVMPassManagerBuilderRef,
 }
 
-<span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+<span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
 </span><span class="kw">impl </span>PassManagerBuilder {
     <span class="kw">pub unsafe fn </span>new(pass_manager_builder: LLVMPassManagerBuilderRef) -&gt; <span class="self">Self </span>{
         <span class="macro">assert!</span>(!pass_manager_builder.is_null());
@@ -1508,7 +1508,7 @@
     ///
     /// pass_manager_builder.populate_lto_pass_manager(&amp;lpm, false, false);
     /// ```
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">14.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">14</span>)]
     </span><span class="kw">pub fn </span>populate_lto_pass_manager(<span class="kw-2">&amp;</span><span class="self">self</span>, pass_manager: <span class="kw-2">&amp;</span>PassManager&lt;Module&gt;, internalize: bool, run_inliner: bool) {
         <span class="kw">use </span>llvm_sys::transforms::pass_manager_builder::LLVMPassManagerBuilderPopulateLTOPassManager;
 
@@ -1523,7 +1523,7 @@
     }
 }
 
-<span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+<span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
 </span><span class="kw">impl </span>Drop <span class="kw">for </span>PassManagerBuilder {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMPassManagerBuilderDispose(<span class="self">self</span>.pass_manager_builder) }
@@ -1634,7 +1634,7 @@
     /// only stored to (returning the value instead), but does not currently.
     /// This case would be best handled when and if LLVM starts supporting multiple
     /// return values from functions.
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">14.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">14</span>)]
     </span><span class="kw">pub fn </span>add_argument_promotion_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">use </span>llvm_sys::transforms::ipo::LLVMAddArgumentPromotionPass;
 
@@ -1645,13 +1645,13 @@
     /// shared. This is useful because some passes (i.e., TraceValues) insert a lot
     /// of string constants into the program, regardless of whether or not an existing
     /// string is available.
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_constant_merge_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMAddConstantMergePass(<span class="self">self</span>.pass_manager) }
     }
 
     <span class="doccomment">/// Discovers identical functions and collapses them.
-    </span><span class="attr">#[llvm_versions(<span class="number">10.0</span>..=<span class="number">16.0</span>)]
+    </span><span class="attr">#[llvm_versions(<span class="number">10</span>..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_merge_functions_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMAddMergeFunctionsPass(<span class="self">self</span>.pass_manager) }
     }
@@ -1663,7 +1663,7 @@
     ///
     /// This pass is often useful as a cleanup pass to run after aggressive
     /// interprocedural passes, which add possibly-dead arguments.
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_dead_arg_elimination_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMAddDeadArgEliminationPass(<span class="self">self</span>.pass_manager) }
     }
@@ -1676,19 +1676,19 @@
     /// less means that the pointer is only dereferenced, and not returned
     /// from the function or stored in a global. This pass is implemented
     /// as a bottom-up traversal of the call-graph.
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_function_attrs_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMAddFunctionAttrsPass(<span class="self">self</span>.pass_manager) }
     }
 
     <span class="doccomment">/// Bottom-up inlining of functions into callees.
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_function_inlining_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMAddFunctionInliningPass(<span class="self">self</span>.pass_manager) }
     }
 
     <span class="doccomment">/// A custom inliner that handles only functions that are marked as “always inline”.
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_always_inliner_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMAddAlwaysInlinerPass(<span class="self">self</span>.pass_manager) }
     }
@@ -1699,7 +1699,7 @@
     /// finds all of the globals which are needed, it deletes
     /// whatever is left over. This allows it to delete recursive
     /// chunks of the program which are unreachable.
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_global_dce_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMAddGlobalDCEPass(<span class="self">self</span>.pass_manager) }
     }
@@ -1707,7 +1707,7 @@
     <span class="doccomment">/// This pass transforms simple global variables that never have
     /// their address taken. If obviously true, it marks read/write
     /// globals as constant, deletes variables only stored to, etc.
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_global_optimizer_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMAddGlobalOptimizerPass(<span class="self">self</span>.pass_manager) }
     }
@@ -1721,7 +1721,7 @@
     ///
     /// In LLVM 12 and later, this instruction is replaced by the
     /// [`add_instruction_simplify_pass`].
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">11.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">11</span>)]
     </span><span class="kw">pub fn </span>add_ip_constant_propagation_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMAddIPConstantPropagationPass(<span class="self">self</span>.pass_manager) }
     }
@@ -1731,14 +1731,14 @@
     /// call instructions if and only if the callee cannot throw
     /// an exception. It implements this as a bottom-up traversal
     /// of the call-graph.
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">15.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">15</span>)]
     </span><span class="kw">pub fn </span>add_prune_eh_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMAddPruneEHPass(<span class="self">self</span>.pass_manager) }
     }
 
     <span class="doccomment">/// An interprocedural variant of [Sparse Conditional Constant
     /// Propagation](https://llvm.org/docs/Passes.html#passes-sccp).
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_ipsccp_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMAddIPSCCPPass(<span class="self">self</span>.pass_manager) }
     }
@@ -1747,7 +1747,7 @@
     /// looking for a main function. If a main function is found, all
     /// other functions and all global variables with initializers are
     /// marked as internal.
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_internalize_pass(<span class="kw-2">&amp;</span><span class="self">self</span>, all_but_main: bool) {
         <span class="kw">unsafe </span>{ LLVMAddInternalizePass(<span class="self">self</span>.pass_manager, all_but_main <span class="kw">as </span>u32) }
     }
@@ -1756,7 +1756,7 @@
     /// looking for dead declarations and removes them. Dead declarations
     /// are declarations of functions for which no implementation is available
     /// (i.e., declarations for unused library functions).
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_strip_dead_prototypes_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMAddStripDeadPrototypesPass(<span class="self">self</span>.pass_manager) }
     }
@@ -1771,7 +1771,7 @@
     /// so it should only be used in situations where the strip utility
     /// would be used, such as reducing code size or making it harder
     /// to reverse engineer code.
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_strip_symbol_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMAddStripSymbolsPass(<span class="self">self</span>.pass_manager) }
     }
@@ -1797,13 +1797,13 @@
     }
 
     <span class="doccomment">/// No LLVM documentation is available at this time.
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_loop_vectorize_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMAddLoopVectorizePass(<span class="self">self</span>.pass_manager) }
     }
 
     <span class="doccomment">/// No LLVM documentation is available at this time.
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_slp_vectorize_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMAddSLPVectorizePass(<span class="self">self</span>.pass_manager) }
     }
@@ -1813,19 +1813,19 @@
     /// assumes that values are dead until proven otherwise. This is
     /// similar to [SCCP](https://llvm.org/docs/Passes.html#passes-sccp),
     /// except applied to the liveness of values.
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_aggressive_dce_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMAddAggressiveDCEPass(<span class="self">self</span>.pass_manager) }
     }
 
     <span class="doccomment">/// No LLVM documentation is available at this time.
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_bit_tracking_dce_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMAddBitTrackingDCEPass(<span class="self">self</span>.pass_manager) }
     }
 
     <span class="doccomment">/// No LLVM documentation is available at this time.
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_alignment_from_assumptions_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMAddAlignmentFromAssumptionsPass(<span class="self">self</span>.pass_manager) }
     }
@@ -1836,25 +1836,25 @@
     /// * Merges a basic block into its predecessor if there is only one and the predecessor only has one successor.
     /// * Eliminates PHI nodes for basic blocks with a single predecessor.
     /// * Eliminates a basic block that only contains an unconditional branch.
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_cfg_simplification_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMAddCFGSimplificationPass(<span class="self">self</span>.pass_manager) }
     }
 
     <span class="doccomment">/// A trivial dead store elimination that only considers basic-block local redundant stores.
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_dead_store_elimination_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMAddDeadStoreEliminationPass(<span class="self">self</span>.pass_manager) }
     }
 
     <span class="doccomment">/// No LLVM documentation is available at this time.
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_scalarizer_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMAddScalarizerPass(<span class="self">self</span>.pass_manager) }
     }
 
     <span class="doccomment">/// No LLVM documentation is available at this time.
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_merged_load_store_motion_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMAddMergedLoadStoreMotionPass(<span class="self">self</span>.pass_manager) }
     }
@@ -1862,7 +1862,7 @@
     <span class="doccomment">/// This pass performs global value numbering to eliminate
     /// fully and partially redundant instructions. It also
     /// performs redundant load elimination.
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_gvn_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMAddGVNPass(<span class="self">self</span>.pass_manager) }
     }
@@ -1872,7 +1872,7 @@
     /// performs redundant load elimination.
     </span><span class="comment">// REVIEW: Is `LLVMAddGVNPass` deprecated? Should we just seamlessly replace
     // the old one with this one in 4.0+?
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_new_gvn_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">use </span>llvm_sys::transforms::scalar::LLVMAddNewGVNPass;
 
@@ -1918,7 +1918,7 @@
     /// the desired loop transformations have been performed. Additionally, on
     /// targets where it is profitable, the loop could be transformed to count
     /// down to zero (the "do loop" optimization).
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_ind_var_simplify_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMAddIndVarSimplifyPass(<span class="self">self</span>.pass_manager) }
     }
@@ -1963,7 +1963,7 @@
     /// the main() function can be transformed into simply return 3. Whether or not library
     /// calls are simplified is controlled by the [-functionattrs](https://llvm.org/docs/Passes.html#passes-functionattrs)
     /// pass and LLVM’s knowledge of library calls on different targets.
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_instruction_combining_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMAddInstructionCombiningPass(<span class="self">self</span>.pass_manager) }
     }
@@ -1987,7 +1987,7 @@
     ///
     /// In this case, the unconditional branch at the end of the first
     /// if can be revectored to the false side of the second if.
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_jump_threading_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMAddJumpThreadingPass(<span class="self">self</span>.pass_manager) }
     }
@@ -2024,7 +2024,7 @@
     /// and stores in the loop of the pointer to use a temporary
     /// alloca'd variable. We then use the mem2reg functionality
     /// to construct the appropriate SSA form for the variable.
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_licm_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMAddLICMPass(<span class="self">self</span>.pass_manager) }
     }
@@ -2034,25 +2034,25 @@
     /// non-infinite computable trip counts that have no side
     /// effects or volatile instructions, and do not contribute
     /// to the computation of the function’s return value.
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_loop_deletion_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMAddLoopDeletionPass(<span class="self">self</span>.pass_manager) }
     }
 
     <span class="doccomment">/// No LLVM documentation is available at this time.
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_loop_idiom_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMAddLoopIdiomPass(<span class="self">self</span>.pass_manager) }
     }
 
     <span class="doccomment">/// A simple loop rotation transformation.
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_loop_rotate_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMAddLoopRotatePass(<span class="self">self</span>.pass_manager) }
     }
 
     <span class="doccomment">/// No LLVM documentation is available at this time.
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_loop_reroll_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMAddLoopRerollPass(<span class="self">self</span>.pass_manager) }
     }
@@ -2062,7 +2062,7 @@
     /// by the [indvars](https://llvm.org/docs/Passes.html#passes-indvars)
     /// pass, allowing it to determine the trip counts
     /// of loops easily.
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_loop_unroll_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMAddLoopUnrollPass(<span class="self">self</span>.pass_manager) }
     }
@@ -2089,7 +2089,7 @@
     /// to be run before it to hoist invariant conditions
     /// out of the loop, to make the unswitching opportunity
     /// obvious.
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">14.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">14</span>)]
     </span><span class="kw">pub fn </span>add_loop_unswitch_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">use </span>llvm_sys::transforms::scalar::LLVMAddLoopUnswitchPass;
 
@@ -2099,14 +2099,14 @@
     <span class="doccomment">/// This pass performs various transformations related
     /// to eliminating memcpy calls, or transforming sets
     /// of stores into memsets.
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_memcpy_optimize_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMAddMemCpyOptPass(<span class="self">self</span>.pass_manager) }
     }
 
     <span class="doccomment">/// This pass performs partial inlining, typically by inlining
     /// an if statement that surrounds the body of the function.
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_partially_inline_lib_calls_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMAddPartiallyInlineLibCallsPass(<span class="self">self</span>.pass_manager) }
     }
@@ -2114,11 +2114,11 @@
     <span class="doccomment">/// Rewrites switch instructions with a sequence of branches,
     /// which allows targets to get away with not implementing the
     /// switch instruction until it is convenient.
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_lower_switch_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">6.0</span>)]
+        <span class="attr">#[llvm_versions(..=<span class="number">6</span>)]
         </span><span class="kw">use </span>llvm_sys::transforms::scalar::LLVMAddLowerSwitchPass;
-        <span class="attr">#[llvm_versions(<span class="number">7.0</span>..=<span class="number">16.0</span>)]
+        <span class="attr">#[llvm_versions(<span class="number">7</span>..=<span class="number">16</span>)]
         </span><span class="kw">use </span>llvm_sys::transforms::util::LLVMAddLowerSwitchPass;
 
         <span class="kw">unsafe </span>{ LLVMAddLowerSwitchPass(<span class="self">self</span>.pass_manager) }
@@ -2130,11 +2130,11 @@
     /// to place phi nodes, then traversing the function in depth-first
     /// order to rewrite loads and stores as appropriate. This is just
     /// the standard SSA construction algorithm to construct "pruned" SSA form.
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_promote_memory_to_register_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">6.0</span>)]
+        <span class="attr">#[llvm_versions(..=<span class="number">6</span>)]
         </span><span class="kw">use </span>llvm_sys::transforms::scalar::LLVMAddPromoteMemoryToRegisterPass;
-        <span class="attr">#[llvm_versions(<span class="number">7.0</span>..=<span class="number">16.0</span>)]
+        <span class="attr">#[llvm_versions(<span class="number">7</span>..=<span class="number">16</span>)]
         </span><span class="kw">use </span>llvm_sys::transforms::util::LLVMAddPromoteMemoryToRegisterPass;
 
         <span class="kw">unsafe </span>{ LLVMAddPromoteMemoryToRegisterPass(<span class="self">self</span>.pass_manager) }
@@ -2150,7 +2150,7 @@
     /// corresponding to the reverse post order traversal of current function
     /// (starting at 2), which effectively gives values in deep loops higher
     /// rank than values not in loops.
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_reassociate_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMAddReassociatePass(<span class="self">self</span>.pass_manager) }
     }
@@ -2165,13 +2165,13 @@
     ///
     /// Note that this pass has a habit of making definitions be dead.
     /// It is a good idea to run a DCE pass sometime after running this pass.
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_sccp_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMAddSCCPPass(<span class="self">self</span>.pass_manager) }
     }
 
     <span class="doccomment">/// No LLVM documentation is available at this time.
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_scalar_repl_aggregates_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMAddScalarReplAggregatesPass(<span class="self">self</span>.pass_manager) }
     }
@@ -2181,19 +2181,19 @@
     /// (structure or array) into individual alloca instructions for each
     /// member if possible. Then, if possible, it transforms the individual
     /// alloca instructions into nice clean scalar SSA form.
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_scalar_repl_aggregates_pass_ssa(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMAddScalarReplAggregatesPassSSA(<span class="self">self</span>.pass_manager) }
     }
 
     <span class="doccomment">/// No LLVM documentation is available at this time.
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_scalar_repl_aggregates_pass_with_threshold(<span class="kw-2">&amp;</span><span class="self">self</span>, threshold: i32) {
         <span class="kw">unsafe </span>{ LLVMAddScalarReplAggregatesPassWithThreshold(<span class="self">self</span>.pass_manager, threshold) }
     }
 
     <span class="doccomment">/// No LLVM documentation is available at this time.
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_simplify_lib_calls_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMAddSimplifyLibCallsPass(<span class="self">self</span>.pass_manager) }
     }
@@ -2218,7 +2218,7 @@
     ///
     /// 4. If it can prove that callees do not access theier caller stack frame,
     /// they are marked as eligible for tail call elimination (by the code generator).
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_tail_call_elimination_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMAddTailCallEliminationPass(<span class="self">self</span>.pass_manager) }
     }
@@ -2242,7 +2242,7 @@
     ///
     /// In LLVM 12 and later, this instruction is replaced by the
     /// [`add_instruction_simplify_pass`].
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">11.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">11</span>)]
     </span><span class="kw">pub fn </span>add_constant_propagation_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMAddConstantPropagationPass(<span class="self">self</span>.pass_manager) }
     }
@@ -2263,7 +2263,7 @@
     ///
     /// NOTE: this pass has a habit of making definitions be dead. It is a good idea to
     /// run a Dead Instruction Elimination pass sometime after running this pass.
-    </span><span class="attr">#[llvm_versions(<span class="number">12.0</span>..=<span class="number">16.0</span>)]
+    </span><span class="attr">#[llvm_versions(<span class="number">12</span>..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_instruction_simplify_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMAddInstructionSimplifyPass(<span class="self">self</span>.pass_manager) }
     }
@@ -2274,7 +2274,7 @@
     /// place phi nodes, then traversing the function in depth-first order to
     /// rewrite loads and stores as appropriate. This is just the standard SSA
     /// construction algorithm to construct “pruned” SSA form.
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_demote_memory_to_register_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMAddDemoteMemoryToRegisterPass(<span class="self">self</span>.pass_manager) }
     }
@@ -2330,24 +2330,24 @@
     /// 20. All other things that are tested by asserts spread about the code.
     ///
     /// Note that this does not provide full security verification (like Java), but instead just tries to ensure that code is well-formed.
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_verifier_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMAddVerifierPass(<span class="self">self</span>.pass_manager) }
     }
 
     <span class="doccomment">/// No LLVM documentation is available at this time.
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_correlated_value_propagation_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMAddCorrelatedValuePropagationPass(<span class="self">self</span>.pass_manager) }
     }
 
     <span class="doccomment">/// No LLVM documentation is available at this time.
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_early_cse_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMAddEarlyCSEPass(<span class="self">self</span>.pass_manager) }
     }
 
-    <span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+    <span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
     </span><span class="doccomment">/// No LLVM documentation is available at this time.
     </span><span class="kw">pub fn </span>add_early_cse_mem_ssa_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">use </span>llvm_sys::transforms::scalar::LLVMAddEarlyCSEMemSSAPass;
@@ -2356,19 +2356,19 @@
     }
 
     <span class="doccomment">/// No LLVM documentation is available at this time.
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_lower_expect_intrinsic_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMAddLowerExpectIntrinsicPass(<span class="self">self</span>.pass_manager) }
     }
 
     <span class="doccomment">/// No LLVM documentation is available at this time.
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_type_based_alias_analysis_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMAddTypeBasedAliasAnalysisPass(<span class="self">self</span>.pass_manager) }
     }
 
     <span class="doccomment">/// No LLVM documentation is available at this time.
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_scoped_no_alias_aa_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMAddScopedNoAliasAAPass(<span class="self">self</span>.pass_manager) }
     }
@@ -2376,12 +2376,12 @@
     <span class="doccomment">/// A basic alias analysis pass that implements identities
     /// (two different globals cannot alias, etc), but does no
     /// stateful analysis.
-    </span><span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+    </span><span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_basic_alias_analysis_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMAddBasicAliasAnalysisPass(<span class="self">self</span>.pass_manager) }
     }
 
-    <span class="attr">#[llvm_versions(<span class="number">7.0</span>..=<span class="number">15.0</span>)]
+    <span class="attr">#[llvm_versions(<span class="number">7</span>..=<span class="number">15</span>)]
     </span><span class="kw">pub fn </span>add_aggressive_inst_combiner_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="attr">#[cfg(not(feature = <span class="string">"llvm7-0"</span>))]
         </span><span class="kw">use </span>llvm_sys::transforms::aggressive_instcombine::LLVMAddAggressiveInstCombinerPass;
@@ -2391,35 +2391,35 @@
         <span class="kw">unsafe </span>{ LLVMAddAggressiveInstCombinerPass(<span class="self">self</span>.pass_manager) }
     }
 
-    <span class="attr">#[llvm_versions(<span class="number">7.0</span>..=<span class="number">16.0</span>)]
+    <span class="attr">#[llvm_versions(<span class="number">7</span>..=<span class="number">16</span>)]
     </span><span class="kw">pub fn </span>add_loop_unroll_and_jam_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">use </span>llvm_sys::transforms::scalar::LLVMAddLoopUnrollAndJamPass;
 
         <span class="kw">unsafe </span>{ LLVMAddLoopUnrollAndJamPass(<span class="self">self</span>.pass_manager) }
     }
 
-    <span class="attr">#[llvm_versions(<span class="number">8.0</span>..<span class="number">15.0</span>)]
+    <span class="attr">#[llvm_versions(<span class="number">8</span>..<span class="number">15</span>)]
     </span><span class="kw">pub fn </span>add_coroutine_early_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">use </span>llvm_sys::transforms::coroutines::LLVMAddCoroEarlyPass;
 
         <span class="kw">unsafe </span>{ LLVMAddCoroEarlyPass(<span class="self">self</span>.pass_manager) }
     }
 
-    <span class="attr">#[llvm_versions(<span class="number">8.0</span>..<span class="number">15.0</span>)]
+    <span class="attr">#[llvm_versions(<span class="number">8</span>..<span class="number">15</span>)]
     </span><span class="kw">pub fn </span>add_coroutine_split_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">use </span>llvm_sys::transforms::coroutines::LLVMAddCoroSplitPass;
 
         <span class="kw">unsafe </span>{ LLVMAddCoroSplitPass(<span class="self">self</span>.pass_manager) }
     }
 
-    <span class="attr">#[llvm_versions(<span class="number">8.0</span>..<span class="number">15.0</span>)]
+    <span class="attr">#[llvm_versions(<span class="number">8</span>..<span class="number">15</span>)]
     </span><span class="kw">pub fn </span>add_coroutine_elide_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">use </span>llvm_sys::transforms::coroutines::LLVMAddCoroElidePass;
 
         <span class="kw">unsafe </span>{ LLVMAddCoroElidePass(<span class="self">self</span>.pass_manager) }
     }
 
-    <span class="attr">#[llvm_versions(<span class="number">8.0</span>..<span class="number">15.0</span>)]
+    <span class="attr">#[llvm_versions(<span class="number">8</span>..<span class="number">15</span>)]
     </span><span class="kw">pub fn </span>add_coroutine_cleanup_pass(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">use </span>llvm_sys::transforms::coroutines::LLVMAddCoroCleanupPass;
 
@@ -2433,13 +2433,13 @@
     }
 }
 
-<span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+<span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
 #[derive(Debug)]
 </span><span class="kw">pub struct </span>PassRegistry {
     pass_registry: LLVMPassRegistryRef,
 }
 
-<span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">16.0</span>)]
+<span class="attr">#[llvm_versions(..=<span class="number">16</span>)]
 </span><span class="kw">impl </span>PassRegistry {
     <span class="kw">pub unsafe fn </span>new(pass_registry: LLVMPassRegistryRef) -&gt; PassRegistry {
         <span class="macro">assert!</span>(!pass_registry.is_null());
@@ -2470,7 +2470,7 @@
         <span class="kw">unsafe </span>{ LLVMInitializeScalarOpts(<span class="self">self</span>.pass_registry) }
     }
 
-    <span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">15.0</span>)]
+    <span class="attr">#[llvm_versions(..=<span class="number">15</span>)]
     </span><span class="kw">pub fn </span>initialize_obj_carc_opts(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMInitializeObjCARCOpts(<span class="self">self</span>.pass_registry) }
     }
@@ -2488,7 +2488,7 @@
         <span class="kw">unsafe </span>{ LLVMInitializeIPO(<span class="self">self</span>.pass_registry) }
     }
 
-    <span class="attr">#[llvm_versions(<span class="number">4.0</span>..=<span class="number">15.0</span>)]
+    <span class="attr">#[llvm_versions(..=<span class="number">15</span>)]
     </span><span class="kw">pub fn </span>initialize_instrumentation(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{ LLVMInitializeInstrumentation(<span class="self">self</span>.pass_registry) }
     }
@@ -2509,7 +2509,7 @@
         <span class="kw">unsafe </span>{ LLVMInitializeTarget(<span class="self">self</span>.pass_registry) }
     }
 
-    <span class="attr">#[llvm_versions(<span class="number">7.0</span>..=<span class="number">15.0</span>)]
+    <span class="attr">#[llvm_versions(<span class="number">7</span>..=<span class="number">15</span>)]
     </span><span class="kw">pub fn </span>initialize_aggressive_inst_combiner(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">use </span>llvm_sys::initialization::LLVMInitializeAggressiveInstCombiner;
 
@@ -2517,13 +2517,13 @@
     }
 }
 
-<span class="attr">#[llvm_versions(<span class="number">13.0</span>..=latest)]
+<span class="attr">#[llvm_versions(<span class="number">13</span>..)]
 #[derive(Debug)]
 </span><span class="kw">pub struct </span>PassBuilderOptions {
     <span class="kw">pub</span>(<span class="kw">crate</span>) options_ref: LLVMPassBuilderOptionsRef,
 }
 
-<span class="attr">#[llvm_versions(<span class="number">13.0</span>..=latest)]
+<span class="attr">#[llvm_versions(<span class="number">13</span>..)]
 </span><span class="kw">impl </span>PassBuilderOptions {
     <span class="doccomment">/// Create a new set of options for a PassBuilder
     </span><span class="kw">pub fn </span>create() -&gt; <span class="self">Self </span>{
@@ -2608,7 +2608,7 @@
     }
 }
 
-<span class="attr">#[llvm_versions(<span class="number">13.0</span>..=latest)]
+<span class="attr">#[llvm_versions(<span class="number">13</span>..)]
 </span><span class="kw">impl </span>Drop <span class="kw">for </span>PassBuilderOptions {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{

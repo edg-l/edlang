@@ -27,7 +27,7 @@
 builder.position_at_end(basic_block);
 
 <span class="kw">let </span>arg1 = function.get_first_param().unwrap().into_pointer_value();
-<span class="kw">let </span>f32_val = f32_type.const_float(::std::f64::consts::PI);
+<span class="kw">let </span>f32_val = f32_type.const_float(std::f64::consts::PI);
 <span class="kw">let </span>store_instruction = builder.build_store(arg1, f32_val).unwrap();
 <span class="kw">let </span>free_instruction = builder.build_free(arg1).unwrap();
 <span class="kw">let </span>return_instruction = builder.build_return(<span class="prelude-val">None</span>).unwrap();
@@ -77,7 +77,7 @@ declare void @free(i8*)
 builder.position_at_end(basic_block);
 
 <span class="kw">let </span>arg1 = function.get_first_param().unwrap().into_pointer_value();
-<span class="kw">let </span>f32_val = f32_type.const_float(::std::f64::consts::PI);
+<span class="kw">let </span>f32_val = f32_type.const_float(std::f64::consts::PI);
 <span class="kw">let </span>store_instruction = builder.build_store(arg1, f32_val).unwrap();
 <span class="kw">let </span>free_instruction = builder.build_free(arg1).unwrap();
 <span class="kw">let </span>return_instruction = builder.build_return(<span class="prelude-val">None</span>).unwrap();
@@ -110,7 +110,7 @@ builder.position_at_end(basic_block);
 builder.position_at_end(basic_block);
 
 <span class="kw">let </span>arg1 = function.get_first_param().unwrap().into_pointer_value();
-<span class="kw">let </span>f32_val = f32_type.const_float(::std::f64::consts::PI);
+<span class="kw">let </span>f32_val = f32_type.const_float(std::f64::consts::PI);
 <span class="kw">let </span>store_instruction = builder.build_store(arg1, f32_val).unwrap();
 <span class="kw">let </span>free_instruction = builder.build_free(arg1).unwrap();
 <span class="kw">let </span>return_instruction = builder.build_return(<span class="prelude-val">None</span>).unwrap();

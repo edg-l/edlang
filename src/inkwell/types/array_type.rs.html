@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/inkwell-946411d814d2c9f8/6c0fb56/src/types/array_type.rs`."><title>array_type.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="inkwell" data-themes="" data-resource-suffix="" data-rustdoc-version="1.78.0 (9b00956e5 2024-04-29)" data-channel="1.78.0" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/inkwell-946411d814d2c9f8/5c9f7fc/src/types/array_type.rs`."><title>array_type.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="inkwell" data-themes="" data-resource-suffix="" data-rustdoc-version="1.78.0 (9b00956e5 2024-04-29)" data-channel="1.78.0" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
             <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
     <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../inkwell/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
@@ -289,15 +289,18 @@
 <a href="#287" id="287">287</a>
 <a href="#288" id="288">288</a>
 <a href="#289" id="289">289</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>llvm_sys::core::{LLVMConstArray, LLVMGetArrayLength};
-<span class="kw">use </span>llvm_sys::prelude::{LLVMTypeRef, LLVMValueRef};
+<a href="#290" id="290">290</a>
+<a href="#291" id="291">291</a>
+</pre></div><pre class="rust"><code><span class="attr">#[allow(deprecated)]
+</span><span class="kw">use </span>llvm_sys::core::LLVMGetArrayLength;
+<span class="kw">use </span>llvm_sys::prelude::LLVMTypeRef;
 
 <span class="kw">use </span><span class="kw">crate</span>::context::ContextRef;
 <span class="kw">use </span><span class="kw">crate</span>::support::LLVMString;
 <span class="kw">use </span><span class="kw">crate</span>::types::enums::BasicMetadataTypeEnum;
 <span class="kw">use </span><span class="kw">crate</span>::types::traits::AsTypeRef;
 <span class="kw">use </span><span class="kw">crate</span>::types::{BasicTypeEnum, FunctionType, PointerType, Type};
-<span class="kw">use </span><span class="kw">crate</span>::values::{ArrayValue, AsValueRef, IntValue};
+<span class="kw">use </span><span class="kw">crate</span>::values::{ArrayValue, IntValue};
 <span class="kw">use </span><span class="kw">crate</span>::AddressSpace;
 
 <span class="kw">use </span>std::fmt::{<span class="self">self</span>, Display};
@@ -449,7 +452,7 @@
         <span class="self">self</span>.array_type.array_type(size)
     }
 
-    <span class="doccomment">/// Creates a constant `ArrayValue`.
+    <span class="doccomment">/// Creates a constant `ArrayValue` of `ArrayValue`s.
     ///
     /// # Example
     /// ```no_run
@@ -464,14 +467,7 @@
     /// assert!(f32_array_array.is_const());
     /// ```
     </span><span class="kw">pub fn </span>const_array(<span class="self">self</span>, values: <span class="kw-2">&amp;</span>[ArrayValue&lt;<span class="lifetime">'ctx</span>&gt;]) -&gt; ArrayValue&lt;<span class="lifetime">'ctx</span>&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>values: Vec&lt;LLVMValueRef&gt; = values.iter().map(|val| val.as_value_ref()).collect();
-        <span class="kw">unsafe </span>{
-            ArrayValue::new(LLVMConstArray(
-                <span class="self">self</span>.as_type_ref(),
-                values.as_mut_ptr(),
-                values.len() <span class="kw">as </span>u32,
-            ))
-        }
+        <span class="kw">unsafe </span>{ ArrayValue::new_const_array(<span class="kw-2">&amp;</span><span class="self">self</span>, values) }
     }
 
     <span class="doccomment">/// Creates a constant zero value of this `ArrayType`.
@@ -504,8 +500,16 @@
     /// assert_eq!(i8_array_type.len(), 3);
     /// ```
     </span><span class="kw">pub fn </span>len(<span class="self">self</span>) -&gt; u32 {
-        <span class="kw">unsafe </span>{ LLVMGetArrayLength(<span class="self">self</span>.as_type_ref()) }
+        <span class="attr">#[allow(deprecated)]
+        </span><span class="kw">unsafe </span>{
+            LLVMGetArrayLength(<span class="self">self</span>.as_type_ref())
+        }
     }
+
+    <span class="doccomment">/// Returns `true` if this `ArrayType` contains no elements.
+    </span><span class="kw">pub fn </span>is_empty(<span class="self">self</span>) -&gt; bool {
+        <span class="self">self</span>.len() == <span class="number">0
+    </span>}
 
     <span class="doccomment">/// Print the definition of an `ArrayType` to `LLVMString`
     </span><span class="kw">pub fn </span>print_to_string(<span class="self">self</span>) -&gt; LLVMString {
@@ -563,7 +567,7 @@
     /// assert_eq!(i8_array_type.get_element_type().into_int_type(), i8_type);
     /// ```
     </span><span class="kw">pub fn </span>get_element_type(<span class="self">self</span>) -&gt; BasicTypeEnum&lt;<span class="lifetime">'ctx</span>&gt; {
-        <span class="self">self</span>.array_type.get_element_type().to_basic_type_enum()
+        <span class="self">self</span>.array_type.get_element_type().as_basic_type_enum()
     }
 }
 

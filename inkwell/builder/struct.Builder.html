@@ -148,7 +148,7 @@ For usage of a cleanup landing pad and the <code>resume</code> instruction, see 
 
 builder.position_at_end(basic_block);
 
-<span class="kw">let </span>pi = f32_type.const_float(::std::f64::consts::PI);
+<span class="kw">let </span>pi = f32_type.const_float(std::f64::consts::PI);
 
 builder.build_return(<span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>pi)).unwrap();
 
@@ -387,7 +387,7 @@ the cleanup block can decrement the refcount of values in scope.</p>
 
 builder.position_at_end(basic_block);
 
-<span class="kw">let </span>pi = f32_type.const_float(::std::f64::consts::PI);
+<span class="kw">let </span>pi = f32_type.const_float(std::f64::consts::PI);
 
 builder.build_return(<span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>pi)).unwrap();
 

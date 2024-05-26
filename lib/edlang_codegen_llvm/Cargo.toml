@@ -1,6 +1,6 @@
 [package]
 name = "edlang_codegen_llvm"
-version = "0.0.1-alpha.18"
+version = "0.0.1-alpha.19"
 authors = ["Edgar Luque <edgar@edgarluque.com>"]
 description = "edlang LLVM codegen"
 edition = "2021"
@@ -13,10 +13,12 @@ repository = "https://github.com/edg-l/edlang"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-edlang_ir = { version = "0.0.1-alpha.18", path = "../edlang_ir" }
-edlang_parser = { version = "0.0.1-alpha.18", path = "../edlang_parser" }
-edlang_session = { version = "0.0.1-alpha.18", path = "../edlang_session" }
+edlang_ir = { version = "0.0.1-alpha.19", path = "../edlang_ir" }
+edlang_parser = { version = "0.0.1-alpha.19", path = "../edlang_parser" }
+edlang_session = { version = "0.0.1-alpha.19", path = "../edlang_session" }
 llvm-sys = "180.0"
-inkwell = { git = "https://github.com/TheDan64/inkwell", rev = "6c0fb56b3554e939f9ca61b465043d6a84fb7b95", features = ["llvm18-0"] }
+inkwell = { git = "https://github.com/TheDan64/inkwell", rev = "5c9f7fcbb0a667f7391b94beb65f1a670ad13221", features = [
+  "llvm18-0",
+] }
 tracing = { workspace = true }
-edlang_span = { version = "0.0.1-alpha.18", path = "../edlang_span" }
+edlang_span = { version = "0.0.1-alpha.19", path = "../edlang_span" }

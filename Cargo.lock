@@ -62,9 +62,9 @@ dependencies = [
 
 [[package]]
 name = "anyhow"
-version = "1.0.83"
+version = "1.0.86"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "25bdb32cbbdce2b519a9cd7df3a678443100e265d5e25ca763b7572a5104f5f3"
+checksum = "b3d1d046238990b9cf5bcde22a3fb3584ee5cf65fb2765f454ed428c7a0063da"
 
 [[package]]
 name = "ariadne"
@@ -237,7 +237,7 @@ dependencies = [
 
 [[package]]
 name = "edb"
-version = "0.0.1-alpha.18"
+version = "0.0.1-alpha.19"
 dependencies = [
  "anyhow",
  "clap",
@@ -250,14 +250,14 @@ dependencies = [
 
 [[package]]
 name = "edlang_ast"
-version = "0.0.1-alpha.18"
+version = "0.0.1-alpha.19"
 dependencies = [
  "edlang_span",
 ]
 
 [[package]]
 name = "edlang_check"
-version = "0.0.1-alpha.18"
+version = "0.0.1-alpha.19"
 dependencies = [
  "ariadne",
  "edlang_ast",
@@ -268,7 +268,7 @@ dependencies = [
 
 [[package]]
 name = "edlang_codegen_llvm"
-version = "0.0.1-alpha.18"
+version = "0.0.1-alpha.19"
 dependencies = [
  "edlang_ir",
  "edlang_parser",
@@ -281,7 +281,7 @@ dependencies = [
 
 [[package]]
 name = "edlang_driver"
-version = "0.0.1-alpha.18"
+version = "0.0.1-alpha.19"
 dependencies = [
  "anyhow",
  "ariadne",
@@ -302,7 +302,7 @@ dependencies = [
 
 [[package]]
 name = "edlang_ir"
-version = "0.0.1-alpha.18"
+version = "0.0.1-alpha.19"
 dependencies = [
  "edlang_span",
  "educe",
@@ -311,7 +311,7 @@ dependencies = [
 
 [[package]]
 name = "edlang_lowering"
-version = "0.0.1-alpha.18"
+version = "0.0.1-alpha.19"
 dependencies = [
  "edlang_ast",
  "edlang_ir",
@@ -321,11 +321,11 @@ dependencies = [
 
 [[package]]
 name = "edlang_parser"
-version = "0.0.1-alpha.18"
+version = "0.0.1-alpha.19"
 dependencies = [
  "ariadne",
  "edlang_ast",
- "itertools 0.12.1",
+ "itertools 0.13.0",
  "lalrpop",
  "lalrpop-util",
  "logos",
@@ -334,18 +334,18 @@ dependencies = [
 
 [[package]]
 name = "edlang_session"
-version = "0.0.1-alpha.18"
+version = "0.0.1-alpha.19"
 dependencies = [
  "ariadne",
 ]
 
 [[package]]
 name = "edlang_span"
-version = "0.0.1-alpha.18"
+version = "0.0.1-alpha.19"
 
 [[package]]
 name = "edlangc"
-version = "0.0.1-alpha.18"
+version = "0.0.1-alpha.19"
 dependencies = [
  "edlang_driver",
 ]
@@ -507,7 +507,7 @@ dependencies = [
 [[package]]
 name = "inkwell"
 version = "0.4.0"
-source = "git+https://github.com/TheDan64/inkwell?rev=6c0fb56b3554e939f9ca61b465043d6a84fb7b95#6c0fb56b3554e939f9ca61b465043d6a84fb7b95"
+source = "git+https://github.com/TheDan64/inkwell?rev=5c9f7fcbb0a667f7391b94beb65f1a670ad13221#5c9f7fcbb0a667f7391b94beb65f1a670ad13221"
 dependencies = [
  "either",
  "inkwell_internals",
@@ -520,7 +520,7 @@ dependencies = [
 [[package]]
 name = "inkwell_internals"
 version = "0.9.0"
-source = "git+https://github.com/TheDan64/inkwell?rev=6c0fb56b3554e939f9ca61b465043d6a84fb7b95#6c0fb56b3554e939f9ca61b465043d6a84fb7b95"
+source = "git+https://github.com/TheDan64/inkwell?rev=5c9f7fcbb0a667f7391b94beb65f1a670ad13221#5c9f7fcbb0a667f7391b94beb65f1a670ad13221"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -555,9 +555,9 @@ dependencies = [
 
 [[package]]
 name = "itertools"
-version = "0.12.1"
+version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ba291022dbbd398a455acf126c1e341954079855bc60dfdda641363bd6922569"
+checksum = "413ee7dfc52ee1a4949ceeb7dbc8a33f2d6c088194d9f922fb8318faf1f01186"
 dependencies = [
  "either",
 ]
@@ -1138,18 +1138,18 @@ dependencies = [
 
 [[package]]
 name = "thiserror"
-version = "1.0.60"
+version = "1.0.61"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "579e9083ca58dd9dcf91a9923bb9054071b9ebbd800b342194c9feb0ee89fc18"
+checksum = "c546c80d6be4bc6a00c0f01730c08df82eaa7a7a61f11d656526506112cc1709"
 dependencies = [
  "thiserror-impl",
 ]
 
 [[package]]
 name = "thiserror-impl"
-version = "1.0.60"
+version = "1.0.61"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e2470041c06ec3ac1ab38d0356a6119054dedaea53e12fbefc0de730a1c08524"
+checksum = "46c3384250002a6d5af4d114f2845d37b57521033f30d5c3f46c4d70e1197533"
 dependencies = [
  "proc-macro2",
  "quote",

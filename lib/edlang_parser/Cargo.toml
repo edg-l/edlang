@@ -1,6 +1,6 @@
 [package]
 name = "edlang_parser"
-version = "0.0.1-alpha.18"
+version = "0.0.1-alpha.19"
 authors = ["Edgar Luque <edgar@edgarluque.com>"]
 description = "edlang parser"
 edition = "2021"
@@ -14,8 +14,8 @@ repository = "https://github.com/edg-l/edlang"
 
 [dependencies]
 ariadne = { version = "0.4.1", features = ["auto-color"] }
-edlang_ast = { version = "0.0.1-alpha.18", path = "../edlang_ast" }
-itertools = "0.12.1"
+edlang_ast = { version = "0.0.1-alpha.19", path = "../edlang_ast" }
+itertools = "0.13.0"
 lalrpop-util = { version = "0.20.2", features = ["lexer"] }
 logos = "0.14.0"
 tracing = { workspace = true }

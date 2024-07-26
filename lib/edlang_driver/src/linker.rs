@@ -58,6 +58,9 @@ pub fn link_binary(objects: &[PathBuf], output_filename: &Path) -> std::io::Resu
         #[cfg(target_os = "macos")]
         {
             let mut args = vec![
+                "-demangle",
+                "-dynamic",
+                "-no_deduplicate",
                 "-L/usr/local/lib",
                 "-L/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib",
             ];

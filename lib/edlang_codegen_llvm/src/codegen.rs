@@ -6,7 +6,7 @@ use std::{
 
 use edlang_ir as ir;
 use edlang_ir::DefId;
-use edlang_session::Session;
+use edlang_session::{OptLevel, Session};
 use edlang_span::Span;
 use inkwell::{
     builder::{Builder, BuilderError},
@@ -111,25 +111,19 @@ pub fn compile(session: &Session, program: &ProgramBody) -> Result<PathBuf, Box<
             .canonicalize()
             .expect("failed to canonicalize file path");
         let filename = file_path.file_name().unwrap().to_str().unwrap();
-        let dirname = abs_file_path
-            .parent()
-            .unwrap()
-            .file_name()
-            .unwrap()
-            .to_str()
-            .unwrap();
+        let dirname = abs_file_path.parent().unwrap().display().to_string();
 
         let llvm_module = context.create_module(&module.name);
         llvm_module.set_source_file_name(filename);
         llvm_module.set_triple(&triple);
         llvm_module.set_data_layout(&machine.get_target_data().get_data_layout());
         let (di_builder, di_unit) = llvm_module.create_debug_info_builder(
-            true,
+            false,
             inkwell::debug_info::DWARFSourceLanguage::Rust,
             filename,
-            dirname,
+            &dirname,
             "edlang",
-            true,
+            !matches!(session.optlevel, OptLevel::None),
             "", // compiler flags
             1,
             "", // split name
@@ -298,7 +292,7 @@ fn compile_fn_signature(ctx: &ModuleCompileCtx<'_, '_>, fn_id: DefId, is_definit
             ctx.di_unit.get_file(),
             line as u32 + 1,
             di_type,
-            body.is_exported || body.is_extern,
+            false, // body.is_exported || body.is_extern,
             is_definition && !body.is_extern,
             line as u32 + 1,
             0,

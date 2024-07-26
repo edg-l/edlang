@@ -1,6 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/winnow-0.6.8/src/binary/mod.rs`."><title>mod.rs - source</title><script> if (window.location.protocol !== "file:") document.write(`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2">`)</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-e935ef01ae1c1829.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="winnow" data-themes="" data-resource-suffix="" data-rustdoc-version="1.78.0 (9b00956e5 2024-04-29)" data-channel="1.78.0" data-search-js="search-42d8da7a6b9792c2.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-4c98445ec4002617.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-12cf3b4f4f9dc36d.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-04d5337699b92874.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title">
-            <h2>Files</h2></div></nav><div class="sidebar-resizer"></div>
-    <main><nav class="sub"><form class="search-form"><span></span><div id="sidebar-button" tabindex="-1"><a href="../../../winnow/all.html" title="show sidebar"></a></div><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" tabindex="-1"><a href="../../../help.html" title="help">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/winnow-0.6.15/src/binary/mod.rs`."><title>mod.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-dd39b87e5fcfba68.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="winnow" data-themes="" data-resource-suffix="" data-rustdoc-version="1.80.0 (051478957 2024-07-21)" data-channel="1.80.0" data-search-js="search-d52510db62a78183.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -2527,21 +2525,6 @@
 <a href="#2525" id="2525">2525</a>
 <a href="#2526" id="2526">2526</a>
 <a href="#2527" id="2527">2527</a>
-<a href="#2528" id="2528">2528</a>
-<a href="#2529" id="2529">2529</a>
-<a href="#2530" id="2530">2530</a>
-<a href="#2531" id="2531">2531</a>
-<a href="#2532" id="2532">2532</a>
-<a href="#2533" id="2533">2533</a>
-<a href="#2534" id="2534">2534</a>
-<a href="#2535" id="2535">2535</a>
-<a href="#2536" id="2536">2536</a>
-<a href="#2537" id="2537">2537</a>
-<a href="#2538" id="2538">2538</a>
-<a href="#2539" id="2539">2539</a>
-<a href="#2540" id="2540">2540</a>
-<a href="#2541" id="2541">2541</a>
-<a href="#2542" id="2542">2542</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Parsers recognizing numbers
 
 </span><span class="attr">#![allow(clippy::match_same_arms)]
@@ -2559,9 +2542,8 @@
 <span class="kw">use </span><span class="kw">crate</span>::error::ParserError;
 <span class="kw">use </span><span class="kw">crate</span>::lib::std::ops::{Add, Shl};
 <span class="kw">use </span><span class="kw">crate</span>::stream::Accumulate;
-<span class="kw">use </span><span class="kw">crate</span>::stream::{AsBytes, Stream, StreamIsPartial};
+<span class="kw">use </span><span class="kw">crate</span>::stream::{Stream, StreamIsPartial};
 <span class="kw">use </span><span class="kw">crate</span>::stream::{ToUsize, UpdateSlice};
-<span class="kw">use </span><span class="kw">crate</span>::token::take;
 <span class="kw">use </span><span class="kw">crate</span>::PResult;
 <span class="kw">use </span><span class="kw">crate</span>::Parser;
 
@@ -2659,7 +2641,6 @@
 </span><span class="kw">pub fn </span>be_u16&lt;Input, Error&gt;(input: <span class="kw-2">&amp;mut </span>Input) -&gt; PResult&lt;u16, Error&gt;
 <span class="kw">where
     </span>Input: StreamIsPartial + Stream&lt;Token = u8&gt;,
-    &lt;Input <span class="kw">as </span>Stream&gt;::Slice: AsBytes,
     Error: ParserError&lt;Input&gt;,
 {
     trace(<span class="string">"be_u16"</span>, <span class="kw">move </span>|input: <span class="kw-2">&amp;mut </span>Input| be_uint(input, <span class="number">2</span>)).parse_next(input)
@@ -2704,7 +2685,6 @@
 </span><span class="kw">pub fn </span>be_u24&lt;Input, Error&gt;(input: <span class="kw-2">&amp;mut </span>Input) -&gt; PResult&lt;u32, Error&gt;
 <span class="kw">where
     </span>Input: StreamIsPartial + Stream&lt;Token = u8&gt;,
-    &lt;Input <span class="kw">as </span>Stream&gt;::Slice: AsBytes,
     Error: ParserError&lt;Input&gt;,
 {
     trace(<span class="string">"be_u23"</span>, <span class="kw">move </span>|input: <span class="kw-2">&amp;mut </span>Input| be_uint(input, <span class="number">3</span>)).parse_next(input)
@@ -2749,7 +2729,6 @@
 </span><span class="kw">pub fn </span>be_u32&lt;Input, Error&gt;(input: <span class="kw-2">&amp;mut </span>Input) -&gt; PResult&lt;u32, Error&gt;
 <span class="kw">where
     </span>Input: StreamIsPartial + Stream&lt;Token = u8&gt;,
-    &lt;Input <span class="kw">as </span>Stream&gt;::Slice: AsBytes,
     Error: ParserError&lt;Input&gt;,
 {
     trace(<span class="string">"be_u32"</span>, <span class="kw">move </span>|input: <span class="kw-2">&amp;mut </span>Input| be_uint(input, <span class="number">4</span>)).parse_next(input)
@@ -2794,7 +2773,6 @@
 </span><span class="kw">pub fn </span>be_u64&lt;Input, Error&gt;(input: <span class="kw-2">&amp;mut </span>Input) -&gt; PResult&lt;u64, Error&gt;
 <span class="kw">where
     </span>Input: StreamIsPartial + Stream&lt;Token = u8&gt;,
-    &lt;Input <span class="kw">as </span>Stream&gt;::Slice: AsBytes,
     Error: ParserError&lt;Input&gt;,
 {
     trace(<span class="string">"be_u64"</span>, <span class="kw">move </span>|input: <span class="kw-2">&amp;mut </span>Input| be_uint(input, <span class="number">8</span>)).parse_next(input)
@@ -2839,7 +2817,6 @@
 </span><span class="kw">pub fn </span>be_u128&lt;Input, Error&gt;(input: <span class="kw-2">&amp;mut </span>Input) -&gt; PResult&lt;u128, Error&gt;
 <span class="kw">where
     </span>Input: StreamIsPartial + Stream&lt;Token = u8&gt;,
-    &lt;Input <span class="kw">as </span>Stream&gt;::Slice: AsBytes,
     Error: ParserError&lt;Input&gt;,
 {
     trace(<span class="string">"be_u128"</span>, <span class="kw">move </span>|input: <span class="kw-2">&amp;mut </span>Input| be_uint(input, <span class="number">16</span>)).parse_next(input)
@@ -2849,23 +2826,34 @@
 </span><span class="kw">fn </span>be_uint&lt;Input, Uint, Error&gt;(input: <span class="kw-2">&amp;mut </span>Input, bound: usize) -&gt; PResult&lt;Uint, Error&gt;
 <span class="kw">where
     </span>Input: StreamIsPartial + Stream&lt;Token = u8&gt;,
-    &lt;Input <span class="kw">as </span>Stream&gt;::Slice: AsBytes,
     Uint: Default + Shl&lt;u8, Output = Uint&gt; + Add&lt;Uint, Output = Uint&gt; + From&lt;u8&gt;,
     Error: ParserError&lt;Input&gt;,
 {
     <span class="macro">debug_assert_ne!</span>(bound, <span class="number">1</span>, <span class="string">"to_be_uint needs extra work to avoid overflow"</span>);
-    take(bound)
-        .map(|n: &lt;Input <span class="kw">as </span>Stream&gt;::Slice| to_be_uint(n.as_bytes()))
-        .parse_next(input)
+    <span class="kw">match </span>input.offset_at(bound) {
+        <span class="prelude-val">Ok</span>(offset) =&gt; {
+            <span class="kw">let </span>res = to_be_uint(input, offset);
+            input.next_slice(offset);
+            <span class="prelude-val">Ok</span>(res)
+        }
+        <span class="prelude-val">Err</span>(e) <span class="kw">if </span>&lt;Input <span class="kw">as </span>StreamIsPartial&gt;::is_partial_supported() &amp;&amp; input.is_partial() =&gt; {
+            <span class="prelude-val">Err</span>(ErrMode::Incomplete(e))
+        }
+        <span class="prelude-val">Err</span>(_needed) =&gt; <span class="prelude-val">Err</span>(ErrMode::from_error_kind(input, ErrorKind::Slice)),
+    }
 }
 
 <span class="attr">#[inline]
-</span><span class="kw">fn </span>to_be_uint&lt;Uint&gt;(number: <span class="kw-2">&amp;</span>[u8]) -&gt; Uint
+</span><span class="kw">fn </span>to_be_uint&lt;Input, Uint&gt;(number: <span class="kw-2">&amp;</span>Input, offset: usize) -&gt; Uint
 <span class="kw">where
-    </span>Uint: Default + Shl&lt;u8, Output = Uint&gt; + Add&lt;Uint, Output = Uint&gt; + From&lt;u8&gt;,
+    </span>Input: Stream,
+    Uint: Default
+        + Shl&lt;u8, Output = Uint&gt;
+        + Add&lt;Uint, Output = Uint&gt;
+        + From&lt;&lt;Input <span class="kw">as </span>Stream&gt;::Token&gt;,
 {
     <span class="kw">let </span><span class="kw-2">mut </span>res = Uint::default();
-    <span class="kw">for </span>byte <span class="kw">in </span>number.iter().copied() {
+    <span class="kw">for </span>(<span class="kw">_</span>, byte) <span class="kw">in </span>number.iter_offsets().take(offset) {
         res = (res &lt;&lt; <span class="number">8</span>) + byte.into();
     }
 
@@ -2955,7 +2943,6 @@
 </span><span class="kw">pub fn </span>be_i16&lt;Input, Error&gt;(input: <span class="kw-2">&amp;mut </span>Input) -&gt; PResult&lt;i16, Error&gt;
 <span class="kw">where
     </span>Input: StreamIsPartial + Stream&lt;Token = u8&gt;,
-    &lt;Input <span class="kw">as </span>Stream&gt;::Slice: AsBytes,
     Error: ParserError&lt;Input&gt;,
 {
     trace(<span class="string">"be_i16"</span>, <span class="kw">move </span>|input: <span class="kw-2">&amp;mut </span>Input| {
@@ -3003,7 +2990,6 @@
 </span><span class="kw">pub fn </span>be_i24&lt;Input, Error&gt;(input: <span class="kw-2">&amp;mut </span>Input) -&gt; PResult&lt;i32, Error&gt;
 <span class="kw">where
     </span>Input: StreamIsPartial + Stream&lt;Token = u8&gt;,
-    &lt;Input <span class="kw">as </span>Stream&gt;::Slice: AsBytes,
     Error: ParserError&lt;Input&gt;,
 {
     trace(<span class="string">"be_i24"</span>, <span class="kw">move </span>|input: <span class="kw-2">&amp;mut </span>Input| {
@@ -3059,7 +3045,6 @@
 </span><span class="kw">pub fn </span>be_i32&lt;Input, Error&gt;(input: <span class="kw-2">&amp;mut </span>Input) -&gt; PResult&lt;i32, Error&gt;
 <span class="kw">where
     </span>Input: StreamIsPartial + Stream&lt;Token = u8&gt;,
-    &lt;Input <span class="kw">as </span>Stream&gt;::Slice: AsBytes,
     Error: ParserError&lt;Input&gt;,
 {
     trace(<span class="string">"be_i32"</span>, <span class="kw">move </span>|input: <span class="kw-2">&amp;mut </span>Input| {
@@ -3107,7 +3092,6 @@
 </span><span class="kw">pub fn </span>be_i64&lt;Input, Error&gt;(input: <span class="kw-2">&amp;mut </span>Input) -&gt; PResult&lt;i64, Error&gt;
 <span class="kw">where
     </span>Input: StreamIsPartial + Stream&lt;Token = u8&gt;,
-    &lt;Input <span class="kw">as </span>Stream&gt;::Slice: AsBytes,
     Error: ParserError&lt;Input&gt;,
 {
     trace(<span class="string">"be_i64"</span>, <span class="kw">move </span>|input: <span class="kw-2">&amp;mut </span>Input| {
@@ -3155,7 +3139,6 @@
 </span><span class="kw">pub fn </span>be_i128&lt;Input, Error&gt;(input: <span class="kw-2">&amp;mut </span>Input) -&gt; PResult&lt;i128, Error&gt;
 <span class="kw">where
     </span>Input: StreamIsPartial + Stream&lt;Token = u8&gt;,
-    &lt;Input <span class="kw">as </span>Stream&gt;::Slice: AsBytes,
     Error: ParserError&lt;Input&gt;,
 {
     trace(<span class="string">"be_i128"</span>, <span class="kw">move </span>|input: <span class="kw-2">&amp;mut </span>Input| {
@@ -3247,7 +3230,6 @@
 </span><span class="kw">pub fn </span>le_u16&lt;Input, Error&gt;(input: <span class="kw-2">&amp;mut </span>Input) -&gt; PResult&lt;u16, Error&gt;
 <span class="kw">where
     </span>Input: StreamIsPartial + Stream&lt;Token = u8&gt;,
-    &lt;Input <span class="kw">as </span>Stream&gt;::Slice: AsBytes,
     Error: ParserError&lt;Input&gt;,
 {
     trace(<span class="string">"le_u16"</span>, <span class="kw">move </span>|input: <span class="kw-2">&amp;mut </span>Input| le_uint(input, <span class="number">2</span>)).parse_next(input)
@@ -3292,7 +3274,6 @@
 </span><span class="kw">pub fn </span>le_u24&lt;Input, Error&gt;(input: <span class="kw-2">&amp;mut </span>Input) -&gt; PResult&lt;u32, Error&gt;
 <span class="kw">where
     </span>Input: StreamIsPartial + Stream&lt;Token = u8&gt;,
-    &lt;Input <span class="kw">as </span>Stream&gt;::Slice: AsBytes,
     Error: ParserError&lt;Input&gt;,
 {
     trace(<span class="string">"le_u24"</span>, <span class="kw">move </span>|input: <span class="kw-2">&amp;mut </span>Input| le_uint(input, <span class="number">3</span>)).parse_next(input)
@@ -3337,7 +3318,6 @@
 </span><span class="kw">pub fn </span>le_u32&lt;Input, Error&gt;(input: <span class="kw-2">&amp;mut </span>Input) -&gt; PResult&lt;u32, Error&gt;
 <span class="kw">where
     </span>Input: StreamIsPartial + Stream&lt;Token = u8&gt;,
-    &lt;Input <span class="kw">as </span>Stream&gt;::Slice: AsBytes,
     Error: ParserError&lt;Input&gt;,
 {
     trace(<span class="string">"le_u32"</span>, <span class="kw">move </span>|input: <span class="kw-2">&amp;mut </span>Input| le_uint(input, <span class="number">4</span>)).parse_next(input)
@@ -3382,7 +3362,6 @@
 </span><span class="kw">pub fn </span>le_u64&lt;Input, Error&gt;(input: <span class="kw-2">&amp;mut </span>Input) -&gt; PResult&lt;u64, Error&gt;
 <span class="kw">where
     </span>Input: StreamIsPartial + Stream&lt;Token = u8&gt;,
-    &lt;Input <span class="kw">as </span>Stream&gt;::Slice: AsBytes,
     Error: ParserError&lt;Input&gt;,
 {
     trace(<span class="string">"le_u64"</span>, <span class="kw">move </span>|input: <span class="kw-2">&amp;mut </span>Input| le_uint(input, <span class="number">8</span>)).parse_next(input)
@@ -3427,7 +3406,6 @@
 </span><span class="kw">pub fn </span>le_u128&lt;Input, Error&gt;(input: <span class="kw-2">&amp;mut </span>Input) -&gt; PResult&lt;u128, Error&gt;
 <span class="kw">where
     </span>Input: StreamIsPartial + Stream&lt;Token = u8&gt;,
-    &lt;Input <span class="kw">as </span>Stream&gt;::Slice: AsBytes,
     Error: ParserError&lt;Input&gt;,
 {
     trace(<span class="string">"le_u128"</span>, <span class="kw">move </span>|input: <span class="kw-2">&amp;mut </span>Input| le_uint(input, <span class="number">16</span>)).parse_next(input)
@@ -3437,22 +3415,33 @@
 </span><span class="kw">fn </span>le_uint&lt;Input, Uint, Error&gt;(input: <span class="kw-2">&amp;mut </span>Input, bound: usize) -&gt; PResult&lt;Uint, Error&gt;
 <span class="kw">where
     </span>Input: StreamIsPartial + Stream&lt;Token = u8&gt;,
-    &lt;Input <span class="kw">as </span>Stream&gt;::Slice: AsBytes,
     Uint: Default + Shl&lt;u8, Output = Uint&gt; + Add&lt;Uint, Output = Uint&gt; + From&lt;u8&gt;,
     Error: ParserError&lt;Input&gt;,
 {
-    take(bound)
-        .map(|n: &lt;Input <span class="kw">as </span>Stream&gt;::Slice| to_le_uint(n.as_bytes()))
-        .parse_next(input)
+    <span class="kw">match </span>input.offset_at(bound) {
+        <span class="prelude-val">Ok</span>(offset) =&gt; {
+            <span class="kw">let </span>res = to_le_uint(input, offset);
+            input.next_slice(offset);
+            <span class="prelude-val">Ok</span>(res)
+        }
+        <span class="prelude-val">Err</span>(e) <span class="kw">if </span>&lt;Input <span class="kw">as </span>StreamIsPartial&gt;::is_partial_supported() &amp;&amp; input.is_partial() =&gt; {
+            <span class="prelude-val">Err</span>(ErrMode::Incomplete(e))
+        }
+        <span class="prelude-val">Err</span>(_needed) =&gt; <span class="prelude-val">Err</span>(ErrMode::from_error_kind(input, ErrorKind::Slice)),
+    }
 }
 
 <span class="attr">#[inline]
-</span><span class="kw">fn </span>to_le_uint&lt;Uint&gt;(number: <span class="kw-2">&amp;</span>[u8]) -&gt; Uint
+</span><span class="kw">fn </span>to_le_uint&lt;Input, Uint&gt;(number: <span class="kw-2">&amp;</span>Input, offset: usize) -&gt; Uint
 <span class="kw">where
-    </span>Uint: Default + Shl&lt;u8, Output = Uint&gt; + Add&lt;Uint, Output = Uint&gt; + From&lt;u8&gt;,
+    </span>Input: Stream,
+    Uint: Default
+        + Shl&lt;u8, Output = Uint&gt;
+        + Add&lt;Uint, Output = Uint&gt;
+        + From&lt;&lt;Input <span class="kw">as </span>Stream&gt;::Token&gt;,
 {
     <span class="kw">let </span><span class="kw-2">mut </span>res = Uint::default();
-    <span class="kw">for </span>(index, byte) <span class="kw">in </span>number.iter_offsets() {
+    <span class="kw">for </span>(index, byte) <span class="kw">in </span>number.iter_offsets().take(offset) {
         res = res + (Uint::from(byte) &lt;&lt; (<span class="number">8 </span>* index <span class="kw">as </span>u8));
     }
 
@@ -3542,7 +3531,6 @@
 </span><span class="kw">pub fn </span>le_i16&lt;Input, Error&gt;(input: <span class="kw-2">&amp;mut </span>Input) -&gt; PResult&lt;i16, Error&gt;
 <span class="kw">where
     </span>Input: StreamIsPartial + Stream&lt;Token = u8&gt;,
-    &lt;Input <span class="kw">as </span>Stream&gt;::Slice: AsBytes,
     Error: ParserError&lt;Input&gt;,
 {
     trace(<span class="string">"le_i16"</span>, <span class="kw">move </span>|input: <span class="kw-2">&amp;mut </span>Input| {
@@ -3590,7 +3578,6 @@
 </span><span class="kw">pub fn </span>le_i24&lt;Input, Error&gt;(input: <span class="kw-2">&amp;mut </span>Input) -&gt; PResult&lt;i32, Error&gt;
 <span class="kw">where
     </span>Input: StreamIsPartial + Stream&lt;Token = u8&gt;,
-    &lt;Input <span class="kw">as </span>Stream&gt;::Slice: AsBytes,
     Error: ParserError&lt;Input&gt;,
 {
     trace(<span class="string">"le_i24"</span>, <span class="kw">move </span>|input: <span class="kw-2">&amp;mut </span>Input| {
@@ -3646,7 +3633,6 @@
 </span><span class="kw">pub fn </span>le_i32&lt;Input, Error&gt;(input: <span class="kw-2">&amp;mut </span>Input) -&gt; PResult&lt;i32, Error&gt;
 <span class="kw">where
     </span>Input: StreamIsPartial + Stream&lt;Token = u8&gt;,
-    &lt;Input <span class="kw">as </span>Stream&gt;::Slice: AsBytes,
     Error: ParserError&lt;Input&gt;,
 {
     trace(<span class="string">"le_i32"</span>, <span class="kw">move </span>|input: <span class="kw-2">&amp;mut </span>Input| {
@@ -3694,7 +3680,6 @@
 </span><span class="kw">pub fn </span>le_i64&lt;Input, Error&gt;(input: <span class="kw-2">&amp;mut </span>Input) -&gt; PResult&lt;i64, Error&gt;
 <span class="kw">where
     </span>Input: StreamIsPartial + Stream&lt;Token = u8&gt;,
-    &lt;Input <span class="kw">as </span>Stream&gt;::Slice: AsBytes,
     Error: ParserError&lt;Input&gt;,
 {
     trace(<span class="string">"le_i64"</span>, <span class="kw">move </span>|input: <span class="kw-2">&amp;mut </span>Input| {
@@ -3742,7 +3727,6 @@
 </span><span class="kw">pub fn </span>le_i128&lt;Input, Error&gt;(input: <span class="kw-2">&amp;mut </span>Input) -&gt; PResult&lt;i128, Error&gt;
 <span class="kw">where
     </span>Input: StreamIsPartial + Stream&lt;Token = u8&gt;,
-    &lt;Input <span class="kw">as </span>Stream&gt;::Slice: AsBytes,
     Error: ParserError&lt;Input&gt;,
 {
     trace(<span class="string">"le_i128"</span>, <span class="kw">move </span>|input: <span class="kw-2">&amp;mut </span>Input| {
@@ -3876,7 +3860,6 @@
 </span><span class="kw">pub fn </span>u16&lt;Input, Error&gt;(endian: Endianness) -&gt; <span class="kw">impl </span>Parser&lt;Input, u16, Error&gt;
 <span class="kw">where
     </span>Input: StreamIsPartial + Stream&lt;Token = u8&gt;,
-    &lt;Input <span class="kw">as </span>Stream&gt;::Slice: AsBytes,
     Error: ParserError&lt;Input&gt;,
 {
     <span class="kw">move </span>|input: <span class="kw-2">&amp;mut </span>Input| {
@@ -3948,7 +3931,6 @@
 </span><span class="kw">pub fn </span>u24&lt;Input, Error&gt;(endian: Endianness) -&gt; <span class="kw">impl </span>Parser&lt;Input, u32, Error&gt;
 <span class="kw">where
     </span>Input: StreamIsPartial + Stream&lt;Token = u8&gt;,
-    &lt;Input <span class="kw">as </span>Stream&gt;::Slice: AsBytes,
     Error: ParserError&lt;Input&gt;,
 {
     <span class="kw">move </span>|input: <span class="kw-2">&amp;mut </span>Input| {
@@ -4020,7 +4002,6 @@
 </span><span class="kw">pub fn </span>u32&lt;Input, Error&gt;(endian: Endianness) -&gt; <span class="kw">impl </span>Parser&lt;Input, u32, Error&gt;
 <span class="kw">where
     </span>Input: StreamIsPartial + Stream&lt;Token = u8&gt;,
-    &lt;Input <span class="kw">as </span>Stream&gt;::Slice: AsBytes,
     Error: ParserError&lt;Input&gt;,
 {
     <span class="kw">move </span>|input: <span class="kw-2">&amp;mut </span>Input| {
@@ -4092,7 +4073,6 @@
 </span><span class="kw">pub fn </span>u64&lt;Input, Error&gt;(endian: Endianness) -&gt; <span class="kw">impl </span>Parser&lt;Input, u64, Error&gt;
 <span class="kw">where
     </span>Input: StreamIsPartial + Stream&lt;Token = u8&gt;,
-    &lt;Input <span class="kw">as </span>Stream&gt;::Slice: AsBytes,
     Error: ParserError&lt;Input&gt;,
 {
     <span class="kw">move </span>|input: <span class="kw-2">&amp;mut </span>Input| {
@@ -4164,7 +4144,6 @@
 </span><span class="kw">pub fn </span>u128&lt;Input, Error&gt;(endian: Endianness) -&gt; <span class="kw">impl </span>Parser&lt;Input, u128, Error&gt;
 <span class="kw">where
     </span>Input: StreamIsPartial + Stream&lt;Token = u8&gt;,
-    &lt;Input <span class="kw">as </span>Stream&gt;::Slice: AsBytes,
     Error: ParserError&lt;Input&gt;,
 {
     <span class="kw">move </span>|input: <span class="kw-2">&amp;mut </span>Input| {
@@ -4291,7 +4270,6 @@
 </span><span class="kw">pub fn </span>i16&lt;Input, Error&gt;(endian: Endianness) -&gt; <span class="kw">impl </span>Parser&lt;Input, i16, Error&gt;
 <span class="kw">where
     </span>Input: StreamIsPartial + Stream&lt;Token = u8&gt;,
-    &lt;Input <span class="kw">as </span>Stream&gt;::Slice: AsBytes,
     Error: ParserError&lt;Input&gt;,
 {
     <span class="kw">move </span>|input: <span class="kw-2">&amp;mut </span>Input| {
@@ -4363,7 +4341,6 @@
 </span><span class="kw">pub fn </span>i24&lt;Input, Error&gt;(endian: Endianness) -&gt; <span class="kw">impl </span>Parser&lt;Input, i32, Error&gt;
 <span class="kw">where
     </span>Input: StreamIsPartial + Stream&lt;Token = u8&gt;,
-    &lt;Input <span class="kw">as </span>Stream&gt;::Slice: AsBytes,
     Error: ParserError&lt;Input&gt;,
 {
     <span class="kw">move </span>|input: <span class="kw-2">&amp;mut </span>Input| {
@@ -4435,7 +4412,6 @@
 </span><span class="kw">pub fn </span>i32&lt;Input, Error&gt;(endian: Endianness) -&gt; <span class="kw">impl </span>Parser&lt;Input, i32, Error&gt;
 <span class="kw">where
     </span>Input: StreamIsPartial + Stream&lt;Token = u8&gt;,
-    &lt;Input <span class="kw">as </span>Stream&gt;::Slice: AsBytes,
     Error: ParserError&lt;Input&gt;,
 {
     <span class="kw">move </span>|input: <span class="kw-2">&amp;mut </span>Input| {
@@ -4507,7 +4483,6 @@
 </span><span class="kw">pub fn </span>i64&lt;Input, Error&gt;(endian: Endianness) -&gt; <span class="kw">impl </span>Parser&lt;Input, i64, Error&gt;
 <span class="kw">where
     </span>Input: StreamIsPartial + Stream&lt;Token = u8&gt;,
-    &lt;Input <span class="kw">as </span>Stream&gt;::Slice: AsBytes,
     Error: ParserError&lt;Input&gt;,
 {
     <span class="kw">move </span>|input: <span class="kw-2">&amp;mut </span>Input| {
@@ -4579,7 +4554,6 @@
 </span><span class="kw">pub fn </span>i128&lt;Input, Error&gt;(endian: Endianness) -&gt; <span class="kw">impl </span>Parser&lt;Input, i128, Error&gt;
 <span class="kw">where
     </span>Input: StreamIsPartial + Stream&lt;Token = u8&gt;,
-    &lt;Input <span class="kw">as </span>Stream&gt;::Slice: AsBytes,
     Error: ParserError&lt;Input&gt;,
 {
     <span class="kw">move </span>|input: <span class="kw-2">&amp;mut </span>Input| {
@@ -4634,7 +4608,6 @@
 </span><span class="kw">pub fn </span>be_f32&lt;Input, Error&gt;(input: <span class="kw-2">&amp;mut </span>Input) -&gt; PResult&lt;f32, Error&gt;
 <span class="kw">where
     </span>Input: StreamIsPartial + Stream&lt;Token = u8&gt;,
-    &lt;Input <span class="kw">as </span>Stream&gt;::Slice: AsBytes,
     Error: ParserError&lt;Input&gt;,
 {
     trace(<span class="string">"be_f32"</span>, <span class="kw">move </span>|input: <span class="kw-2">&amp;mut </span>Input| {
@@ -4682,7 +4655,6 @@
 </span><span class="kw">pub fn </span>be_f64&lt;Input, Error&gt;(input: <span class="kw-2">&amp;mut </span>Input) -&gt; PResult&lt;f64, Error&gt;
 <span class="kw">where
     </span>Input: StreamIsPartial + Stream&lt;Token = u8&gt;,
-    &lt;Input <span class="kw">as </span>Stream&gt;::Slice: AsBytes,
     Error: ParserError&lt;Input&gt;,
 {
     trace(<span class="string">"be_f64"</span>, <span class="kw">move </span>|input: <span class="kw-2">&amp;mut </span>Input| {
@@ -4730,7 +4702,6 @@
 </span><span class="kw">pub fn </span>le_f32&lt;Input, Error&gt;(input: <span class="kw-2">&amp;mut </span>Input) -&gt; PResult&lt;f32, Error&gt;
 <span class="kw">where
     </span>Input: StreamIsPartial + Stream&lt;Token = u8&gt;,
-    &lt;Input <span class="kw">as </span>Stream&gt;::Slice: AsBytes,
     Error: ParserError&lt;Input&gt;,
 {
     trace(<span class="string">"le_f32"</span>, <span class="kw">move </span>|input: <span class="kw-2">&amp;mut </span>Input| {
@@ -4778,7 +4749,6 @@
 </span><span class="kw">pub fn </span>le_f64&lt;Input, Error&gt;(input: <span class="kw-2">&amp;mut </span>Input) -&gt; PResult&lt;f64, Error&gt;
 <span class="kw">where
     </span>Input: StreamIsPartial + Stream&lt;Token = u8&gt;,
-    &lt;Input <span class="kw">as </span>Stream&gt;::Slice: AsBytes,
     Error: ParserError&lt;Input&gt;,
 {
     trace(<span class="string">"be_f64"</span>, <span class="kw">move </span>|input: <span class="kw-2">&amp;mut </span>Input| {
@@ -4844,7 +4814,6 @@
 </span><span class="kw">pub fn </span>f32&lt;Input, Error&gt;(endian: Endianness) -&gt; <span class="kw">impl </span>Parser&lt;Input, f32, Error&gt;
 <span class="kw">where
     </span>Input: StreamIsPartial + Stream&lt;Token = u8&gt;,
-    &lt;Input <span class="kw">as </span>Stream&gt;::Slice: AsBytes,
     Error: ParserError&lt;Input&gt;,
 {
     <span class="kw">move </span>|input: <span class="kw-2">&amp;mut </span>Input| {
@@ -4916,7 +4885,6 @@
 </span><span class="kw">pub fn </span>f64&lt;Input, Error&gt;(endian: Endianness) -&gt; <span class="kw">impl </span>Parser&lt;Input, f64, Error&gt;
 <span class="kw">where
     </span>Input: StreamIsPartial + Stream&lt;Token = u8&gt;,
-    &lt;Input <span class="kw">as </span>Stream&gt;::Slice: AsBytes,
     Error: ParserError&lt;Input&gt;,
 {
     <span class="kw">move </span>|input: <span class="kw-2">&amp;mut </span>Input| {

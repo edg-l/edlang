@@ -1089,7 +1089,7 @@ fn compile_rvalue<'ctx>(
                                 }
                             }
                             ir::PlaceElem::Index { value } => {
-                                let (value, _ty) = compile_rvalue(ctx, fn_id, &locals, value)?;
+                                let (value, _ty) = compile_rvalue(ctx, fn_id, locals, value)?;
 
                                 ptr = unsafe {
                                     ctx.builder.build_in_bounds_gep(

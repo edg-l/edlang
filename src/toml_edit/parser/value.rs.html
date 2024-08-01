@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/toml_edit-0.22.17/src/parser/value.rs`."><title>value.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-dd39b87e5fcfba68.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="toml_edit" data-themes="" data-resource-suffix="" data-rustdoc-version="1.80.0 (051478957 2024-07-21)" data-channel="1.80.0" data-search-js="search-d52510db62a78183.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/toml_edit-0.22.20/src/parser/value.rs`."><title>value.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-dd39b87e5fcfba68.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="toml_edit" data-themes="" data-resource-suffix="" data-rustdoc-version="1.80.0 (051478957 2024-07-21)" data-channel="1.80.0" data-search-js="search-d52510db62a78183.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -152,8 +152,6 @@
 <a href="#152" id="152">152</a>
 <a href="#153" id="153">153</a>
 <a href="#154" id="154">154</a>
-<a href="#155" id="155">155</a>
-<a href="#156" id="156">156</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>winnow::combinator::alt;
 <span class="kw">use </span>winnow::combinator::fail;
 <span class="kw">use </span>winnow::combinator::peek;
@@ -170,17 +168,16 @@
 <span class="kw">use </span><span class="kw">crate</span>::Value;
 
 <span class="comment">// val = string / boolean / array / inline-table / date-time / float / integer
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>value&lt;<span class="lifetime">'i</span>&gt;(check: RecursionCheck) -&gt; <span class="kw">impl </span>Parser&lt;Input&lt;<span class="lifetime">'i</span>&gt;, Value, ContextError&gt; {
-    <span class="kw">move </span>|input: <span class="kw-2">&amp;mut </span>Input&lt;<span class="lifetime">'i</span>&gt;| {
-        <span class="macro">dispatch!</span>{peek(any);
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>value(input: <span class="kw-2">&amp;mut </span>Input&lt;<span class="lifetime">'_</span>&gt;) -&gt; PResult&lt;Value&gt; {
+    <span class="macro">dispatch!</span> {peek(any);
             <span class="kw">crate</span>::parser::strings::QUOTATION_MARK |
             <span class="kw">crate</span>::parser::strings::APOSTROPHE =&gt; string.map(|s| {
                 Value::String(Formatted::new(
                     s.into_owned()
                 ))
             }),
-            <span class="kw">crate</span>::parser::array::ARRAY_OPEN =&gt; array(check).map(Value::Array),
-            <span class="kw">crate</span>::parser::inline_table::INLINE_TABLE_OPEN =&gt; inline_table(check).map(Value::InlineTable),
+            <span class="kw">crate</span>::parser::array::ARRAY_OPEN =&gt; check_recursion(array).map(Value::Array),
+            <span class="kw">crate</span>::parser::inline_table::INLINE_TABLE_OPEN =&gt; check_recursion(inline_table).map(Value::InlineTable),
             <span class="comment">// Date/number starts
             </span><span class="string">b'+' </span>| <span class="string">b'-' </span>| <span class="string">b'0'</span>..=<span class="string">b'9' </span>=&gt; {
                 <span class="comment">// Uncommon enough not to be worth optimizing at this time
@@ -236,13 +233,12 @@
                     .context(StrContext::Expected(StrContextValue::CharLiteral(<span class="string">'\''</span>)))
             },
     }
-        .with_span()
-        .try_map(|(value, span)| apply_raw(value, span))
-        .parse_next(input)
-    }
+    .with_span()
+    .map(|(value, span)| apply_raw(value, span))
+    .parse_next(input)
 }
 
-<span class="kw">fn </span>apply_raw(<span class="kw-2">mut </span>val: Value, span: std::ops::Range&lt;usize&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;Value, std::str::Utf8Error&gt; {
+<span class="kw">fn </span>apply_raw(<span class="kw-2">mut </span>val: Value, span: std::ops::Range&lt;usize&gt;) -&gt; Value {
     <span class="kw">match </span>val {
         Value::String(<span class="kw-2">ref mut </span>f) =&gt; {
             <span class="kw">let </span>raw = RawString::with_span(span);
@@ -272,7 +268,7 @@
         }
     };
     val.decorate(<span class="string">""</span>, <span class="string">""</span>);
-    <span class="prelude-val">Ok</span>(val)
+    val
 }
 
 <span class="attr">#[cfg(test)]
@@ -302,7 +298,7 @@ trimmed in raw strings.
         ];
         <span class="kw">for </span>input <span class="kw">in </span>inputs {
             <span class="macro">dbg!</span>(input);
-            <span class="kw">let </span><span class="kw-2">mut </span>parsed = value(Default::default()).parse(new_input(input));
+            <span class="kw">let </span><span class="kw-2">mut </span>parsed = value.parse(new_input(input));
             <span class="kw">if let </span><span class="prelude-val">Ok</span>(parsed) = <span class="kw-2">&amp;mut </span>parsed {
                 parsed.despan(input);
             }

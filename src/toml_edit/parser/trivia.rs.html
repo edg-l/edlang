@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/toml_edit-0.22.17/src/parser/trivia.rs`."><title>trivia.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-dd39b87e5fcfba68.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="toml_edit" data-themes="" data-resource-suffix="" data-rustdoc-version="1.80.0 (051478957 2024-07-21)" data-channel="1.80.0" data-search-js="search-d52510db62a78183.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/toml_edit-0.22.20/src/parser/trivia.rs`."><title>trivia.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-dd39b87e5fcfba68.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="toml_edit" data-themes="" data-resource-suffix="" data-rustdoc-version="1.80.0 (051478957 2024-07-21)" data-channel="1.80.0" data-search-js="search-d52510db62a78183.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -158,14 +158,26 @@
 <a href="#158" id="158">158</a>
 <a href="#159" id="159">159</a>
 <a href="#160" id="160">160</a>
+<a href="#161" id="161">161</a>
+<a href="#162" id="162">162</a>
+<a href="#163" id="163">163</a>
+<a href="#164" id="164">164</a>
+<a href="#165" id="165">165</a>
+<a href="#166" id="166">166</a>
+<a href="#167" id="167">167</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::ops::RangeInclusive;
 
 <span class="kw">use </span>winnow::combinator::alt;
+<span class="kw">use </span>winnow::combinator::empty;
 <span class="kw">use </span>winnow::combinator::eof;
+<span class="kw">use </span>winnow::combinator::fail;
 <span class="kw">use </span>winnow::combinator::opt;
+<span class="kw">use </span>winnow::combinator::peek;
 <span class="kw">use </span>winnow::combinator::repeat;
 <span class="kw">use </span>winnow::combinator::terminated;
 <span class="kw">use </span>winnow::prelude::<span class="kw-2">*</span>;
+<span class="kw">use </span>winnow::stream::Stream <span class="kw">as _</span>;
+<span class="kw">use </span>winnow::token::any;
 <span class="kw">use </span>winnow::token::one_of;
 <span class="kw">use </span>winnow::token::take_while;
 
@@ -210,69 +222,71 @@
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>COMMENT_START_SYMBOL: u8 = <span class="string">b'#'</span>;
 
 <span class="comment">// comment = comment-start-symbol *non-eol
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>comment&lt;<span class="lifetime">'i</span>&gt;(input: <span class="kw-2">&amp;mut </span>Input&lt;<span class="lifetime">'i</span>&gt;) -&gt; PResult&lt;<span class="kw-2">&amp;</span><span class="lifetime">'i </span>[u8]&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>comment(input: <span class="kw-2">&amp;mut </span>Input&lt;<span class="lifetime">'_</span>&gt;) -&gt; PResult&lt;()&gt; {
     (COMMENT_START_SYMBOL, take_while(<span class="number">0</span>.., NON_EOL))
-        .recognize()
+        .void()
         .parse_next(input)
 }
 
 <span class="comment">// newline = ( %x0A /              ; LF
 //             %x0D.0A )           ; CRLF
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>newline(input: <span class="kw-2">&amp;mut </span>Input&lt;<span class="lifetime">'_</span>&gt;) -&gt; PResult&lt;u8&gt; {
-    alt((
-        one_of(LF).value(<span class="string">b'\n'</span>),
-        (one_of(CR), one_of(LF)).value(<span class="string">b'\n'</span>),
-    ))
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>newline(input: <span class="kw-2">&amp;mut </span>Input&lt;<span class="lifetime">'_</span>&gt;) -&gt; PResult&lt;()&gt; {
+    <span class="macro">dispatch!</span> {any;
+        <span class="string">b'\n' </span>=&gt; empty,
+        <span class="string">b'\r' </span>=&gt; one_of(LF).void(),
+        <span class="kw">_ </span>=&gt; fail,
+    }
     .parse_next(input)
 }
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>LF: u8 = <span class="string">b'\n'</span>;
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>CR: u8 = <span class="string">b'\r'</span>;
 
 <span class="comment">// ws-newline       = *( wschar / newline )
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>ws_newline&lt;<span class="lifetime">'i</span>&gt;(input: <span class="kw-2">&amp;mut </span>Input&lt;<span class="lifetime">'i</span>&gt;) -&gt; PResult&lt;<span class="kw-2">&amp;</span><span class="lifetime">'i </span>str&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>ws_newline(input: <span class="kw-2">&amp;mut </span>Input&lt;<span class="lifetime">'_</span>&gt;) -&gt; PResult&lt;()&gt; {
     repeat(
         <span class="number">0</span>..,
         alt((newline.value(<span class="kw-2">&amp;</span><span class="string">b"\n"</span>[..]), take_while(<span class="number">1</span>.., WSCHAR))),
     )
     .map(|()| ())
-    .recognize()
-    .map(|b| <span class="kw">unsafe </span>{ from_utf8_unchecked(b, <span class="string">"`is_wschar` and `newline` filters out on-ASCII"</span>) })
     .parse_next(input)
 }
 
 <span class="comment">// ws-newlines      = newline *( wschar / newline )
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>ws_newlines&lt;<span class="lifetime">'i</span>&gt;(input: <span class="kw-2">&amp;mut </span>Input&lt;<span class="lifetime">'i</span>&gt;) -&gt; PResult&lt;<span class="kw-2">&amp;</span><span class="lifetime">'i </span>str&gt; {
-    (newline, ws_newline)
-        .recognize()
-        .map(|b| <span class="kw">unsafe </span>{
-            from_utf8_unchecked(b, <span class="string">"`is_wschar` and `newline` filters out on-ASCII"</span>)
-        })
-        .parse_next(input)
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>ws_newlines(input: <span class="kw-2">&amp;mut </span>Input&lt;<span class="lifetime">'_</span>&gt;) -&gt; PResult&lt;()&gt; {
+    (newline, ws_newline).void().parse_next(input)
 }
 
 <span class="comment">// note: this rule is not present in the original grammar
 // ws-comment-newline = *( ws-newline-nonempty / comment )
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>ws_comment_newline&lt;<span class="lifetime">'i</span>&gt;(input: <span class="kw-2">&amp;mut </span>Input&lt;<span class="lifetime">'i</span>&gt;) -&gt; PResult&lt;<span class="kw-2">&amp;</span><span class="lifetime">'i </span>[u8]&gt; {
-    repeat(
-        <span class="number">0</span>..,
-        alt((
-            repeat(
-                <span class="number">1</span>..,
-                alt((take_while(<span class="number">1</span>.., WSCHAR), newline.value(<span class="kw-2">&amp;</span><span class="string">b"\n"</span>[..]))),
-            )
-            .map(|()| ()),
-            comment.void(),
-        )),
-    )
-    .map(|()| ())
-    .recognize()
-    .parse_next(input)
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>ws_comment_newline(input: <span class="kw-2">&amp;mut </span>Input&lt;<span class="lifetime">'_</span>&gt;) -&gt; PResult&lt;()&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>start = input.checkpoint();
+    <span class="kw">loop </span>{
+        <span class="kw">let _ </span>= ws.parse_next(input)<span class="question-mark">?</span>;
+
+        <span class="kw">let </span>next_token = opt(peek(any)).parse_next(input)<span class="question-mark">?</span>;
+        <span class="kw">match </span>next_token {
+            <span class="prelude-val">Some</span>(<span class="string">b'#'</span>) =&gt; (comment, newline).void().parse_next(input)<span class="question-mark">?</span>,
+            <span class="prelude-val">Some</span>(<span class="string">b'\n'</span>) =&gt; (newline).void().parse_next(input)<span class="question-mark">?</span>,
+            <span class="prelude-val">Some</span>(<span class="string">b'\r'</span>) =&gt; (newline).void().parse_next(input)<span class="question-mark">?</span>,
+            <span class="kw">_ </span>=&gt; <span class="kw">break</span>,
+        }
+
+        <span class="kw">let </span>end = input.checkpoint();
+        <span class="kw">if </span>start == end {
+            <span class="kw">break</span>;
+        }
+        start = end;
+    }
+
+    <span class="prelude-val">Ok</span>(())
 }
 
 <span class="comment">// note: this rule is not present in the original grammar
 // line-ending = newline / eof
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>line_ending&lt;<span class="lifetime">'i</span>&gt;(input: <span class="kw-2">&amp;mut </span>Input&lt;<span class="lifetime">'i</span>&gt;) -&gt; PResult&lt;<span class="kw-2">&amp;</span><span class="lifetime">'i </span>str&gt; {
-    alt((newline.value(<span class="string">"\n"</span>), eof.value(<span class="string">""</span>))).parse_next(input)
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>line_ending(input: <span class="kw-2">&amp;mut </span>Input&lt;<span class="lifetime">'_</span>&gt;) -&gt; PResult&lt;()&gt; {
+    alt((newline.value(<span class="string">"\n"</span>), eof.value(<span class="string">""</span>)))
+        .void()
+        .parse_next(input)
 }
 
 <span class="comment">// note: this rule is not present in the original grammar
@@ -311,7 +325,7 @@
         ];
         <span class="kw">for </span>input <span class="kw">in </span>inputs {
             <span class="macro">dbg!</span>(input);
-            <span class="kw">let </span>parsed = ws_comment_newline.parse(new_input(input));
+            <span class="kw">let </span>parsed = ws_comment_newline.take().parse(new_input(input));
             <span class="macro">assert!</span>(parsed.is_ok(), <span class="string">"{:?}"</span>, parsed);
             <span class="kw">let </span>parsed = parsed.unwrap();
             <span class="macro">assert_eq!</span>(parsed, input.as_bytes());

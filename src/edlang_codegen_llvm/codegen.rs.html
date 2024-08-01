@@ -2924,7 +2924,7 @@
                                 }
                             }
                             ir::PlaceElem::Index { value } =&gt; {
-                                <span class="kw">let </span>(value, _ty) = compile_rvalue(ctx, fn_id, <span class="kw-2">&amp;</span>locals, value)<span class="question-mark">?</span>;
+                                <span class="kw">let </span>(value, _ty) = compile_rvalue(ctx, fn_id, locals, value)<span class="question-mark">?</span>;
 
                                 ptr = <span class="kw">unsafe </span>{
                                     ctx.builder.build_in_bounds_gep(

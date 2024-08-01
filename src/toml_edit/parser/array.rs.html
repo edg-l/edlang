@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/toml_edit-0.22.17/src/parser/array.rs`."><title>array.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-dd39b87e5fcfba68.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="toml_edit" data-themes="" data-resource-suffix="" data-rustdoc-version="1.80.0 (051478957 2024-07-21)" data-channel="1.80.0" data-search-js="search-d52510db62a78183.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/index.crates.io-6f17d22bba15001f/toml_edit-0.22.20/src/parser/array.rs`."><title>array.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-dd39b87e5fcfba68.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="toml_edit" data-themes="" data-resource-suffix="" data-rustdoc-version="1.80.0 (051478957 2024-07-21)" data-channel="1.80.0" data-search-js="search-d52510db62a78183.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -132,46 +132,34 @@
 <a href="#132" id="132">132</a>
 <a href="#133" id="133">133</a>
 <a href="#134" id="134">134</a>
-<a href="#135" id="135">135</a>
-<a href="#136" id="136">136</a>
-<a href="#137" id="137">137</a>
-<a href="#138" id="138">138</a>
-<a href="#139" id="139">139</a>
-<a href="#140" id="140">140</a>
-<a href="#141" id="141">141</a>
-<a href="#142" id="142">142</a>
-<a href="#143" id="143">143</a>
-<a href="#144" id="144">144</a>
-<a href="#145" id="145">145</a>
-<a href="#146" id="146">146</a>
-<a href="#147" id="147">147</a>
-<a href="#148" id="148">148</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>winnow::combinator::cut_err;
 <span class="kw">use </span>winnow::combinator::delimited;
 <span class="kw">use </span>winnow::combinator::opt;
+<span class="kw">use </span>winnow::combinator::peek;
 <span class="kw">use </span>winnow::combinator::separated;
 <span class="kw">use </span>winnow::combinator::trace;
 
 <span class="kw">use </span><span class="kw">crate</span>::parser::trivia::ws_comment_newline;
 <span class="kw">use </span><span class="kw">crate</span>::parser::value::value;
-<span class="kw">use crate</span>::{Array, Item, RawString, Value};
+<span class="kw">use crate</span>::{Array, Item, RawString};
 
 <span class="kw">use </span><span class="kw">crate</span>::parser::prelude::<span class="kw-2">*</span>;
 
 <span class="comment">// ;; Array
 
 // array = array-open array-values array-close
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>array&lt;<span class="lifetime">'i</span>&gt;(check: RecursionCheck) -&gt; <span class="kw">impl </span>Parser&lt;Input&lt;<span class="lifetime">'i</span>&gt;, Array, ContextError&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>array&lt;<span class="lifetime">'i</span>&gt;(input: <span class="kw-2">&amp;mut </span>Input&lt;<span class="lifetime">'i</span>&gt;) -&gt; PResult&lt;Array&gt; {
     trace(<span class="string">"array"</span>, <span class="kw">move </span>|input: <span class="kw-2">&amp;mut </span>Input&lt;<span class="lifetime">'i</span>&gt;| {
         delimited(
             ARRAY_OPEN,
-            cut_err(array_values(check)),
+            cut_err(array_values),
             cut_err(ARRAY_CLOSE)
                 .context(StrContext::Label(<span class="string">"array"</span>))
                 .context(StrContext::Expected(StrContextValue::CharLiteral(<span class="string">']'</span>))),
         )
         .parse_next(input)
     })
+    .parse_next(input)
 }
 
 <span class="comment">// note: we're omitting ws and newlines here, because
@@ -183,49 +171,33 @@
 <span class="comment">// array-sep = ws %x2C ws  ; , Comma
 </span><span class="kw">const </span>ARRAY_SEP: u8 = <span class="string">b','</span>;
 
-<span class="comment">// note: this rule is modified
-// array-values = [ ( array-value array-sep array-values ) /
-//                  array-value / ws-comment-newline ]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>array_values&lt;<span class="lifetime">'i</span>&gt;(
-    check: RecursionCheck,
-) -&gt; <span class="kw">impl </span>Parser&lt;Input&lt;<span class="lifetime">'i</span>&gt;, Array, ContextError&gt; {
-    <span class="kw">move </span>|input: <span class="kw-2">&amp;mut </span>Input&lt;<span class="lifetime">'i</span>&gt;| {
-        <span class="kw">let </span>check = check.recursing(input)<span class="question-mark">?</span>;
-        (
-            opt((
-                separated(<span class="number">1</span>.., array_value(check), ARRAY_SEP),
-                opt(ARRAY_SEP),
-            )
-                .map(|(v, trailing): (Vec&lt;Value&gt;, <span class="prelude-ty">Option</span>&lt;u8&gt;)| {
-                    (
-                        Array::with_vec(v.into_iter().map(Item::Value).collect()),
-                        trailing.is_some(),
-                    )
-                })),
-            ws_comment_newline.span(),
-        )
-            .try_map::&lt;<span class="kw">_</span>, <span class="kw">_</span>, std::str::Utf8Error&gt;(|(array, trailing)| {
-                <span class="kw">let </span>(<span class="kw-2">mut </span>array, comma) = array.unwrap_or_default();
-                array.set_trailing_comma(comma);
-                array.set_trailing(RawString::with_span(trailing));
-                <span class="prelude-val">Ok</span>(array)
-            })
-            .parse_next(input)
+<span class="comment">// array-values =  ws-comment-newline val ws-comment-newline array-sep array-values
+// array-values =/ ws-comment-newline val ws-comment-newline [ array-sep ]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>array_values(input: <span class="kw-2">&amp;mut </span>Input&lt;<span class="lifetime">'_</span>&gt;) -&gt; PResult&lt;Array&gt; {
+    <span class="kw">if </span>peek(opt(ARRAY_CLOSE)).parse_next(input)<span class="question-mark">?</span>.is_some() {
+        <span class="comment">// Optimize for empty arrays, avoiding `value` from being expected to fail
+        </span><span class="kw">return </span><span class="prelude-val">Ok</span>(Array::new());
     }
+
+    <span class="kw">let </span>array = separated(<span class="number">0</span>.., array_value, ARRAY_SEP).parse_next(input)<span class="question-mark">?</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>array = Array::with_vec(array);
+    <span class="kw">if </span>!array.is_empty() {
+        <span class="kw">let </span>comma = opt(ARRAY_SEP).parse_next(input)<span class="question-mark">?</span>.is_some();
+        array.set_trailing_comma(comma);
+    }
+    <span class="kw">let </span>trailing = ws_comment_newline.span().parse_next(input)<span class="question-mark">?</span>;
+    array.set_trailing(RawString::with_span(trailing));
+
+    <span class="prelude-val">Ok</span>(array)
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>array_value&lt;<span class="lifetime">'i</span>&gt;(
-    check: RecursionCheck,
-) -&gt; <span class="kw">impl </span>Parser&lt;Input&lt;<span class="lifetime">'i</span>&gt;, Value, ContextError&gt; {
-    <span class="kw">move </span>|input: <span class="kw-2">&amp;mut </span>Input&lt;<span class="lifetime">'i</span>&gt;| {
-        (
-            ws_comment_newline.span(),
-            value(check),
-            ws_comment_newline.span(),
-        )
-            .map(|(ws1, v, ws2)| v.decorated(RawString::with_span(ws1), RawString::with_span(ws2)))
-            .parse_next(input)
-    }
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>array_value(input: <span class="kw-2">&amp;mut </span>Input&lt;<span class="lifetime">'_</span>&gt;) -&gt; PResult&lt;Item&gt; {
+    <span class="kw">let </span>prefix = ws_comment_newline.span().parse_next(input)<span class="question-mark">?</span>;
+    <span class="kw">let </span>value = value.parse_next(input)<span class="question-mark">?</span>;
+    <span class="kw">let </span>suffix = ws_comment_newline.span().parse_next(input)<span class="question-mark">?</span>;
+    <span class="kw">let </span>value = value.decorated(RawString::with_span(prefix), RawString::with_span(suffix));
+    <span class="kw">let </span>value = Item::Value(value);
+    <span class="prelude-val">Ok</span>(value)
 }
 
 <span class="attr">#[cfg(test)]
@@ -273,7 +245,7 @@
         ];
         <span class="kw">for </span>input <span class="kw">in </span>inputs {
             <span class="macro">dbg!</span>(input);
-            <span class="kw">let </span><span class="kw-2">mut </span>parsed = array(Default::default()).parse(new_input(input));
+            <span class="kw">let </span><span class="kw-2">mut </span>parsed = array.parse(new_input(input));
             <span class="kw">if let </span><span class="prelude-val">Ok</span>(parsed) = <span class="kw-2">&amp;mut </span>parsed {
                 parsed.despan(input);
             }
@@ -286,7 +258,7 @@
         <span class="kw">let </span>invalid_inputs = [<span class="string">r#"["#</span>, <span class="string">r#"[,]"#</span>, <span class="string">r#"[,2]"#</span>, <span class="string">r#"[1e165,,]"#</span>];
         <span class="kw">for </span>input <span class="kw">in </span>invalid_inputs {
             <span class="macro">dbg!</span>(input);
-            <span class="kw">let </span><span class="kw-2">mut </span>parsed = array(Default::default()).parse(new_input(input));
+            <span class="kw">let </span><span class="kw-2">mut </span>parsed = array.parse(new_input(input));
             <span class="kw">if let </span><span class="prelude-val">Ok</span>(parsed) = <span class="kw-2">&amp;mut </span>parsed {
                 parsed.despan(input);
             }

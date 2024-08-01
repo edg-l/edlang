@@ -17,7 +17,7 @@ edlang_ir = { version = "0.0.1-alpha.19", path = "../edlang_ir" }
 edlang_parser = { version = "0.0.1-alpha.19", path = "../edlang_parser" }
 edlang_session = { version = "0.0.1-alpha.19", path = "../edlang_session" }
 llvm-sys = "180.0"
-inkwell = { git = "https://github.com/TheDan64/inkwell", rev = "5c9f7fcbb0a667f7391b94beb65f1a670ad13221", features = [
+inkwell = { git = "https://github.com/TheDan64/inkwell", rev = "89e06af9dd70dc5d6bc5ae42a2a03f680a367d37", features = [
   "llvm18-0",
 ] }
 tracing = { workspace = true }
